@@ -305,3 +305,14 @@ canvas {
     [data-theme="dark"] .btn-archive:hover {
         background: linear-gradient(135deg, #475569 0%, #334155 100%);
     }
+
+/* Light modda kritik stok kartı arka planını koyulaştır */
+[data-theme="light"] .bg-danger-gradient {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+    [data-theme="light"] .bg-danger-gradient .value,
+    [data-theme="light"] .bg-danger-gradient .title,
+    [data-theme="light"] .bg-danger-gradient .small {
+        color: white !important;
+    }
