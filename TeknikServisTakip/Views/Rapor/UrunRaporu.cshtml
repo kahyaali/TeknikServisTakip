@@ -1,0 +1,472 @@
+﻿@{
+    ViewData["Title"] = "Ürün Bazlı Rapor";
+}
+
+<style>
+    /* ==================== LIGHT MODE ==================== */
+    :root,
+    [data-theme="light"] {
+        --bg-card: #ffffff;
+        --bg-table-header: #f8fafc;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+        --gradient-start: #f8fafc;
+        --gradient-end: #f1f5f9;
+        --rank-1-bg: #fbbf24;
+        --rank-1-text: #92400e;
+        --rank-2-bg: #e5e7eb;
+        --rank-2-text: #4b5563;
+        --rank-3-bg: #fdba74;
+        --rank-3-text: #9a3412;
+    }
+
+    /* ==================== DARK MODE ==================== */
+    [data-theme="dark"] {
+        --bg-card: #1e1e2f;
+        --bg-table-header: #1a1a2e;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --border-color: #2c2c3a;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+        --gradient-start: #1a1a2e;
+        --gradient-end: #16213e;
+        --rank-1-bg: #b45309;
+        --rank-1-text: #fef3c7;
+        --rank-2-bg: #4b5563;
+        --rank-2-text: #e5e7eb;
+        --rank-3-bg: #c2410c;
+        --rank-3-text: #ffedd5;
+    }
+
+    .report-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s;
+    }
+
+    .stat-number {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-top: 5px;
+    }
+
+    .stat-box {
+        padding: 20px;
+        background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+        border-radius: 16px;
+        text-align: center;
+        transition: transform 0.2s;
+        height: 100%;
+    }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+        }
+
+    .filter-group {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .filter-item {
+        flex: 1;
+        min-width: 150px;
+    }
+
+        .filter-item label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+            color: var(--text-secondary);
+        }
+
+        .filter-item input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .data-table th {
+            background: var(--bg-table-header);
+            font-weight: 600;
+        }
+
+    .text-end {
+        text-align: right;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .rank-badge {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    .rank-1 {
+        background: var(--rank-1-bg);
+        color: var(--rank-1-text);
+    }
+
+    .rank-2 {
+        background: var(--rank-2-bg);
+        color: var(--rank-2-text);
+    }
+
+    .rank-3 {
+        background: var(--rank-3-bg);
+        color: var(--rank-3-text);
+    }
+
+    .chart-container {
+        min-height: 420px;
+    }
+
+        .chart-container canvas {
+            max-height: 350px;
+        }
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Başlık -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="fas fa-box me-2 text-primary"></i> Ürün Bazlı Rapor</h2>
+            <p class="text-muted">En çok tamir edilen ürünler ve marka analizleri</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-2"></i> Yenile
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtreler -->
+    <div class="report-card mb-4">
+        <div class="filter-group">
+            <div class="filter-item">
+                <label><i class="fas fa-calendar me-1"></i> Başlangıç Tarihi</label>
+                <input type="date" id="startDate" class="form-control" />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-calendar me-1"></i> Bitiş Tarihi</label>
+                <input type="date" id="endDate" class="form-control" />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-search me-1"></i> Ürün Adı</label>
+                <input type="text" id="productNameFilter" class="form-control" placeholder="Ürün ara..." />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-tag me-1"></i> Marka</label>
+                <input type="text" id="brandFilter" class="form-control" placeholder="Marka ara..." />
+            </div>
+            <div class="filter-item">
+                <button class="btn btn-primary w-100" id="filterBtn">
+                    <i class="fas fa-search me-2"></i> Filtrele
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="stat-box">
+                <div class="stat-number" id="totalProducts">0</div>
+                <div class="stat-label">Farklı Ürün Sayısı</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-box">
+                <div class="stat-number" id="totalRepairs">0</div>
+                <div class="stat-label">Toplam Tamir</div>
+            </div>
+        </div>
+        <div class="col-md-4" id="revenueCard">
+            <div class="stat-box" id="revenueContainer">
+                <div class="stat-number" id="totalRevenue">₺0</div>
+                <div class="stat-label">Toplam Gelir</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- En Çok Tamir Edilen Ürünler -->
+    <div class="report-card mb-4">
+        <h5 class="mb-3"><i class="fas fa-crown me-2 text-warning"></i> En Çok Tamir Edilen Ürünler (Top 10)</h5>
+        <div class="table-responsive">
+            <table class="data-table" id="topProductsTable">
+                <thead>
+                    <tr>
+                        <th>Sıra</th>
+                        <th>Ürün Adı</th>
+                        <th>Marka / Model</th>
+                        <th class="text-center">Tamir Sayısı</th>
+                        <th class="text-end">Toplam Gelir</th>
+                        <th class="text-end">Ortalama Ücret</th>
+                        <th class="text-center">Son Tamir</th>
+                    </tr>
+                </thead>
+                <tbody id="topProductsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Marka Bazlı İstatistikler -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="report-card chart-container">
+                <h5 class="mb-3"><i class="fas fa-chart-bar me-2 text-primary"></i> Marka Bazında Tamir Sayıları (Top 5)</h5>
+                <canvas id="brandChart" style="width: 100%;"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="report-card chart-container">
+                <h5 class="mb-3"><i class="fas fa-chart-line me-2 text-primary"></i> Aylık Ürün Tamir Trendi</h5>
+                <canvas id="trendChart" style="width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let brandChart, trendChart;
+        const currencySymbols = { 'TRY': '₺', 'USD': '$', 'EUR': '€', 'GBP': '£' };
+
+        function formatCurrency(amount, currency = 'TRY') {
+        const symbol = currencySymbols[currency] || '₺';
+        return symbol + amount.toFixed(2);
+        }
+
+        $(document).ready(function() {
+        var today = new Date();
+        var oneYearAgo = new Date();
+        oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+        $('#startDate').val(oneYearAgo.toISOString().split('T')[0]);
+        $('#endDate').val(today.toISOString().split('T')[0]);
+
+        loadUrunRaporu();
+
+        $('#filterBtn').click(function() {
+        loadUrunRaporu();
+        });
+        });
+
+        function loadUrunRaporu() {
+        var data = {
+        startDate: $('#startDate').val(),
+        endDate: $('#endDate').val(),
+        productName: $('#productNameFilter').val(),
+        brand: $('#brandFilter').val()
+        };
+
+        $.get('/Rapor/GetUrunRaporu', data, function(res) {
+        // Kartlar
+        $('#totalProducts').text(res.totalProducts || 0);
+        $('#totalRepairs').text(res.totalRepairs || 0);
+
+        // Toplam Gelir - Her para birimi AYRI KART olarak
+        if (res.totalRevenueByCurrency && res.totalRevenueByCurrency.length > 0) {
+        var revenueHtml = '<div class="row g-2">';
+        $.each(res.totalRevenueByCurrency, function(i, item) {
+        revenueHtml += `
+        <div class="col-6 col-md-4">
+        <div class="text-center p-2">
+        <div class="stat-number" style="font-size: 22px;">${formatCurrency(item.total, item.currency)}</div>
+        <div class="stat-label" style="font-size: 11px;">${item.currency}</div>
+        </div>
+        </div>
+        `;
+        });
+        revenueHtml += '</div>';
+        $('#revenueContainer').html(revenueHtml);
+        } else {
+        $('#revenueContainer').html('<div class="stat-number">₺0</div><div class="stat-label">Toplam Gelir</div>');
+        }
+
+        // Top Ürünler Tablosu
+        var tbody = $('#topProductsBody');
+        tbody.empty();
+        if (!res.topProducts || res.topProducts.length === 0) {
+        tbody.html('运转<td colspan="7" class="text-center">Veri bulunamadı<\/td><\/tr>');
+        return;
+        }
+
+        $.each(res.topProducts, function(i, p) {
+        var rankClass = i == 0 ? 'rank-1' : (i == 1 ? 'rank-2' : (i == 2 ? 'rank-3' : ''));
+
+        var revenueText = '';
+        if (p.revenueByCurrency && p.revenueByCurrency.length > 0) {
+        $.each(p.revenueByCurrency, function(j, rev) {
+        revenueText += `${formatCurrency(rev.total, rev.currency)} `;
+        });
+        } else {
+        revenueText = '₺0';
+        }
+
+        var avgText = '';
+        if (p.avgPriceByCurrency && p.avgPriceByCurrency.length > 0) {
+        $.each(p.avgPriceByCurrency, function(j, avg) {
+        avgText += `${formatCurrency(avg.avg, avg.currency)} `;
+        });
+        } else {
+        avgText = '₺0';
+        }
+
+        tbody.append(`
+        <tr>
+        <td class="text-center"><span class="rank-badge ${rankClass}">${i+1}<\/span><\/td>
+        <td><strong>${p.productName}<\/strong><\/td>
+        <td>${p.brand} / ${p.model}<\/td>
+        <td class="text-center"><span class="badge bg-primary">${p.count}<\/span><\/td>
+        <td class="text-end">${revenueText}<\/td>
+        <td class="text-end">${avgText}<\/td>
+        <td class="text-center">${new Date(p.lastRepair).toLocaleDateString()}<\/td>
+        </tr>
+        `);
+        });
+
+        // Marka Grafiği (Bar Chart)
+        if (brandChart) brandChart.destroy();
+
+        var brands = res.brandStats.map(x => x.brand);
+        var brandCounts = res.brandStats.map(x => x.count);
+
+        if (brands.length > 0) {
+        var ctx = document.getElementById('brandChart').getContext('2d');
+        var brandColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#06b6d4'];
+
+        brandChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+        labels: brands,
+        datasets: [{
+        label: 'Tamir Sayısı',
+        data: brandCounts,
+        backgroundColor: brandColors.slice(0, brands.length),
+        borderRadius: 8,
+        borderWidth: 0
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: function(ctx) { return ctx.raw + ' tamir'; } } }
+        },
+        scales: {
+        y: { title: { display: true, text: 'Tamir Sayısı' }, beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
+        x: { title: { display: true, text: 'Marka' }, ticks: { maxRotation: 45, minRotation: 45, autoSkip: true, maxTicksLimit: 10 } }
+        }
+        }
+        });
+        } else {
+        $('#brandChart').parent().html('<div class="text-center text-muted py-5">Marka verisi bulunamadı</div>');
+        }
+
+        // Aylık Trend Grafiği
+        if (trendChart) trendChart.destroy();
+        var months = res.monthlyTrend.map(x => x.month);
+
+        if (months.length > 0) {
+        var ctx2 = document.getElementById('trendChart').getContext('2d');
+        var datasets = [];
+        var allCurrencies = new Set();
+
+        res.monthlyTrend.forEach(month => {
+        if (month.currencies) {
+        month.currencies.forEach(curr => allCurrencies.add(curr.currency));
+        }
+        });
+
+        var currencyColors = { 'TRY': '#10b981', 'USD': '#3b82f6', 'EUR': '#f59e0b', 'GBP': '#ef4444' };
+
+        if (allCurrencies.size > 0) {
+        allCurrencies.forEach(currency => {
+        var currencyData = res.monthlyTrend.map(month => {
+        if (month.currencies) {
+        var found = month.currencies.find(c => c.currency === currency);
+        return found ? found.revenue : 0;
+        }
+        return 0;
+        });
+        datasets.push({
+        label: currency,
+        data: currencyData,
+        borderColor: currencyColors[currency] || '#6c757d',
+        backgroundColor: 'rgba(0,0,0,0)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false
+        });
+        });
+        } else {
+        datasets.push({
+        label: 'Gelir',
+        data: res.monthlyTrend.map(x => x.revenue || 0),
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16,185,129,0.1)',
+        fill: true,
+        tension: 0.3
+        });
+        }
+
+        trendChart = new Chart(ctx2, {
+        type: 'line',
+        data: { labels: months, datasets: datasets },
+        options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+        tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + formatCurrency(context.raw, context.dataset.label); } } },
+        legend: { position: 'top' }
+        },
+        scales: { y: { title: { display: true, text: 'Gelir' } } }
+        }
+        });
+        } else {
+        $('#trendChart').parent().html('<div class="text-center text-muted py-5">Trend verisi bulunamadı</div>');
+        }
+        });
+        }
+    </script>
+}

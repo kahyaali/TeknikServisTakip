@@ -1,0 +1,46 @@
+﻿@model IEnumerable<Entities.Concrete.Service>
+@{
+    ViewData["Title"] = "Hizmetlerimiz";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Hizmetlerimiz</h1>
+        <div class="divider mx-auto" style="width: 80px; height: 4px; background: #0d6efd; border-radius: 2px;"></div>
+        <p class="lead mt-3">Profesyonel ekibimizle sunduğumuz hizmetler</p>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4">
+                    <div class="card h-100 text-center border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            @if (!string.IsNullOrEmpty(item.ImagePath))
+                            {
+                                <img src="@item.ImagePath" class="mb-3" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px;" />
+                            }
+                            else
+                            {
+                                <div class="bg-light mb-3 d-flex align-items-center justify-content-center" style="width: 100%; height: 180px; border-radius: 8px;">
+                                    <i class="fas fa-cogs fa-3x text-muted"></i>
+                                </div>
+                            }
+                            <h3 class="h5 fw-bold">@item.Title</h3>
+                            <p class="text-muted">@item.Description</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i> Henüz hizmet eklenmemiştir.
+        </div>
+    }
+</div>

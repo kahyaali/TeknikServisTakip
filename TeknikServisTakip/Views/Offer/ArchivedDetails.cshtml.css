@@ -1,0 +1,49 @@
+﻿
+.info-row {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+body.dark-mode .info-row {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .table-light {
+    background-color: #1a1a2e !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .bg-light {
+    background-color: #1a1a2e !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .badge.bg-light {
+    background-color: #2c3e50 !important;
+    color: #e0e0e0 !important;
+}
+/* Dark mode için text renkleri */
+body.dark-mode .dark-mode-text-white {
+    color: #ffffff !important;
+}
+
+body.dark-mode .dark-mode-text-muted {
+    color: #aaa !important;
+}
+
+body.dark-mode .bg-secondary.bg-opacity-10 {
+    background-color: rgba(108, 117, 125, 0.2) !important;
+}
+
+body.dark-mode .table tbody td {
+    color: #e0e0e0 !important;
+}
+
+    body.dark-mode .table tbody td.text-primary {
+        color: #38ef7d !important;
+    }
+
+

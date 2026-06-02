@@ -1,0 +1,379 @@
+﻿
+.btn-ekle, .btn-geri {
+    padding: 8px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.btn-ekle {
+    background-color: #0d6efd;
+    color: white;
+}
+
+    .btn-ekle:hover {
+        background-color: #0a58ca;
+        color: white;
+    }
+
+.btn-geri {
+    background-color: #6c757d;
+    color: white;
+}
+
+    .btn-geri:hover {
+        background-color: #5c636a;
+        color: white;
+    }
+
+.badge-aktif {
+    background-color: #10b981;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+.badge-pasif {
+    background-color: #ef4444;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+.action-buttons {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-duzenle, .btn-sifre, .btn-sil {
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-duzenle {
+    background-color: #ffc107;
+    color: black;
+}
+
+    .btn-duzenle:hover {
+        background-color: #e0a800;
+        color: black;
+    }
+
+.btn-sifre {
+    background-color: #17a2b8;
+    color: white;
+}
+
+    .btn-sifre:hover {
+        background-color: #138496;
+        color: white;
+    }
+
+.btn-sil {
+    background-color: #dc3545;
+    color: white;
+}
+
+    .btn-sil:hover {
+        background-color: #bb2d3b;
+    }
+
+.dataTables_wrapper {
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+}
+
+.dt-buttons {
+    margin-bottom: 15px;
+}
+
+.dt-button {
+    margin-right: 5px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+.buttons-excel {
+    background-color: #10b981;
+    color: white;
+}
+
+.buttons-pdf {
+    background-color: #ef4444;
+    color: white;
+}
+
+.buttons-print {
+    background-color: #6c757d;
+    color: white;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
+#personelTable {
+    width: 100% !important;
+    min-width: 800px;
+}
+
+    #personelTable th,
+    #personelTable td {
+        word-wrap: break-word;
+        vertical-align: middle;
+    }
+
+        #personelTable th:nth-child(1) {
+            width: 5%;
+        }
+
+        #personelTable th:nth-child(2) {
+            width: 15%;
+        }
+
+        #personelTable th:nth-child(3) {
+            width: 12%;
+        }
+
+        #personelTable th:nth-child(4) {
+            width: 12%;
+        }
+
+        #personelTable th:nth-child(5) {
+            width: 12%;
+        }
+
+        #personelTable th:nth-child(6) {
+            width: 15%;
+        }
+
+        #personelTable th:nth-child(7) {
+            width: 12%;
+        }
+
+        #personelTable th:nth-child(8) {
+            width: 6%;
+        }
+
+        #personelTable th:nth-child(9) {
+            width: 8%;
+        }
+
+        #personelTable th:nth-child(10) {
+            width: 13%;
+        }
+
+
+.truncate-text {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+    .truncate-text:hover {
+        background-color: #e0f2fe;
+        color: #0369a1;
+    }
+
+
+.detail-modal .modal-content {
+    border-radius: 12px;
+}
+
+.detail-modal .modal-header {
+    background-color: #1e293b;
+    color: white;
+    border-radius: 12px 12px 0 0;
+}
+
+.detail-modal .modal-body {
+    padding: 20px;
+}
+
+.detail-item {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.detail-label {
+    font-weight: bold;
+    color: #1e293b;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    color: #334155;
+    word-wrap: break-word;
+}
+
+@media screen and (max-width: 1200px) {
+    .btn-duzenle, .btn-sifre, .btn-sil {
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+}
+
+@media screen and (max-width: 992px) {
+    .action-buttons {
+        gap: 3px;
+    }
+
+    .btn-duzenle, .btn-sifre, .btn-sil {
+        padding: 3px 5px;
+        font-size: 10px;
+    }
+
+    #personelTable th:nth-child(10) {
+        width: 15%;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .btn-duzenle, .btn-sifre, .btn-sil {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+
+[data-theme="dark"] .detail-modal .modal-content {
+    background-color: #1e293b;
+}
+
+[data-theme="dark"] .detail-modal .modal-header {
+    background-color: #0f172a;
+    border-bottom-color: #334155;
+}
+
+    [data-theme="dark"] .detail-modal .modal-header .btn-close {
+        filter: invert(1);
+    }
+
+[data-theme="dark"] .detail-modal .modal-body {
+    background-color: #1e293b;
+}
+
+[data-theme="dark"] .detail-item {
+    border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .detail-label {
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .detail-value {
+    color: #94a3b8;
+    background-color: #0f172a;
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top-color: #334155;
+    background-color: #1e293b;
+}
+
+    [data-theme="dark"] .modal-footer .btn-secondary {
+        background-color: #475569;
+        border-color: #475569;
+    }
+
+
+[data-theme="dark"] .table {
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+    background-color: #334155 !important;
+}
+
+    [data-theme="dark"] .table tbody tr:hover td {
+        color: #f1f5f9 !important;
+    }
+
+[data-theme="dark"] .table-bordered td,
+[data-theme="dark"] .table-bordered th {
+    border-color: #334155;
+}
+
+
+[data-theme="dark"] .dataTables_wrapper {
+    background: #1e293b;
+}
+
+    [data-theme="dark"] .dataTables_wrapper .dataTables_filter input,
+    [data-theme="dark"] .dataTables_wrapper .dataTables_length select {
+        background-color: #0f172a;
+        border-color: #334155;
+        color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .dataTables_wrapper .dataTables_filter label,
+    [data-theme="dark"] .dataTables_wrapper .dataTables_length label,
+    [data-theme="dark"] .dataTables_wrapper .dataTables_info {
+        color: #94a3b8;
+    }
+
+[data-theme="dark"] .paginate_button {
+    color: #e2e8f0 !important;
+}
+
+    [data-theme="dark"] .paginate_button.current {
+        background: #3b82f6 !important;
+        color: white !important;
+        border-color: #3b82f6 !important;
+    }
+
+    [data-theme="dark"] .paginate_button:hover {
+        background: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+[data-theme="dark"] .buttons-excel {
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%) !important;
+}
+
+[data-theme="dark"] .buttons-pdf {
+    background: linear-gradient(135deg, #991b1b 0%, #b91c1c 100%) !important;
+}
+
+[data-theme="dark"] .buttons-print {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+}
+
+[data-theme="dark"] .truncate-text:hover {
+    background-color: #334155;
+    color: #60a5fa;
+}

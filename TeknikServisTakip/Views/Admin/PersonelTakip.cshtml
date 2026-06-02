@@ -1,0 +1,262 @@
+﻿@model TeknikServisTakip.Models.ViewModels.PersonelIsTakipListViewModel
+@using Entities.Enum
+
+@{
+    ViewData["Title"] = "Personel İş Takip";
+    var personeller = ViewBag.Personeller as List<TeknikServisTakip.Models.ViewModels.PersonelTakipViewModel>;
+    int seciliPersonelId = ViewBag.SeciliPersonelId ?? 0;
+    string activeTab = ViewBag.ActiveTab ?? "bekleyen";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int pageSize = ViewBag.PageSize ?? 20;
+    int totalCount = ViewBag.TotalCount ?? 0;
+    string customerNoFilter = ViewBag.CustomerNo;
+    string companyNameFilter = ViewBag.CompanyName;
+    var pageSizeOptions = ViewBag.PageSizeOptions as List<int> ?? new List<int> { 10, 20, 50, 100 };
+}
+
+
+<!-- Hata Mesajı -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="fas fa-users me-2"></i> Personel İş Takip</h5>
+        </div>
+        <div class="card-body">
+
+            <!-- Personel Seçim Formu -->
+            <form method="get" action="/Admin/PersonelTakip" class="mb-4" id="personelForm">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">Personel Seçin</label>
+                        <select name="personelId" class="form-select" id="personelSelect">
+                            <option value="">-- Personel Seçin --</option>
+                            @if (personeller != null)
+                            {
+                                foreach (var p in personeller)
+                                {
+                                    <option value="@p.PersonelId" selected="@(seciliPersonelId == p.PersonelId)">@p.PersonelAdi (@p.Email)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small">Müşteri No</label>
+                        <input type="text" name="customerNo" class="form-control" placeholder="Müşteri No ara..." value="@customerNoFilter" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small">Firma Adı</label>
+                        <input type="text" name="companyName" class="form-control" placeholder="Firma adı ara..." value="@companyNameFilter" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Filtrele
+                        </button>
+                    </div>
+                </div>
+                <input type="hidden" name="tab" id="tabInput" value="@activeTab" />
+                <input type="hidden" name="page" id="pageInput" value="1" />
+                <input type="hidden" name="pageSize" id="pageSizeInput" value="@pageSize" />
+            </form>
+
+            @if (seciliPersonelId > 0)
+            {
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-user-circle me-2"></i>
+                    <strong>@Model.PersonelAdi</strong> personelinin iş takibi
+                </div>
+
+                <!-- Tab Butonları -->
+                <ul class="nav nav-tabs mb-3">
+                    <li class="nav-item">
+                        <a class="nav-link @(activeTab == "bekleyen" ? "active" : "")" href="#" data-tab="bekleyen">
+                            <i class="fas fa-clock text-warning me-1"></i> Bekleyenler
+                            <span class="badge bg-secondary ms-1">@Model.BekleyenCount</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(activeTab == "islemde" ? "active" : "")" href="#" data-tab="islemde">
+                            <i class="fas fa-cogs text-primary me-1"></i> İşlemdekiler
+                            <span class="badge bg-secondary ms-1">@Model.IslemdeCount</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(activeTab == "tamamlanan" ? "active" : "")" href="#" data-tab="tamamlanan">
+                            <i class="fas fa-check-circle text-success me-1"></i> Tamamlananlar
+                            <span class="badge bg-secondary ms-1">@Model.TamamlananCount</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tablo -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Müşteri No</th>
+                                <th>Firma Adı</th>
+                                <th>Ürün Adı</th>
+                                <th>Arıza Açıklaması</th>
+                                <th>Geliş Tarihi</th>
+                                <th>Durum</th>
+                                <th class="text-end">Ücret</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var items = activeTab == "bekleyen" ? Model.Bekleyenler :
+                                           (activeTab == "islemde" ? Model.Islemdekiler : Model.Tamamlananlar);
+                            }
+                            @if (items != null && items.Any())
+                            {
+                                foreach (var item in items)
+                                {
+                                    <tr>
+                                        <td>@item.RepairId</td>
+                                        <td>@item.CustomerNumber</td>
+                                        <td>@item.CompanyName</td>
+                                        <td>@item.ProductName</td>
+                                        <td>@(item.ProblemDescription?.Length > 40 ? item.ProblemDescription.Substring(0, 40) + "..." : item.ProblemDescription)</td>
+                                        <td>@item.ReceivedDate.ToString("dd.MM.yyyy")</td>
+                                        <td>
+                                            <span class="badge @(item.StatusId == 7 ? "bg-primary" : (item.StatusId >= 8 ? "bg-success" : "bg-warning"))">
+                                                @item.StatusName
+                                            </span>
+                                        </td>
+                                        <td class="text-end">@item.Price.ToString("N2") @item.Currency</td>                                   
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-muted">
+                                        <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                        Bu kategoride kayıt bulunamadı.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (totalPages > 1)
+                {
+                    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="form-label mb-0 small">Sayfa başına:</label>
+                            <select id="pageSizeSelect" class="form-select form-select-sm w-auto">
+                                @foreach (var size in pageSizeOptions)
+                                {
+                                    <option value="@size" selected="@(pageSize == size)">@size</option>
+                                }
+                            </select>
+                            <span class="text-muted small ms-2">Toplam @totalCount kayıt</span>
+                        </div>
+
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                @if (currentPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="#" data-page="1"><i class="fas fa-angle-double-left"></i></a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#" data-page="@(currentPage - 1)"><i class="fas fa-angle-left"></i></a>
+                                    </li>
+                                }
+
+                                @{
+                                    int startPage = Math.Max(1, currentPage - 2);
+                                    int endPage = Math.Min(totalPages, startPage + 4);
+                                    if (endPage - startPage < 4 && startPage > 1)
+                                    {
+                                        startPage = Math.Max(1, endPage - 4);
+                                    }
+                                }
+
+                                @for (int i = startPage; i <= endPage; i++)
+                                {
+                                    <li class="page-item @(i == currentPage ? "active" : "")">
+                                        <a class="page-link" href="#" data-page="@i">@i</a>
+                                    </li>
+                                }
+
+                                @if (currentPage < totalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="#" data-page="@(currentPage + 1)"><i class="fas fa-angle-right"></i></a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#" data-page="@totalPages"><i class="fas fa-angle-double-right"></i></a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-light text-center py-5">
+                    <i class="fas fa-user-circle fa-4x mb-3 text-muted"></i>
+                    <p>Lütfen yukarıdan bir personel seçin.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Personel değişince formu submit et
+            $('#personelSelect').change(function() {
+                $('#pageInput').val(1);
+                $('#personelForm').submit();
+            });
+
+            // Tab tıklama
+            $('.nav-link[data-tab]').click(function(e) {
+                e.preventDefault();
+                var tab = $(this).data('tab');
+                $('#tabInput').val(tab);
+                $('#pageInput').val(1);
+                $('#personelForm').submit();
+            });
+
+            // Pagination
+            $('.page-link[data-page]').click(function(e) {
+                e.preventDefault();
+                var page = $(this).data('page');
+                $('#pageInput').val(page);
+                $('#personelForm').submit();
+            });
+
+            // Sayfa boyutu değişince
+            $('#pageSizeSelect').change(function() {
+                $('#pageSizeInput').val($(this).val());
+                $('#pageInput').val(1);
+                $('#personelForm').submit();
+            });
+        });
+    </script>
+}

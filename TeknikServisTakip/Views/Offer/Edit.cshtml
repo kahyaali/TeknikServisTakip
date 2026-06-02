@@ -1,0 +1,312 @@
+﻿@model TeknikServisTakip.Models.ViewModels.OfferFormViewModel
+
+@{
+    ViewData["Title"] = "Teklif Düzenle";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Teklif Revizyonu / Düzenleme</h5>
+            <span class="badge bg-secondary">Müşteri No: @Model.CustomerNumber</span>
+        </div>
+        <div class="card-body bg-light">
+            <form asp-action="Edit" method="post" id="offerForm">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="ParentOfferId" />
+                <input type="hidden" asp-for="CustomerNumber" />
+                <input type="hidden" asp-for="CustomerName" />
+                <input type="hidden" asp-for="CompanyName" />
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="row g-3 mb-4 p-3 bg-white rounded shadow-sm border-start border-info border-4">
+                    <div class="col-md-4 border-end">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="fas fa-building text-info fa-lg me-2"></i>
+                            <label class="form-label fw-bold mb-0 text-secondary">İşlemi Yapan Firma</label>
+                        </div>
+                        <div class="fs-5 fw-bolder bg-dark bg-opacity-10 border border-info-subtle px-3 py-2 rounded shadow-sm d-inline-block my-1" style="color: #00bdff;">
+                            <i class="fas fa-check-circle text-info small me-1"></i> @Model.CompanyName
+                        </div>
+                        <hr class="my-2 opacity-25">
+                        <small class="text-muted d-block mt-1">
+                            <i class="fas fa-user me-1 text-secondary"></i> <strong>Müşteri:</strong> @Model.CustomerName
+                        </small>
+                    </div>
+
+                    <div class="col-md-4 border-end">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-money-bill-wave text-primary fa-lg me-2"></i>
+                            <label class="form-label fw-bold mb-0">Para Birimi</label>
+                        </div>
+                        <select class="form-select border-2 fs-5 fw-bold text-primary" asp-for="Currency" id="CurrencySelect">
+                            <option value="TRY">₺ - Türk Lirası</option>
+                            <option value="USD">$ - Dolar</option>
+                            <option value="EUR">€ - Euro</option>
+                            <option value="GBP">£ - Sterlin</option>
+                        </select>
+                        <span asp-validation-for="Currency" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-sticky-note text-warning fa-lg me-2"></i>
+                            <label class="form-label fw-bold mb-0">Şartlar ve Özel Notlar</label>
+                        </div>
+                        <textarea class="form-control" asp-for="Note" rows="2" placeholder="Örn: Teklif 15 gün geçerlidir..."></textarea>
+                    </div>
+                </div>
+
+                <h6 class="text-secondary uppercase tracking-wider mb-3">
+                    <i class="fas fa-laptop-medical me-2"></i>Fiyatlandırılacak Ürün ve Hizmet Grupları
+                </h6>
+
+                @for (int i = 0; i < Model.ProductGroups.Count; i++)
+                {
+                    <div class="card mb-4 border-start border-primary border-4 shadow-xs product-group-card">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                            <h6 class="mb-0 text-primary fw-bold">
+                                <i class="fas fa-microchip me-2"></i>Cihaz: @Model.ProductGroups[i].ProductName
+                            </h6>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-group-btn" data-product-name="@Model.ProductGroups[i].ProductName" title="Bu Grubu Tekliften Çıkar">
+                                    <i class="fas fa-trash-alt me-1"></i> Grubu Çıkar
+                                </button>
+                                <input type="hidden" asp-for="ProductGroups[i].RepairItemId" />
+                                <input type="hidden" asp-for="ProductGroups[i].ProductName" />
+                                <input type="hidden" asp-for="ProductGroups[i].IsGroupDeleted" class="group-deleted-flag" />
+                            </div>
+                        </div>
+
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 35%;">Ekspertiz Açıklaması / Yapılacak İşlem</th>
+                                            <th style="width: 10%;" class="text-center">Miktar</th>
+                                            <th style="width: 10%;" class="text-center">Birim</th>
+                                            <th style="width: 15%;" class="text-end">Birim Fiyat</th>
+                                            <th style="width: 30%;">Teknisyen Notu</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (int j = 0; j < Model.ProductGroups[i].Lines.Count; j++)
+                                        {
+                                            <tr class="line-row">
+                                                <td>
+                                                    <input type="text" class="form-control-plaintext bg-light px-2 rounded" asp-for="ProductGroups[i].Lines[j].Description" readonly />
+                                                    <input type="hidden" asp-for="ProductGroups[i].Lines[j].ExpertiseLineId" />
+                                                    <input type="hidden" asp-for="ProductGroups[i].Lines[j].Currency" class="line-currency-input" />
+                                                </td>
+                                                <td>
+                                                    <input type="text" class="form-control btn-qty text-center fw-bold text-numeric" asp-for="ProductGroups[i].Lines[j].Quantity" value="@Model.ProductGroups[i].Lines[j].Quantity.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" />
+                                                </td>
+                                                <td>
+                                                    <input type="text" class="form-control bg-light text-center" asp-for="ProductGroups[i].Lines[j].Unit" readonly />
+                                                </td>
+                                                <td>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control border-primary text-end btn-price fw-bold text-numeric" asp-for="ProductGroups[i].Lines[j].UnitPrice" value="@Model.ProductGroups[i].Lines[j].UnitPrice.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" placeholder="0.00" />
+                                                        <span class="input-group-text bg-light cur-sym">₺</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <textarea class="form-control bg-light technician-note" rows="1" style="resize: vertical;" placeholder="Teknisyen notu...">@Model.ProductGroups[i].Lines[j].TechnicianNote</textarea>
+                                                    <input type="hidden" asp-for="ProductGroups[i].Lines[j].TechnicianNote" class="technician-note-hidden" />
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="bg-light p-3 border-top d-flex flex-wrap gap-3 justify-content-end align-items-center">
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-secondary text-white small">Toplam İşçilik</span>
+                                        <input type="text" class="form-control btn-labor text-end fw-bold text-numeric" asp-for="ProductGroups[i].LaborCost" value="@Model.ProductGroups[i].LaborCost.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" placeholder="0.00" />
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-sm-6">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-secondary text-white small">İndirim %</span>
+                                        <input type="text" class="form-control btn-discount text-center text-danger fw-bold text-numeric" asp-for="ProductGroups[i].DiscountRate" value="@Model.ProductGroups[i].DiscountRate.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" />
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-sm-6">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-secondary text-white small">KDV %</span>
+                                        <input type="text" class="form-control btn-tax text-center fw-bold text-numeric" asp-for="ProductGroups[i].TaxRate" value="@Model.ProductGroups[i].TaxRate.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" />
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                }
+
+                <div class="card bg-dark text-white mb-3">
+                    <div class="card-body d-flex justify-content-between align-items-center py-3">
+                        <h4 class="mb-0 text-uppercase text-warning fw-bold"><i class="fas fa-file-invoice-dollar"></i> GÜNCEL TEKLİF GENEL TOPLAMI:</h4>
+                        <h2 class="mb-0 fw-bolder text-success" id="grandTotalLabel">0,00 ₺</h2>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">
+                        <i class="fas fa-arrow-left me-2"></i>Listeye Dön
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg px-5 shadow">
+                        <i class="fas fa-save me-2"></i>Değişiklikleri Kaydet ve Güncelle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteConfirmModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Cihaz Grubunu Çıkar
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="text-danger mb-3">
+                    <i class="fas fa-trash-alt fa-3x"></i>
+                </div>
+                <h6 class="fw-bold mb-2 text-dark" id="modalProductName">Cihaz Grubu</h6>
+                <p class="text-secondary mb-0 small">
+                    Bu cihaz grubunu tekliften çıkarmak istediğinize emin misiniz?<br>
+                    <span class="text-primary fw-bold">Personel ekspertiz kayıtları bozulmaz</span>, sadece bu tekliften ayrılır.
+                </p>
+            </div>
+            <div class="modal-footer bg-light border-0 justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Vazgeç</button>
+                <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">Evet, Çıkar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const currencySelect = document.getElementById('CurrencySelect');
+            const offerForm = document.getElementById('offerForm');
+            const symbols = { TRY: '₺', USD: '$', EUR: '€', GBP: '£' };
+
+             // Teknisyen notu senkronizasyonu
+            document.querySelectorAll('.technician-note').forEach((textarea, index) => {
+                const hiddenInput = textarea.closest('tr').querySelector('.technician-note-hidden');
+                if (hiddenInput) {
+                    textarea.value = hiddenInput.value || '';
+                    textarea.addEventListener('input', function() {
+                        hiddenInput.value = this.value;
+                    });
+                }
+            });
+
+            // Modal Elementleri
+            const deleteModalEl = document.getElementById('deleteConfirmModal');
+            const deleteModal = new bootstrap.Modal(deleteModalEl);
+            const modalProductName = document.getElementById('modalProductName');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+            // Silinecek kartın referansını hafızada tutmak için değişken
+            let activeCardToHide = null;
+
+            function calculateTotals() {
+                let currency = currencySelect.value;
+                let symbol = symbols[currency] || '₺';
+
+                document.querySelectorAll('.cur-sym').forEach(el => el.textContent = symbol);
+
+                document.querySelectorAll('.line-currency-input').forEach(input => {
+                    input.value = currency;
+                });
+
+                let globalGrandTotal = 0;
+
+                document.querySelectorAll('.product-group-card:not(.d-none)').forEach(groupCard => {
+                    let productLinesTotal = 0;
+
+                    groupCard.querySelectorAll('.line-row').forEach(row => {
+                        let qtyRaw = row.querySelector('.btn-qty').value.replace(',', '.');
+                        let priceRaw = row.querySelector('.btn-price').value.replace(',', '.');
+
+                        let qty = parseFloat(qtyRaw) || 0;
+                        let price = parseFloat(priceRaw) || 0;
+                        productLinesTotal += (qty * price);
+                    });
+
+                    let labor = parseFloat(groupCard.querySelector('.btn-labor').value.replace(',', '.')) || 0;
+                    let discountRate = parseFloat(groupCard.querySelector('.btn-discount').value.replace(',', '.')) || 0;
+                    let taxRate = parseFloat(groupCard.querySelector('.btn-tax').value.replace(',', '.')) || 0;
+
+                    let base = productLinesTotal + labor;
+                    let discAmt = base * (discountRate / 100);
+                    let afterDisc = base - discAmt;
+                    let taxAmt = afterDisc * (taxRate / 100);
+                    let groupTotal = afterDisc + taxAmt;
+
+                    globalGrandTotal += groupTotal;
+                });
+
+                document.getElementById('grandTotalLabel').textContent =
+                    globalGrandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + symbol;
+            }
+
+            // ---  MODAL TABANLI GRUP SILME VE INDEKS KORUMA MANTIĞI ---
+            document.querySelectorAll('.remove-group-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+
+                    activeCardToHide = this.closest('.product-group-card');
+                    const productName = this.getAttribute('data-product-name') || "Seçilen Cihaz";
+
+               
+                    modalProductName.textContent = "Cihaz: " + productName;
+
+                    deleteModal.show();
+                });
+            });
+
+            // Kullanıcı modalda "Evet, Çıkar" butonuna bastığında tetiklenir 
+            confirmDeleteBtn.addEventListener('click', function() {
+                if (activeCardToHide) {
+                    const deleteFlag = activeCardToHide.querySelector('.group-deleted-flag');
+                    if (deleteFlag) {
+                        deleteFlag.value = "true";
+                    }
+
+                    // Kartı ekrandan yumuşakça gizle ve toplamları anlık düşür
+                    activeCardToHide.classList.add('d-none');
+                    calculateTotals();
+                }
+
+                // Modali kapat ve hafızayı temizle
+                deleteModal.hide();
+                activeCardToHide = null;
+            });
+            // -----------------------------------------------------------------------
+
+            document.querySelectorAll('.text-numeric').forEach(input => {
+                input.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9.,]/g, '');
+                });
+            });
+
+            offerForm.addEventListener('input', calculateTotals);
+            currencySelect.addEventListener('change', calculateTotals);
+            calculateTotals();
+        });
+    </script>
+}

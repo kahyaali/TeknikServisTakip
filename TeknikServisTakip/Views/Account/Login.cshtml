@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "Giriş Yap";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0"><i class="fas fa-sign-in-alt"></i> Giriş Yap</h4>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(ViewBag.Error))
+                {
+                    <div class="alert alert-danger">@ViewBag.Error</div>
+                }
+                @if (!string.IsNullOrEmpty(ViewBag.Success))
+                {
+                    <div class="alert alert-success">@ViewBag.Success</div>
+                }
+                
+                <form method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+                    <div class="mb-3">
+                        <label class="form-label">Müşteri No / E-posta</label>
+                        <input type="text" name="emailOrCustomerNo" class="form-control" placeholder="MUS-202600001 veya email@ornek.com" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Şifre</label>
+                        <input type="password" name="password" class="form-control" required />
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="rememberMe" class="form-check-input" />
+                        <label class="form-check-label">Beni Hatırla</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Giriş Yap</button>
+                </form>
+                <hr />
+                <div class="text-center">
+                    <a asp-action="ForgotPassword">Şifremi Unuttum</a> |
+                    <a asp-action="Register">Hesabın yok mu? Kayıt Ol</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

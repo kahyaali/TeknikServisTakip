@@ -1,0 +1,248 @@
+﻿@model List<Entities.Concrete.Offer>
+
+@{
+    ViewData["Title"] = "Teklif Takip ve Onay Havuzu";
+ 
+    var pendingOffers = Model.Where(o => o.IsActive).OrderByDescending(o => o.CreatedDate).ToList();
+    var approvedOffers = Model.Where(o => !o.IsActive).OrderByDescending(o => o.CreatedDate).ToList();
+}
+
+
+<!-- SweetAlert2 Kütüphanesi -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="container-fluid mt-4">
+
+    <!-- Üst Sekme Navigasyonu -->
+    <ul class="nav nav-tabs mb-3 gap-2 border-bottom-0" id="offerTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active btn btn-sm shadow-sm px-4 fw-bold" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending-pane" type="button" role="tab" style="border: 1px solid #dee2e6;">
+                <i class="fas fa-clock text-warning me-2"></i>Onay Bekleyenler
+                <span class="badge bg-danger ms-2">@pendingOffers.Count</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link btn btn-sm shadow-sm px-4 fw-bold text-secondary" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved-pane" type="button" role="tab" style="border: 1px solid #dee2e6;">
+                <i class="fas fa-check-circle text-success me-2"></i>Onaylanan / Arşivlenenler
+               @*  <span class="badge bg-secondary ms-2">@approvedOffers.Count</span> *@
+                <span class="badge bg-secondary ms-2">@ViewBag.TotalApprovedCount</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a href="/Offer/Archived" class="btn btn-sm shadow-sm px-4 fw-bold text-white bg-secondary" style="border: 1px solid #dee2e6; text-decoration: none;">
+                <i class="fas fa-archive me-2"></i>Arşivlenen / Onaylananlar
+               @*  <span class="badge bg-light text-dark ms-2">@approvedOffers.Count</span> *@
+                <span class="badge bg-light text-dark ms-2">@ViewBag.TotalApprovedCount</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="offerTabsContent">
+
+        <!-- ================= 1. SEKME: ONAY BEKLEYENLER ================= -->
+        <div class="tab-pane fade show active" id="pending-pane" role="tabpanel" aria-labelledby="pending-tab">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar text-warning me-2"></i> Müşteri Onayı Bekleyen Aktif Teklifler</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped align-middle mb-0">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>Teklif No / Ver.</th>
+                                    <th>Müşteri Bilgisi</th>
+                                    <th>Oluşturma Tarihi</th>
+                                    <th class="text-end">Genel Toplam</th>
+                                    <th class="text-center">Durum</th>
+                                    <th class="text-end pe-4" width="30%">İşlemler Robotu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!pendingOffers.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            <i class="fas fa-folder-open fs-3 d-block mb-2"></i> Aktif onay bekleyen bir teklif bulunamadı.
+                                        </td>
+                                    </tr>
+                                }
+                                @foreach (var offer in pendingOffers)
+                                {
+                                    string symbol = offer.Currency == "USD" ? "$" : offer.Currency == "EUR" ? "€" : offer.Currency == "GBP" ? "£" : "₺";
+                                    <tr>
+                                        <td class="fw-bold text-dark ps-3">
+                                            @offer.OfferNumber
+                                            <span class="badge bg-secondary ms-1">v@(offer.Version)</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">@offer.CustomerName</div>
+                                            <small class="text-muted">No: @offer.CustomerNumber</small>
+                                        </td>
+                                        <td>@offer.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                        <td class="text-end fw-bolder text-success">
+                                            @offer.GrandTotal.ToString("N2") @symbol
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info text-dark fw-bold">Onay Bekliyor</span>
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <div class="btn-group gap-1">
+                                           
+                                                <a href="/Offer/Details?id=@offer.Id" class="btn btn-sm btn-info text-white shadow-sm">
+                                                    <i class="fas fa-search-plus"></i> İncele
+                                                </a>
+                                                <a href="/Offer/DownloadPdf?id=@offer.Id" class="btn btn-sm btn-outline-danger shadow-sm"><i class="fas fa-file-pdf"></i> PDF</a>
+                                                <a href="/Offer/Create?parentOfferId=@offer.Id" class="btn btn-sm btn-outline-warning text-dark shadow-sm"><i class="fas fa-edit"></i> Revize</a>
+                                                <a href="/Offer/Edit/@offer.Id" class="btn btn-sm btn-outline-primary shadow-sm">
+                                                    <i class="fas fa-pen"></i> Düzenle
+                                                </a>
+
+                                                <form id="approveForm-@offer.Id" action="/Offer/ApproveOffer" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="offerId" value="@offer.Id" />
+                                                    <button type="button" class="btn btn-sm btn-success px-2 fw-bold shadow-sm js-approve-btn" data-id="@offer.Id" data-number="@offer.OfferNumber">
+                                                        <i class="fas fa-check-circle"></i> Onayla
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 2. SEKME: ONAYLANANLAR / ARŞİV ================= -->
+        <div class="tab-pane fade" id="approved-pane" role="tabpanel" aria-labelledby="approved-tab">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-archive text-light me-2"></i> Onaylanmış ve Geçmişe Dönük Teklif Arşivi (Son 20)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped align-middle mb-0 table-dark-mode">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>Teklif No / Ver.</th>
+                                    <th>Müşteri Bilgisi</th>
+                                    <th>Oluşturma Tarihi</th>
+                                    <th class="text-end">Genel Toplam</th>
+                                    <th class="text-center">Durum</th>
+                                    <th class="text-end pe-4" width="30%">İşlemler Robotu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    // Sadece OfferArchive'de kaydı olan teklifleri göster
+                                    var archivedOffers = Model.Where(o => ViewBag.ApprovedOfferIds != null && ((List<int>)ViewBag.ApprovedOfferIds).Contains(o.Id))
+                                        .OrderByDescending(o => o.CreatedDate)
+                                        .ToList();
+                                }
+                                @if (!archivedOffers.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            <i class="fas fa-history fs-3 d-block mb-2"></i> Onaylanmış teklif bulunamadı.
+                                        </td>
+                                    </tr>
+                                }
+                                @foreach (var offer in archivedOffers)
+                                {
+                                    string symbol = offer.Currency == "USD" ? "$" : offer.Currency == "EUR" ? "€" : offer.Currency == "GBP" ? "£" : "₺";
+                                    <tr>
+                                        <td class="fw-bold text-muted ps-3">
+                                            @offer.OfferNumber
+                                            <span class="badge bg-light text-dark border ms-1">v@(offer.Version)</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-muted">@offer.CustomerName</div>
+                                            <small class="text-muted">No: @offer.CustomerNumber</small>
+                                        </td>
+                                        <td class="text-muted">@offer.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                        <td class="text-end fw-bold text-secondary">
+                                            @offer.GrandTotal.ToString("N2") @symbol
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-success fw-bold"><i class="fas fa-check me-1"></i> Onaylandı</span>
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <div class="btn-group gap-1">
+                                                <a href="/Offer/ArchivedDetails?id=@offer.Id" class="btn btn-sm btn-info text-white shadow-sm">
+                                                    <i class="fas fa-search-plus"></i> İncele
+                                                </a>
+                                                <a href="/Offer/DownloadPdf?id=@offer.Id" class="btn btn-sm btn-danger shadow-sm">
+                                                    <i class="fas fa-file-pdf"></i> PDF
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+    
+        const approveButtons = document.querySelectorAll('.js-approve-btn');
+        approveButtons.forEach(button => {
+        button.addEventListener('click', function (e) {
+        const offerId = this.getAttribute('data-id');
+        const offerNumber = this.getAttribute('data-number');
+        const form = document.getElementById(`approveForm-${offerId}`);
+
+        Swal.fire({
+        title: 'Emin misiniz?',
+        text: `${offerNumber} numaralı teklif formunu resmi olarak onaylamak istiyor musunuz?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-check me-1"></i> Evet, Onayla!',
+        cancelButtonText: 'İptal'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        Swal.fire({
+        title: 'İşlem Yapılıyor...',
+        text: 'Teklif onaylanıyor ve arşive taşınıyor.',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+        });
+        form.submit();
+        }
+        });
+        });
+        });
+
+        // Başarı Mesajı Bildirimi (Toast / Popup)
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>
+                Swal.fire({
+                title: 'Başarılı!',
+                text: '@TempData["SuccessMessage"]',
+                icon: 'success',
+                confirmButtonColor: '#212529',
+                timer: 3500,
+                timerProgressBar: true
+                });
+            </text>
+        }
+        });
+    </script>
+}
+
+

@@ -1,0 +1,186 @@
+﻿@model Entities.Concrete.Delivery
+
+@{
+    ViewData["Title"] = "Teslimat Detayı";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<div class="detail-container">
+    <div class="page-header">
+        <h1><i class="fas fa-clipboard-list me-2"></i> Teslimat Detayı</h1>
+        <p>Teslim edilen ürüne ait tüm bilgiler</p>
+    </div>
+
+    <!-- ÜRÜN BİLGİLERİ -->
+    <div class="detail-section">
+        <div class="section-title">
+            <div class="section-icon"><i class="fas fa-box"></i></div>
+            <span>Ürün Bilgileri</span>
+        </div>
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-barcode"></i> Takip Kodu</div>
+                <div class="info-value"><strong>@(Model.RepairItem?.TrackingCode ?? "-")</strong></div>
+            </div>
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-box"></i> Ürün Adı</div>
+                <div class="info-value">@(Model.RepairItem?.ProductName ?? "-")</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-tag"></i>Marka</div>
+                <div class="info-value">@(Model.RepairItem?.ProductBrand ?? "-")</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-cube"></i>Model</div>
+                <div class="info-value">@(Model.RepairItem?.ProductModel ?? "-")</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-fingerprint"></i>Seri No</div>
+                <div class="info-value">@(Model.RepairItem?.SerialNumber ?? "-")</div>
+            </div>
+        </div>
+    </div>
+
+  
+
+    <!-- MÜŞTERİ BİLGİLERİ -->
+    <div class="detail-section">
+        <div class="section-title">
+            <div class="section-icon"><i class="fas fa-user"></i></div>
+            <span>Müşteri Bilgileri</span>
+        </div>
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-user-circle"></i> Müşteri Adı</div>
+                <div class="info-value">@(Model.Customer?.FullName ?? "-")</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-id-card"></i> Müşteri No</div>
+                <div class="info-value">@(Model.Customer?.CustomerNumber ?? "-")</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-building"></i> Firma Adı</div>
+                <div class="info-value">
+                    @if (!string.IsNullOrEmpty(Model.Customer?.CompanyName))
+                    {
+                        <strong class="text-primary">@Model.Customer.CompanyName</strong>
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-qrcode"></i> Cari No</div>
+                <div class="info-value">
+                    @if (!string.IsNullOrEmpty(Model.Customer?.CariNo))
+                    {
+                        <span class="badge bg-info">@Model.Customer.CariNo</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TESLİMAT BİLGİLERİ -->
+    <div class="detail-section">
+        <div class="section-title">
+            <div class="section-icon"><i class="fas fa-truck"></i></div>
+            <span>Teslimat Bilgileri</span>
+        </div>
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-tag"></i> Teslim Tipi</div>
+                <div class="info-value">
+                    @if (Model.DeliveryType == "Cargo")
+                    {
+                        <span class="badge-cargo-modal"><i class="fas fa-truck"></i> Kargo ile Gönderildi</span>
+                    }
+                    else
+                    {
+                        <span class="badge-inperson-modal"><i class="fas fa-handshake"></i> Elden Teslim Edildi</span>
+                    }
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-user-check"></i> Teslim Eden</div>
+                <div class="info-value">@(Model.DeliveredBy ?? "-")</div>
+            </div>
+
+            @if (Model.DeliveryType == "Cargo")
+            {
+                <div class="info-card">
+                    <div class="info-label"><i class="fas fa-shipping-fast"></i> Kargo Firması</div>
+                    <div class="info-value">@(Model.CargoCompany ?? "-")</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label"><i class="fas fa-qrcode"></i> Kargo Takip No</div>
+                    <div class="info-value">@(Model.CargoTrackingNumber ?? "-")</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label"><i class="fas fa-user"></i> Alıcı Ad Soyad</div>
+                    <div class="info-value">@(Model.RecipientName ?? "-")</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label"><i class="fas fa-phone"></i> Alıcı Telefon</div>
+                    <div class="info-value">@(Model.RecipientPhone ?? "-")</div>
+                </div>
+            }
+            else
+            {
+                <div class="info-card">
+                    <div class="info-label"><i class="fas fa-user-check"></i> Teslim Alan</div>
+                    <div class="info-value">@(Model.ReceiverName ?? "-")</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label"><i class="fas fa-phone"></i> Teslim Alan Telefon</div>
+                    <div class="info-value">@(Model.ReceiverPhone ?? "-")</div>
+                </div>
+            }
+
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-calendar"></i> Teslim Tarihi</div>
+                <div class="info-value">@Model.DeliveryDate.ToString("dd.MM.yyyy")</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label"><i class="fas fa-clock"></i> Teslim Saati</div>
+                <div class="info-value">@Model.DeliveryDate.ToString("HH:mm")</div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Note))
+        {
+            <div class="note-box">
+                <div class="info-label"><i class="fas fa-sticky-note"></i> Not</div>
+                <div class="info-value">@Model.Note</div>
+            </div>
+        }
+    </div>
+
+    <hr />
+
+    <div class="btn-group">
+        <a href="javascript:history.back()" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Geri Dön
+        </a>
+        @* <button onclick="window.print()" class="btn-print">
+            <i class="fas fa-print"></i> Yazdır
+        </button> *@
+
+        <a href="/Delivery/Print/@Model.Id" target="_blank" class="btn-print">
+            <i class="fas fa-print"></i> Yazdır
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        console.log("Teslimat detay sayfası yüklendi - ID: @Model.Id");
+    </script>
+}

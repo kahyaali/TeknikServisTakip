@@ -1,0 +1,298 @@
+﻿@{
+    ViewData["Title"] = "Dashboard Raporu";
+}
+
+<div class="container-fluid mt-4">
+    <!-- Başlık -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="fas fa-chart-pie me-2 text-primary"></i> Dashboard Raporu</h2>
+            <p class="text-muted">Güncel istatistikler ve analizler</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-2"></i> Yenile
+            </button>
+        </div>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="row g-4 mb-4" id="statsCards">
+        <div class="col-md-3">
+            <div class="dashboard-card stat-card">
+                <div class="stat-icon"><i class="fas fa-tools"></i></div>
+                <div class="stat-number" id="totalRepairs">0</div>
+                <div class="stat-label">Toplam Tamir</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="dashboard-card stat-card">
+                <div class="stat-icon"><i class="fas fa-spinner"></i></div>
+                <div class="stat-number" id="activeRepairs">0</div>
+                <div class="stat-label">Aktif Tamirler</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="dashboard-card stat-card">
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-number" id="completedRepairs">0</div>
+                <div class="stat-label">Tamamlanan Tamirler</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="dashboard-card stat-card" id="revenueCard">
+                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                <div id="revenueContent">
+                    <div class="stat-number" id="totalRevenue">0</div>
+                    <div class="stat-label">Toplam Gelir</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gelir Para Birimi Bazında -->
+    <div class="row g-4 mb-4" id="revenueByCurrencyRow" style="display: none;">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <h5 class="mb-3"><i class="fas fa-money-bill-wave me-2 text-primary"></i> Para Birimlerine Göre Gelir</h5>
+                <div class="row" id="revenueByCurrencyContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grafikler -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-8">
+            <div class="dashboard-card chart-container">
+                <h5 class="mb-3"><i class="fas fa-chart-line me-2 text-primary"></i> Aylık Gelir Trendi</h5>
+                <canvas id="revenueChart" style="width: 100%; height: 350px;"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dashboard-card chart-container">
+                <h5 class="mb-3"><i class="fas fa-chart-pie me-2 text-primary"></i> Durum Dağılımı</h5>
+                <canvas id="statusChart" style="width: 100%; height: 350px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Son Tamirler -->
+    <div class="dashboard-card">
+        <h5 class="mb-3"><i class="fas fa-history me-2 text-primary"></i> Son 10 Tamir Kaydı</h5>
+        <div class="table-responsive">
+            <table class="recent-table">
+                <thead>
+                    <tr>
+                        <th>Takip Kodu</th>
+                        <th>Müşteri</th>
+                        <th>Ürün</th>
+                        <th>Personel</th>
+                        <th>Tarih</th>
+                        <th>Durum</th>
+                    </tr>
+                </thead>
+                <tbody id="recentRepairsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let revenueChart, statusChart;
+
+        const currencySymbols = {
+        'TRY': '₺',
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£'
+        };
+
+        function formatCurrency(amount, currency) {
+        const symbol = currencySymbols[currency] || '₺';
+        return symbol + amount.toFixed(2);
+        }
+
+        $(document).ready(function() {
+        loadDashboardStats();
+        loadRecentRepairs();
+        });
+
+        function loadDashboardStats() {
+        $.get('/Rapor/GetDashboardStats', function(data) {
+        $('#totalRepairs').text(data.totalRepairs || 0);
+        $('#activeRepairs').text(data.activeRepairs || 0);
+        $('#completedRepairs').text(data.completedRepairs || 0);
+
+        // Para birimlerine göre gelir gösterimi
+        if (data.revenueByCurrency && data.revenueByCurrency.length > 0) {
+        $('#revenueByCurrencyRow').show();
+
+        var revenueHtml = '';
+        $.each(data.revenueByCurrency, function(i, item) {
+        revenueHtml += `
+        <div class="col-md-3 col-sm-6 mb-3">
+        <div class="stat-box text-center" style="padding: 15px;">
+        <div class="stat-number" style="font-size: 24px;">${formatCurrency(item.total, item.currency)}</div>
+        <div class="stat-label">${item.currency} Geliri</div>
+        </div>
+        </div>
+        `;
+        });
+        $('#revenueByCurrencyContainer').html(revenueHtml);
+
+        // Ana kartta toplam gösterimi
+        if (data.revenueByCurrency.length === 1) {
+        $('#totalRevenue').text(formatCurrency(data.revenueByCurrency[0].total, data.revenueByCurrency[0].currency));
+        } else {
+        $('#totalRevenue').text('Çoklu Para');
+        $('#revenueCard .stat-label').text('Farklı Para Birimleri');
+        }
+        } else {
+        $('#totalRevenue').text('₺0');
+        }
+
+        // Aylık Gelir Grafiği
+        var months = data.monthlyRevenue.map(x => x.month);
+
+        if (revenueChart) revenueChart.destroy();
+        var ctx = document.getElementById('revenueChart').getContext('2d');
+
+        var datasets = [];
+        var allCurrencies = new Set();
+
+        if (data.monthlyRevenue && data.monthlyRevenue.length > 0) {
+        data.monthlyRevenue.forEach(month => {
+        if (month.currencies) {
+        month.currencies.forEach(curr => {
+        allCurrencies.add(curr.currency);
+        });
+        }
+        });
+        }
+
+        var currencyColors = {
+        'TRY': '#10b981',
+        'USD': '#3b82f6',
+        'EUR': '#f59e0b',
+        'GBP': '#ef4444'
+        };
+
+        if (allCurrencies.size > 0) {
+        allCurrencies.forEach(currency => {
+        var currencyData = data.monthlyRevenue.map(month => {
+        if (month.currencies) {
+        var found = month.currencies.find(c => c.currency === currency);
+        return found ? found.revenue : 0;
+        }
+        return 0;
+        });
+
+        datasets.push({
+        label: currency,
+        data: currencyData,
+        borderColor: currencyColors[currency] || '#6c757d',
+        backgroundColor: 'rgba(0,0,0,0)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false
+        });
+        });
+        } else {
+        // Fallback: tek para birimi varsayılan
+        datasets.push({
+        label: 'TRY',
+        data: data.monthlyRevenue.map(x => x.total || 0),
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(0,0,0,0)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false
+        });
+        }
+
+        revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: months, datasets: datasets },
+        options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+        tooltip: {
+        callbacks: {
+        label: function(context) {
+        return context.dataset.label + ': ' + formatCurrency(context.raw, context.dataset.label);
+        }
+        }
+        }
+        }
+        }
+        });
+
+        // Durum Dağılımı Grafiği
+        var statusLabels = data.statusDistribution ? data.statusDistribution.map(x => x.name) : [];
+        var statusValues = data.statusDistribution ? data.statusDistribution.map(x => x.value) : [];
+        var statusColors = data.statusDistribution ? data.statusDistribution.map(x => x.color) : [];
+
+        if (statusChart) statusChart.destroy();
+        var ctx2 = document.getElementById('statusChart').getContext('2d');
+        statusChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+        labels: statusLabels,
+        datasets: [{
+        data: statusValues,
+        backgroundColor: statusColors,
+        borderWidth: 0
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+        callbacks: {
+        label: function(context) {
+        return context.label + ': ' + context.raw + ' adet';
+        }
+        }
+        }
+        }
+        }
+        });
+        }).fail(function() {
+        $('#totalRepairs').text('0');
+        $('#activeRepairs').text('0');
+        $('#completedRepairs').text('0');
+        $('#totalRevenue').text('₺0');
+        });
+        }
+
+        function loadRecentRepairs() {
+        $.get('/Rapor/GetRecentRepairs', { count: 10 }, function(data) {
+        var tbody = $('#recentRepairsBody');
+        tbody.empty();
+        if (!data || data.length === 0) {
+        tbody.html('<tr><td colspan="6" class="text-center">Kayıt bulunamadı<\/td><\/tr>');
+        return;
+        }
+        $.each(data, function(i, r) {
+        var statusClass = r.status === 'Beklemede' ? 'badge-pending' : (r.status === 'İşlemde' ? 'badge-progress' : (r.status === 'Tamamlandı' ? 'badge-completed' : 'badge-delivered'));
+        tbody.append(`
+        <tr>
+        <td>${r.trackingCode || '-'}</td>
+        <td>${r.customerName || '-'}</td>
+        <td>${r.productName || '-'}</td>
+        <td>${r.personelName || '-'}</td>
+        <td>${new Date(r.receivedDate).toLocaleDateString()}</td>
+        <td><span class="badge-status ${statusClass}">${r.status}</span></td>
+        </tr>
+        `);
+        });
+        });
+        }
+    </script>
+}

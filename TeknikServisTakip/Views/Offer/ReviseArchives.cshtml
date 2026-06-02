@@ -1,0 +1,196 @@
+﻿@model List<TeknikServisTakip.Models.ViewModels.ReviseArchiveViewModel>
+
+@{
+    ViewData["Title"] = "Revize Arşivi";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int pageSize = ViewBag.PageSize ?? 25;
+    int totalCount = ViewBag.TotalCount ?? 0;
+    string customerNoFilter = ViewBag.CustomerNo;
+    string productNameFilter = ViewBag.ProductName;
+    string companyNameFilter = ViewBag.CompanyName;
+    var pageSizeOptions = ViewBag.PageSizeOptions as List<int> ?? new List<int> { 10, 25, 50, 100 };
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-wrap">
+            <h5 class="mb-0">
+                <i class="fas fa-history me-2"></i> Revize Arşivi (Eski Versiyonlar)
+                <span class="badge bg-info ms-2">@totalCount Kayıt</span>
+            </h5>
+            <a href="/Offer/Index" class="btn btn-sm btn-outline-light mt-2 mt-sm-0">
+                <i class="fas fa-arrow-left"></i> Tekliflere Dön
+            </a>
+        </div>
+
+        <div class="card-body">
+
+            <!-- Filtre Formu -->
+            <form method="get" action="/Offer/ReviseArchives" class="mb-4" id="filterForm">
+                <input type="hidden" name="page" value="1" id="pageInput" />
+                <input type="hidden" name="pageSize" value="@pageSize" id="pageSizeInput" />
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Müşteri No</label>
+                        <input type="text" name="customerNo" class="form-control" placeholder="Müşteri No ara..."
+                               value="@customerNoFilter" />
+                    </div>
+                   @*  <div class="col-md-4">
+                        <label class="form-label fw-bold small">Ürün Adı</label>
+                        <input type="text" name="productName" class="form-control" placeholder="Ürün adı ara..."
+                               value="@productNameFilter" />
+                    </div> *@
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Firma Adı</label>
+                        <input type="text" name="companyName" class="form-control" placeholder="Firma adı ara..."
+                               value="@companyNameFilter" />
+                    </div>
+                    <div class="col-md-12">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Filtrele
+                            </button>
+                            <a href="/Offer/ReviseArchives?page=1&pageSize=@pageSize" class="btn btn-secondary">
+                                <i class="fas fa-eraser"></i> Temizle
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Tablo -->
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Teklif No / Ver.</th>
+                            <th>Müşteri Bilgisi</th>
+                            <th>Firma Adı</th>
+                            <th>Arşivlenme Tarihi</th>
+                            <th>Onaylanan Yeni Versiyon</th>
+                            <th class="text-center" width="15%">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                    Revize arşivinde kayıt bulunamadı.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">
+                                    @item.OfferNumber
+                                    <span class="badge bg-secondary ms-1">v@(item.Version)</span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">@item.CustomerName</div>
+                                    <small class="text-muted">No: @item.CustomerNumber</small>
+                                </td>
+                                <td>@item.CompanyName</td>
+                                <td>@item.RevokedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>
+                                    <span class="badge bg-success">@item.ApprovedOfferNumber (v@(item.ApprovedVersion))</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group gap-1">
+                                        <a href="/Offer/ReviseArchiveDetails?id=@item.Id" class="btn btn-sm btn-info text-white">
+                                            <i class="fas fa-search-plus"></i> Detay
+                                        </a>
+                                        <a href="/Offer/DownloadPdf?id=@item.OfferId" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-file-pdf"></i> PDF
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (totalPages > 1)
+            {
+                <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="form-label mb-0 small">Sayfa başına:</label>
+                        <select id="pageSizeSelect" class="form-select form-select-sm w-auto">
+                            @foreach (var size in pageSizeOptions)
+                            {
+                                <option value="@size" selected="@(pageSize == size)">@size</option>
+                            }
+                        </select>
+                        <span class="text-muted small ms-2">Toplam @totalCount kayıt</span>
+                    </div>
+
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            @if (currentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="#" data-page="1"><i class="fas fa-angle-double-left"></i></a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#" data-page="@(currentPage - 1)"><i class="fas fa-angle-left"></i></a>
+                                </li>
+                            }
+
+                            @{
+                                int startPage = Math.Max(1, currentPage - 2);
+                                int endPage = Math.Min(totalPages, startPage + 4);
+                                if (endPage - startPage < 4 && startPage > 1)
+                                {
+                                    startPage = Math.Max(1, endPage - 4);
+                                }
+                            }
+
+                            @for (int i = startPage; i <= endPage; i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" href="#" data-page="@i">@i</a>
+                                </li>
+                            }
+
+                            @if (currentPage < totalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="#" data-page="@(currentPage + 1)"><i class="fas fa-angle-right"></i></a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#" data-page="@totalPages"><i class="fas fa-angle-double-right"></i></a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.page-link[data-page]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.getAttribute('data-page');
+                document.getElementById('pageInput').value = page;
+                document.getElementById('filterForm').submit();
+            });
+        });
+
+        document.getElementById('pageSizeSelect').addEventListener('change', function() {
+            document.getElementById('pageSizeInput').value = this.value;
+            document.getElementById('pageInput').value = 1;
+            document.getElementById('filterForm').submit();
+        });
+    </script>
+}

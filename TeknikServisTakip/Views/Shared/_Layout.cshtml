@@ -1,0 +1,466 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Entities.Concrete
+@inject UserManager<AppUser> UserManager
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="@Html.AntiForgeryToken().ToString()">
+    <title>@ViewData["Title"] - Teknik Servis Takip</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/Layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/TeknikServisTakip.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css" />
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-primary border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-tools"></i> Teknik Servis Takip
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <!-- Ana Menüler - Herkes için ortak -->
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-controller="Home" asp-action="Index">
+                                <i class="fas fa-home"></i> Ana Sayfa
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-controller="Home" asp-action="About">
+                                <i class="fas fa-info-circle"></i> Hakkımızda
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="/Home/Services">
+                                <i class="fas fa-cogs"></i> Hizmetler
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="/Home/References">
+                                <i class="fas fa-star"></i> Referanslar
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="/Home/VisionMission">
+                                <i class="fas fa-eye"></i> Vizyon & Misyon
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-controller="Home" asp-action="Contact">
+                                <i class="fas fa-envelope"></i> İletişim
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-controller="Track" asp-action="Index">
+                                <i class="fas fa-qrcode"></i> Tamir Takip
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <!-- Sağ Menüler - Kullanıcı Durumuna Göre -->
+                    <ul class="navbar-nav ms-auto">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <!-- Kullanıcı Dropdown (Login olanlar için) -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user"></i> @User.Identity.Name
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    @if (User.IsInRole("Customer"))
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Edit">Profil Düzenle</a></li>
+                                    }
+                                    <li><a class="dropdown-item" asp-controller="Password" asp-action="ChangePassword">Şifre Değiştir</a></li>
+                                    @if (User.IsInRole("Personel"))
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="PersonelDashboard" asp-action="Index">Tamirlerim</a></li>
+                                    }
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="fas fa-sign-out-alt"></i> Çıkış Yap
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <!-- Giriş Yap / Kayıt Ol (Login olmayanlar için) -->
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-controller="Account" asp-action="Login">
+                                    <i class="fas fa-sign-in-alt"></i> Giriş Yap
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-controller="Account" asp-action="Register">
+                                    <i class="fas fa-user-plus"></i> Kayıt Ol
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container-fluid">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+
+    <footer class="border-top footer text-muted">
+        <div class="container text-center">
+            &copy; @DateTime.Now.Year - Teknik Servis Takip Sistemi | Tüm Hakları Saklıdır.
+        </div>
+    </footer>
+
+    <!--Çerez Onayları-->
+    <div id="cookieConsent" class="cookie-consent" style="display: none;">
+        <div class="container">
+            <p style="margin: 0; display: inline-block;">Bu site, deneyiminizi geliştirmek için çerezler kullanmaktadır.</p>
+            <button id="acceptCookies" class="btn btn-sm btn-primary ms-3">Kabul Et</button>
+            <a href="/Home/Privacy" class="btn btn-sm btn-outline-light ms-2">Detaylar</a>
+        </div>
+    </div>
+  
+
+    <!-- GLOBAL LOADER ELEMENTİ -->
+    <div id="globalLoader" class="global-loader-overlay">
+        <div class="global-loader-container">
+            <div class="global-loader-content">
+                <div class="spinner"></div>
+                <div class="text">İşlem Devam Ediyor</div>
+                <div class="subtext">Lütfen bekleyiniz...</div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+            .cookie-consent {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: #1e293b;
+                color: white;
+                padding: 15px;
+                text-align: center;
+                z-index: 10000;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+            }
+            @@media (max-width: 768px) {
+                .cookie-consent .container p {
+                    display: block !important;
+                    margin-bottom: 10px !important;
+                }
+            }
+    </style>
+
+
+
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        if (typeof Swal === 'undefined') {
+        document.write('<script src="~/lib/sweetalert2/sweetalert2.min.js"><\/script>');
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        if (typeof toastr === 'undefined') {
+        document.write('<script src="~/lib/toastr/toastr.min.js"><\/script>');
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        if (typeof signalR === 'undefined') {
+        document.write('<script src="~/lib/signalr/signalr.min.js"><\/script>');
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        if (typeof Chart === 'undefined') {
+        document.write('<script src="~/lib/chart.js/chart.min.js"><\/script>');
+        }
+    </script>
+
+    <script>
+
+        if (!localStorage.getItem('cookiesAccepted')) {
+        document.getElementById('cookieConsent').style.display = 'block';
+        }
+        document.getElementById('acceptCookies')?.addEventListener('click', function() {
+        localStorage.setItem('cookiesAccepted', 'true');
+        document.getElementById('cookieConsent').style.display = 'none';
+        });
+
+
+        $(document).ajaxSend(function(e, xhr, options) {
+        // Önce input'tan dene (daha güvenli)
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        // Yoksa meta'dan al
+        if (!token) {
+        token = $('meta[name="csrf-token"]').attr('content');
+        }
+        if (token && !options.headers?.['RequestVerificationToken']) {
+        xhr.setRequestHeader('RequestVerificationToken', token);
+        }
+        });
+
+
+
+        toastr.options = {
+        "closeButton": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "timeOut": "3000"
+        };
+
+        // ========== GLOBAL LOADER KONTROLLERİ ==========
+
+        let loaderTimeout;
+        function showGlobalLoader() {
+        var loader = document.getElementById('globalLoader');
+        if (loader) {
+        loader.style.display = 'flex';
+        }
+        // 15 saniye safety
+        loaderTimeout = setTimeout(function () {
+        hideGlobalLoader();
+        }, 30000);
+        }
+        
+        function hideGlobalLoader() {
+        var loader = document.getElementById('globalLoader');
+        if (loader) {
+        loader.style.display = 'none';
+        }
+        if (loaderTimeout) {
+        clearTimeout(loaderTimeout);
+        loaderTimeout = null;
+        }
+        }
+
+        // AJAX isteklerinde loader göster 
+        let loaderDelay;
+        $(document).ajaxStart(function () {
+        loaderDelay = setTimeout(function () {
+        showGlobalLoader();
+        }, 200); // 200ms delay
+        });
+        
+        $(document).ajaxStop(function() {
+        clearTimeout(loaderDelay);
+        loaderDelay = null;
+        hideGlobalLoader();
+        });
+        
+        $(document).ajaxError(function(event, xhr, settings, error) {
+        console.error("AJAX Error:", {
+        url: settings.url,
+        status: xhr.status,
+        error: error
+        });
+    
+        let userMessage = "Bir hata oluştu. Lütfen daha sonra tekrar deneyin.";
+        if (xhr.status === 404) userMessage = "İstenen kaynak bulunamadı.";
+        if (xhr.status === 403) userMessage = "Bu işlem için yetkiniz yok.";
+        if (xhr.status === 500) userMessage = "Sunucu hatası oluştu.";
+    
+        toastr.error(userMessage);
+        hideGlobalLoader();
+        });
+
+        function triggerLoaderWithDelay() {
+        if (loaderDelay) return; 
+
+        loaderDelay = setTimeout(function () {
+        showGlobalLoader();
+        }, 200);
+        }
+
+        
+        // Form submit'lerde loader göster (normal submit)
+        $(document).on('submit', 'form', function(e) {
+        if (!$(this).hasClass('no-loader')) {
+        triggerLoaderWithDelay();
+        }
+        });
+        
+        // Sayfa değişirken (link tıklama) loader göster
+        $(document).on('click', 'a:not([target="_blank"]):not([href^="#"]):not([href^="javascript"])', function(e) {
+        if ($(this).attr('href') && $(this).attr('href') !== '#' && !$(this).hasClass('no-loader')) {
+        triggerLoaderWithDelay();
+        }
+        });
+
+        // SignalR bağlantısı
+        const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/notificationHub", {
+        withCredentials: true
+        })
+        .withAutomaticReconnect([0, 2000, 10000, 30000])
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+      
+        connection.onreconnecting(() => {
+        console.log("Bağlantı kopuyor...");
+        });
+
+        connection.onreconnected(() => {
+        console.log("Bağlantı tekrar kuruldu");
+        });
+
+        connection.onclose(() => {
+        console.log("Bağlantı tamamen kapandı");
+        });
+
+       
+        function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(text));
+        return div.innerHTML;
+        }
+
+        connection.on("ReceiveMessage", function(message, type) {
+        console.log("ReceiveMessage ÇALIŞTI:", message, type);
+        var safeMessage = escapeHtml(message);
+        if (type === "error") {
+        toastr.error(safeMessage);
+        } else if (type === "warning") {
+        toastr.warning(safeMessage);
+        } else if (type === "info") {
+        toastr.info(safeMessage);
+        } else {
+        toastr.success(safeMessage);
+        }
+
+        setTimeout(function() {
+        location.reload();
+        }, 2000);
+
+        });
+
+      
+        connection.start().then(function() {
+        console.log("SignalR bağlantısı kuruldu.");
+        }).catch(function(err) {
+        console.error("SignalR bağlantı hatası: " + err.toString());
+        });
+
+        $(window).on('beforeunload', function () {
+        clearTimeout(loaderDelay);
+        clearTimeout(loaderTimeout);
+
+        loaderDelay = null;
+        loaderTimeout = null;
+        var loader = document.getElementById('globalLoader');
+        if (loader) {
+        loader.style.display = 'none';
+        }
+        });
+
+
+        // ========== CLIENT-SIDE HATA LOGLAMA ==========
+        (function() {
+        function sendErrorToServer(errorData) {
+        try {
+        fetch('/Log/LogClientError', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(errorData)
+        }).catch(function(e) {
+        console.log('Log gönderilemedi:', e);
+        });
+        } catch(e) {
+        }
+        }
+
+        // JavaScript hatalarını yakala
+        window.addEventListener('error', function(event) {
+        var errorData = {
+        message: event.message,
+        url: event.filename,
+        line: event.lineno,
+        column: event.colno,
+        stack: event.error?.stack,
+        userAgent: navigator.userAgent,
+        pageUrl: window.location.href,
+        timestamp: new Date().toISOString()
+        };
+        sendErrorToServer(errorData);
+        });
+
+        // Promise hatalarını yakala
+        window.addEventListener('unhandledrejection', function(event) {
+        var errorData = {
+        message: event.reason?.message || 'Unhandled Promise Rejection',
+        url: window.location.href,
+        line: null,
+        column: null,
+        stack: event.reason?.stack,
+        userAgent: navigator.userAgent,
+        pageUrl: window.location.href,
+        timestamp: new Date().toISOString()
+        };
+        sendErrorToServer(errorData);
+        });
+        })();
+
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

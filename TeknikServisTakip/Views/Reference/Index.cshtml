@@ -1,0 +1,148 @@
+﻿@model IEnumerable<Entities.Concrete.Reference>
+@{
+    ViewData["Title"] = "Referanslar";
+}
+
+
+
+<div class="container-fluid px-4">
+    <!-- HEADER -->
+    <div class="reference-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1 class="display-5 fw-bold mb-2"><i class="fas fa-star me-3"></i> Referanslar</h1>
+                <p class="lead mb-0 opacity-75">Müşterilerimizin memnuniyet dolu yorumları</p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="/Reference/Create" class="btn btn-add-reference">
+                    <i class="fas fa-plus me-2"></i> Yeni Referans Ekle
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- REFERANS KARTLARI -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="reference-card">
+                        <i class="fas fa-quote-left quote-icon"></i>
+                        
+                        @if (!string.IsNullOrEmpty(item.ImagePath))
+                        {
+                            <img src="@item.ImagePath" class="reference-image" alt="@item.CustomerName" />
+                        }
+                        else
+                        {
+                            <div style="height: 200px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-user fa-4x text-white opacity-50"></i>
+                            </div>
+                        }
+                        
+                        <img src="@(string.IsNullOrEmpty(item.ImagePath) ? "https://ui-avatars.com/api/?background=f59e0b&color=fff&name=" + item.CustomerName : item.ImagePath)" 
+                             class="reference-avatar" alt="@item.CustomerName" />
+                        
+                        <h3 class="reference-name">@item.CustomerName</h3>
+                        @if (!string.IsNullOrEmpty(item.Title))
+                        {
+                            <p class="reference-title">@item.Title</p>
+                        }
+                        
+                        <p class="reference-comment">"@item.Comment"</p>
+                        
+                        <div class="reference-footer">
+                            <span class="reference-order">
+                                <i class="fas fa-sort-numeric-down me-1"></i> Sıra: @item.Order
+                            </span>
+                            <span class="reference-status @(item.IsActive ? "active" : "passive")">
+                                <i class="fas @(item.IsActive ? "fa-check-circle" : "fa-times-circle") me-1"></i>
+                                @(item.IsActive ? "Aktif" : "Pasif")
+                            </span>
+                            <div class="btn-actions">
+                                <a href="/Reference/Edit/@item.Id" class="btn-edit" title="Düzenle">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="deleteReference(@item.Id, '@item.CustomerName')" class="btn-delete" title="Sil">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fas fa-star"></i>
+            <h3>Henüz Referans Eklenmemiş</h3>
+            <p>İlk referansınızı eklemek için "Yeni Referans Ekle" butonuna tıklayın.</p>
+            <a href="/Reference/Create" class="btn btn-add-reference mt-3">
+                <i class="fas fa-plus me-2"></i> Referans Ekle
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts { 
+    <form id="antiForgeryForm" style="display:none;">
+        @Html.AntiForgeryToken()
+    </form>
+    
+    <script>
+        function deleteReference(id, customerName) {
+            Swal.fire({
+                title: 'Silmek istiyor musunuz?',
+                html: '<b>' + customerName + '</b> müşterisine ait referansı silmek üzeresiniz!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Siliniyor...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                    
+                    $.ajax({
+                        url: '/Reference/Delete',
+                        type: 'POST',
+                        data: { id: id },                   
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                              error: function(xhr, status, error) {
+            console.log("Hata detayı:", xhr.responseText);
+            let errorMsg = 'Bir sorun oluştu.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMsg = xhr.responseJSON.message;
+            } else if (xhr.status === 500) {
+                errorMsg = 'Sunucu hatası! Lütfen daha sonra tekrar deneyin.';
+            }
+            Swal.fire('Hata!', errorMsg, 'error');
+        }
+                    });
+                }
+            });
+        }
+    </script>
+}

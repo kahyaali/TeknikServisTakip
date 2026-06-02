@@ -1,0 +1,81 @@
+﻿@model Entities.Concrete.MailSetting
+@{
+    ViewData["Title"] = "Mail Ayarları";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0"><i class="fas fa-envelope me-2"></i> Mail Ayarları</h1>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-envelope"></i> Mail Ayarları</h4>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success">@TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger">@TempData["Error"]</div>
+                    }
+
+                    <form method="post" asp-action="Save">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label">SMTP Sunucu</label>
+                            <input asp-for="SmtpServer" class="form-control" placeholder="smtp.gmail.com" required />
+                            <span asp-validation-for="SmtpServer" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Port</label>
+                            <input asp-for="Port" class="form-control" placeholder="587" required />
+                            <span asp-validation-for="Port" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Gönderici E-posta</label>
+                            <input asp-for="SenderEmail" class="form-control" placeholder="ornek@gmail.com" required />
+                            <span asp-validation-for="SenderEmail" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Şifre</label>
+                            <input asp-for="SenderPassword" type="password" class="form-control" placeholder="********" required />
+                            <span asp-validation-for="SenderPassword" class="text-danger"></span>
+                            <small class="form-text text-muted">Gmail için uygulama şifresi kullanın</small>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="UseSSL" class="form-check-input" />
+                            <label class="form-check-label">SSL Kullan</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Kaydet
+                        </button>
+                    </form>
+
+                    <hr />
+
+                    <h5><i class="fas fa-paper-plane"></i> Test Maili Gönder</h5>
+                    <form method="post" asp-action="SendTestMail">
+                        <div class="input-group">
+                            <input type="email" name="testEmail" class="form-control" placeholder="test@ornek.com" required />
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-envelope"></i> Test Maili Gönder
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

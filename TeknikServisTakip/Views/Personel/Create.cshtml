@@ -1,0 +1,179 @@
+﻿@using TeknikServisTakip.Helpers
+@model Entities.Concrete.Personel
+@{
+    ViewData["Title"] = "Personel Ekle";
+}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Yeni Personel Ekle</h3>
+        </div>
+        <div class="card-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <strong>Lütfen aşağıdaki hataları düzeltin:</strong>
+                    <ul>
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <li>@error.ErrorMessage</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <!--
+                novalidate, HTML5 formlarında tarayıcının doğrulama (validation) özelliğini devre dışı bırakan bir attribute'dür.
+                required olsa bile tarayıcı engellemez, form her türlü gider
+                 <form method="post" novalidate>
+                 <input type="text" required>
+                 </form>
+            -->
+
+            <form method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Ad Soyad <span class="text-danger">*</span></label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Pozisyon <span class="text-danger">*</span></label>
+                            <select asp-for="PositionId" class="form-select" asp-items="ViewBag.Positions">
+                                <option value="">-- Seçiniz --</option>
+                            </select>
+                            <span asp-validation-for="PositionId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Departman</label>
+                            <select asp-for="DepartmentId" class="form-select" asp-items="ViewBag.Departments">
+                                <option value="">-- Seçiniz --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Telefon <span class="text-danger">*</span></label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="05XX XXX XX XX" value="@(Model?.PhoneNumber.FormatPhoneSafe())" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>                   
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Adres</label>
+                            <textarea asp-for="Address" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Şehir</label>
+                            <input asp-for="City" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">İlçe</label>
+                            <input asp-for="District" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">E-posta <span class="text-danger">*</span></label>
+                            <input asp-for="Email" type="email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Şifre <span class="text-danger">*</span></label>
+                            <input type="password" name="password" class="form-control" />
+                            <small class="text-muted">En az 6 karakter</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Durum</label>
+                            <select asp-for="IsActive" class="form-select">
+                                <option value="true">Aktif</option>
+                                <option value="false">Pasif</option>
+                            </select>
+                        </div>
+
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="sendMail" class="form-check-input" id="sendMail" value="true"  />
+                            <label class="form-check-label" for="sendMail">
+                                <i class="fas fa-envelope text-primary"></i> Personele bilgilendirme maili gönder
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                    <a href="/Personel/Index" class="btn btn-secondary">Geri</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Telefon formatı için kontrol
+        const phoneInput = document.querySelector('input[name="PhoneNumber"]');
+        
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                
+                // Maksimum 11 haneli olabilir
+                if (value.length > 11) {
+                    value = value.slice(0, 11);
+                }
+                
+                // 4+3+2+2 formatı
+                let formatted = '';
+                if (value.length > 0) {
+                    formatted = value.slice(0, 4);
+                    if (value.length >= 4) {
+                        formatted += ' ' + value.slice(4, 7);
+                    }
+                    if (value.length >= 7) {
+                        formatted += ' ' + value.slice(7, 9);
+                    }
+                    if (value.length >= 9) {
+                        formatted += ' ' + value.slice(9, 11);
+                    }
+                    e.target.value = formatted;
+                } else {
+                    e.target.value = '';
+                }
+            });
+
+            // Sayfa yüklendiğinde mevcut değeri formatla
+            function formatExistingPhone() {
+                let value = phoneInput.value.replace(/\D/g, '');
+                if (value.length === 11) {
+                    let formatted = value.slice(0, 4) + ' ' + value.slice(4, 7) + ' ' + value.slice(7, 9) + ' ' + value.slice(9, 11);
+                    phoneInput.value = formatted;
+                }
+            }
+            formatExistingPhone();
+        }
+
+        // Form submit öncesi validasyon
+        const form = document.querySelector('form');
+        if (form && phoneInput) {
+            form.addEventListener('submit', function(e) {
+                let phone = phoneInput.value.replace(/\D/g, '');
+                if (phone.length !== 11) {
+                    alert('Lütfen geçerli bir telefon numarası giriniz (11 haneli, Örn: 0500 000 00 00)');
+                    phoneInput.focus();
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+    </script>
+}

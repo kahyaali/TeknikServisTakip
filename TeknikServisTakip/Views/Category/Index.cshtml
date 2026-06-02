@@ -1,0 +1,172 @@
+﻿@model IEnumerable<Entities.Concrete.Category>
+@{
+    ViewData["Title"] = "Kategori Yönetimi";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-tags"></i> Kategori Yönetimi
+                <div class="float-end">
+                    <a href="/Category/Create" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> Yeni Kategori
+                    </a>
+                </div>
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="categoryTable" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Kategori Adı</th>
+                            <th>Açıklama</th>
+                            <th>Sıra</th>
+                            <th>Durum</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int index = 1;
+                        }
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@item.Name</td>
+                                <td>@(item.Description ?? "-")</td>
+                                <td>@item.DisplayOrder</td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge bg-success">Aktif</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Pasif</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group" style="gap: 5px;">
+                                        <a href="/Category/Edit/@item.Id" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-edit"></i> Düzenle
+                                        </a>
+                                        @if (item.IsActive)
+                                        {
+                                            <button onclick="softDeleteCategory(@item.Id, '@item.Name')" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-ban"></i> Pasif Yap
+                                            </button>
+                                        }
+                                        <button onclick="hardDeleteCategory(@item.Id, '@item.Name')" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash"></i> Tamamen Sil
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#categoryTable').DataTable({
+                language: { url: '/datatables/tr.json' },
+                order: [[3, 'asc']],
+                pageLength: 10
+            });
+        });
+
+        // Hard Delete (Tamamen sil)
+        function hardDeleteCategory(id, name) {
+            Swal.fire({
+                title: 'Silmek istiyor musunuz?',
+                html: `<b>${name}</b> kategorisini <b class="text-danger">TAMAMEN</b> silmek üzeresiniz!<br>Bu işlem <b>geri alınamaz</b>.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Tamamen Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'İşlem yapılıyor...',
+                        text: 'Lütfen bekleyin',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    $.ajax({
+                        url: '/Category/Delete',
+                        type: 'POST',
+                        data: { id: id, hardDelete: true },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            let errorMsg = xhr.responseJSON?.message || 'Bir sorun oluştu.';
+                            Swal.fire('Hata!', errorMsg, 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        // Soft Delete (Pasif yap)
+        function softDeleteCategory(id, name) {
+            Swal.fire({
+                title: 'Pasif yapmak istiyor musunuz?',
+                html: `<b>${name}</b> kategorisini pasif duruma getirmek üzeresiniz!`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Pasif Yap!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'İşlem yapılıyor...',
+                        text: 'Lütfen bekleyin',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    $.ajax({
+                        url: '/Category/SoftDelete',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Başarılı!', res.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            let errorMsg = xhr.responseJSON?.message || 'Bir sorun oluştu.';
+                            Swal.fire('Hata!', errorMsg, 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

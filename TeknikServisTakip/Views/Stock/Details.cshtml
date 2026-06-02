@@ -1,0 +1,438 @@
+﻿@model Entities.Concrete.Product
+@using TeknikServisTakip.Helpers
+@{
+    ViewData["Title"] = "Ürün Detayı";
+    var movements = ViewBag.Movements as IEnumerable<Entities.Concrete.StockMovement> ?? new List<Entities.Concrete.StockMovement>();
+}
+
+<div class="container-fluid mt-4">
+   
+    <!-- STOK HAREKETLERİ -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-history"></i> Stok Hareketleri</h5>
+            <div class="d-flex gap-2">
+                <a href="/Stock/Index" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Geri Dön
+                </a>
+                <a href="/Stock/StockMovements/@Model.Id" class="btn btn-warning btn-sm">
+                    <i class="fas fa-arrow-right me-1"></i> Tüm Hareketler
+                </a>
+            </div>
+        </div>         
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>İşlem Tipi</th>
+                            <th>Miktar</th>
+                            <th>Önceki Stok</th>
+                            <th>Yeni Stok</th>
+                            <th>Referans</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in movements)
+                        {
+                            <tr>
+                                <td>@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>
+                                    @{
+                                        var badge = item.MovementType == "IN" || item.MovementType == "ADJUST_IN" ? "bg-success" : "bg-danger";
+                                        var name = item.MovementType == "IN" ? "Stok Girişi" : (item.MovementType == "OUT" ? "Stok Çıkışı" : "Düzeltme");
+                                    }
+                                    <span class="badge @badge">@name</span>
+                                 </td>
+                                <td>@item.Quantity</td>
+                                <td>@item.PreviousStock</td>
+                                <td>@item.NewStock</td>
+                                <td>@(item.ReferenceNo ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÜRÜN BİLGİLERİ -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Ürün Bilgileri</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <tr>
+                    <th style="width:30%">Ürün Kodu</th>
+                    <td>@Model.ProductCode</td>
+                </tr>
+                <tr>
+                    <th>Ürün Adı</th>
+                    <td>@Model.ProductName</td>
+                </tr>
+                <tr>
+                    <th>Kategori</th>
+                    <td>@(Model.Category?.Name ?? "-")</td>
+                </tr>
+                <tr>
+                    <th>Marka</th>
+                    <td>@(Model.Brand ?? "-")</td>
+                </tr>
+                <tr>
+                    <th>Model</th>
+                    <td>@(Model.Model ?? "-")</td>
+                </tr>
+                <tr>
+                    <th>Seri No</th>
+                    <td>@(Model.SerialNo ?? "-")</td>
+                </tr>
+                <tr>
+                    <th>IMEI No</th>
+                    <td>@(Model.IMEINo ?? "-")</td>
+                </tr>
+                <tr>
+                <th>Para Birimi</th>
+                <td>
+                    <span class="badge bg-secondary">@Model.Currency</span>
+                    (@(CurrencyHelper.GetName(Model.Currency ?? "TRY")))
+                </td>
+            </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- STOK & FİYAT BİLGİLERİ  -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-chart-line"></i> Stok & Fiyat Bilgileri</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width:40%">Stok Miktarı</th>
+                            <td class="fw-bold @(Model.Quantity <= Model.MinStockLevel ? "text-danger" : "")">
+                                @Model.Quantity @Model.Unit
+                             </td>
+                        </tr>
+                        <tr>
+                            <th>Min Stok (Sarı)</th>
+                            <td>@Model.MinStockLevel</td>
+                        </tr>
+                        <tr>
+                            <th>Max Stok (Kırmızı)</th>
+                            <td>@Model.MaxStockLevel</td>
+                        </tr>
+                        <tr>
+                            <th>Lokasyon</th>
+                            <td>@(Model.Location ?? "-")</td>
+                        </tr>
+                        <tr>
+                            <th>Tedarikçi</th>
+                            <td>@(Model.Supplier ?? "-")</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tr>
+                          @*   <th style="width:40%">Alış Fiyatı</th>
+                            <td>@(Model.PurchasePrice?.ToString("C2") ?? "-")</td> *@
+                            <th style="width:40%">Alış Fiyatı</th>
+                            <td class="fw-bold">
+                                @(Model.PurchasePrice.HasValue
+                                    ? $"{CurrencyHelper.GetSymbol(Model.Currency)} {Model.PurchasePrice.Value.ToString("N2")}"
+                                    : "-")
+                            </td>
+                        </tr>
+                        <tr>
+                          @*   <th>Satış Fiyatı</th>
+                            <td>@(Model.SalePrice?.ToString("C2") ?? "-")</td> *@
+                            <th>Satış Fiyatı</th>
+                            <td class="fw-bold text-success">
+                                @(Model.SalePrice.HasValue
+                                    ? $"{CurrencyHelper.GetSymbol(Model.Currency)} {Model.SalePrice.Value.ToString("N2")}"
+                                    : "-")
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Açıklama</th>
+                            <td>@(Model.Description ?? "-")</td>
+                        </tr>
+                        <tr>
+                            <th>Oluşturulma</th>
+                            <td>@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm") - @Model.CreatedBy</td>
+                        </tr>
+                        <tr>
+                            <th>Son Güncelleme</th>
+                            <td>@(Model.UpdatedAt?.ToString("dd.MM.yyyy HH:mm") ?? "-") @(Model.UpdatedBy != null ? $" - {Model.UpdatedBy}" : "")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hızlı İşlem Butonları -->
+    <div class="row mt-2">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-footer bg-white">
+                    <div class="btn-group w-100">
+                        <button type="button" class="btn btn-success" onclick="openStockInModal(@Model.Id, '@Model.ProductName')">
+                            <i class="fas fa-arrow-down"></i> Stok Girişi
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="openStockOutModal(@Model.Id, '@Model.ProductName', @Model.Quantity)">
+                            <i class="fas fa-arrow-up"></i> Stok Çıkışı
+                        </button>
+                        <a href="/Stock/Edit/@Model.Id" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Düzenle
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .swal2-popup {
+            border-radius: 20px !important;
+            padding: 1.5rem !important;
+        }
+        .swal2-title {
+            font-size: 1.5rem !important;
+            font-weight: 600 !important;
+            color: #1e293b !important;
+        }
+        .custom-form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+        .custom-form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #334155;
+            font-size: 0.85rem;
+        }
+        .custom-form-group input,
+        .custom-form-group textarea {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .custom-form-group input:focus,
+        .custom-form-group textarea:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
+        }
+        .custom-form-group input[readonly] {
+            background-color: #f1f5f9;
+            cursor: not-allowed;
+        }
+        .stock-info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .stock-info-box span {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+    </style>
+
+    <script>
+        function openStockInModal(id, name) {
+            Swal.fire({
+                title: `<i class="fas fa-arrow-down text-success me-2"></i> ${name} - Stok Girişi`,
+                html: `
+                    <div class="custom-form-group">
+                        <label><i class="fas fa-cubes me-1"></i> Miktar <span class="text-danger">*</span></label>
+                        <input type="number" id="quantity" class="swal2-input" placeholder="Adet miktarını giriniz" min="1">
+                    </div>
+                    <div class="custom-form-group">
+                        <label><i class="fas fa-hashtag me-1"></i> Referans No</label>
+                        <input type="text" id="reference" class="swal2-input" placeholder="Fatura No / Sipariş No">
+                    </div>
+                    <div class="custom-form-group">
+                        <label><i class="fas fa-align-left me-1"></i> Açıklama</label>
+                        <textarea id="description" class="swal2-textarea" rows="3" placeholder="Stok giriş açıklaması..."></textarea>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-check-circle me-1"></i> Stok Girişi Yap',
+                cancelButtonText: '<i class="fas fa-times me-1"></i> İptal',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                width: '550px',
+                backdrop: true,
+                preConfirm: () => {
+                    const quantity = document.getElementById('quantity').value;
+                    if (!quantity || quantity <= 0) {
+                        Swal.showValidationMessage('<i class="fas fa-exclamation-triangle me-1"></i> Lütfen geçerli bir miktar girin!');
+                        return false;
+                    }
+                    return {
+                        quantity: quantity,
+                        reference: document.getElementById('reference').value,
+                        description: document.getElementById('description').value
+                    };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'İşlem Yapılıyor...',
+                        text: 'Stok girişi gerçekleştiriliyor',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    $.ajax({
+                        url: '/Stock/StockIn',
+                        type: 'POST',
+                        data: {
+                            productId: id,
+                            quantity: result.value.quantity,
+                            referenceNo: result.value.reference,
+                            description: result.value.description
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Başarılı!',
+                                    html: `<i class="fas fa-check-circle me-1 text-success"></i> ${res.message}`,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => window.location.reload());
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Hata!',
+                                    html: `<i class="fas fa-exclamation-circle me-1"></i> ${res.message}`,
+                                    confirmButtonColor: '#dc3545'
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Hata!',
+                                text: 'Bir sorun oluştu. Lütfen tekrar deneyin.',
+                                confirmButtonColor: '#dc3545'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function openStockOutModal(id, name, currentStock) {
+            Swal.fire({
+                title: `<i class="fas fa-arrow-up text-warning me-2"></i> ${name} - Stok Çıkışı`,
+                html: `
+                    <div class="stock-info-box">
+                        <i class="fas fa-boxes me-1"></i> Mevcut Stok: <span>${currentStock}</span>
+                    </div>
+                    <div class="custom-form-group">
+                        <label><i class="fas fa-cubes me-1"></i> Çıkış Miktarı <span class="text-danger">*</span></label>
+                        <input type="number" id="quantity" class="swal2-input" placeholder="Adet miktarını giriniz" min="1" max="${currentStock}">
+                    </div>
+                    <div class="custom-form-group">
+                        <label><i class="fas fa-hashtag me-1"></i> Referans No</label>
+                        <input type="text" id="reference" class="swal2-input" placeholder="Fatura No / Teslim No">
+                    </div>
+                    <div class="custom-form-group">
+                        <label><i class="fas fa-align-left me-1"></i> Açıklama</label>
+                        <textarea id="description" class="swal2-textarea" rows="3" placeholder="Stok çıkış açıklaması..."></textarea>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-check-circle me-1"></i> Stok Çıkışı Yap',
+                cancelButtonText: '<i class="fas fa-times me-1"></i> İptal',
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                width: '550px',
+                backdrop: true,
+                preConfirm: () => {
+                    const quantity = document.getElementById('quantity').value;
+                    if (!quantity || quantity <= 0) {
+                        Swal.showValidationMessage('<i class="fas fa-exclamation-triangle me-1"></i> Lütfen geçerli bir miktar girin!');
+                        return false;
+                    }
+                    if (parseInt(quantity) > currentStock) {
+                        Swal.showValidationMessage('<i class="fas fa-exclamation-triangle me-1"></i> Yetersiz stok! Mevcut stok: ' + currentStock);
+                        return false;
+                    }
+                    return {
+                        quantity: quantity,
+                        reference: document.getElementById('reference').value,
+                        description: document.getElementById('description').value
+                    };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'İşlem Yapılıyor...',
+                        text: 'Stok çıkışı gerçekleştiriliyor',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    $.ajax({
+                        url: '/Stock/StockOut',
+                        type: 'POST',
+                        data: {
+                            productId: id,
+                            quantity: result.value.quantity,
+                            referenceNo: result.value.reference,
+                            description: result.value.description
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Başarılı!',
+                                    html: `<i class="fas fa-check-circle me-1 text-success"></i> ${res.message}`,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => window.location.reload());
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Hata!',
+                                    html: `<i class="fas fa-exclamation-circle me-1"></i> ${res.message}`,
+                                    confirmButtonColor: '#dc3545'
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Hata!',
+                                text: 'Bir sorun oluştu. Lütfen tekrar deneyin.',
+                                confirmButtonColor: '#dc3545'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

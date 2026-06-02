@@ -1,0 +1,53 @@
+﻿@model IEnumerable<Entities.Concrete.Reference>
+@{
+    ViewData["Title"] = "Referanslarımız";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Referanslarımız</h1>
+        <div class="divider mx-auto" style="width: 80px; height: 4px; background: #0d6efd; border-radius: 2px;"></div>
+        <p class="lead mt-3">Müşterilerimizin memnuniyet dolu yorumları</p>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            @if (!string.IsNullOrEmpty(item.ImagePath))
+                            {
+                                <img src="@item.ImagePath" class="rounded-circle mb-3" style="width: 80px; height: 80px; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                                    <i class="fas fa-user fa-2x"></i>
+                                </div>
+                            }
+                            <h5 class="fw-bold">@item.CustomerName</h5>
+                            @if (!string.IsNullOrEmpty(item.Title))
+                            {
+                                <p class="text-muted small">@item.Title</p>
+                            }
+                            <div class="mt-3">
+                                <i class="fas fa-quote-left text-primary opacity-50 me-2"></i>
+                                <p class="fst-italic">"@item.Comment"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i> Henüz referans eklenmemiştir.
+        </div>
+    }
+</div>

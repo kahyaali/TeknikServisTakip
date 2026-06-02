@@ -1,0 +1,118 @@
+﻿@using TeknikServisTakip.Helpers
+@model Entities.Concrete.AppUser
+@{
+    ViewData["Title"] = "Müşteri Detayı";
+}
+
+<div class="content" style="padding: 15px; max-width: 100%; width: 100%;">
+    <div class="page-header">
+        <h1><i class="fas fa-user-circle me-3"></i> Müşteri Detayı</h1>
+        <p>Müşteri bilgilerini görüntüleyin</p>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i> @Model.FullName</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-id-card"></i> Müşteri No</div>
+                        <div class="detail-value fw-bold">@(Model.CustomerNumber ?? "-")</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-user"></i> Ad Soyad</div>
+                        <div class="detail-value">@(Model.FullName ?? "-")</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-building"></i> Firma Adı</div>
+                        <div class="detail-value">@(Model.CompanyName ?? "-")</div>
+                    </div>
+                </div>
+
+             
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-hashtag"></i> Cari No</div>
+                        <div class="detail-value">@(Model.CariNo ?? "-")</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-envelope"></i> E-posta</div>
+                        <div class="detail-value">@(Model.Email ?? "-")</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-phone"></i> Telefon</div>
+                        <div class="detail-value">@(Model.PhoneNumber ?? "-")</div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Adres</div>
+                        <div class="detail-value">@(Model.PhoneNumber.FormatPhoneSafe())</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-city"></i> Şehir</div>
+                        <div class="detail-value">@(Model.City ?? "-")</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-building"></i> İlçe</div>
+                        <div class="detail-value">@(Model.District ?? "-")</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-mail-bulk"></i> Posta Kodu</div>
+                        <div class="detail-value">@(Model.PostalCode ?? "-")</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-id-card"></i> TC Kimlik No</div>
+                        <div class="detail-value">@(Model.IdentityNumber ?? "-")</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-calendar"></i> Kayıt Tarihi</div>
+                        <div class="detail-value">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-circle"></i> Durum</div>
+                        <div class="detail-value">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge-active"><i class="fas fa-check"></i> Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="badge-passive"><i class="fas fa-times"></i> Pasif</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <a href="/Customer/Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Geri Dön</a>
+            <a href="/Customer/Edit/@Model.Id" class="btn btn-primary"><i class="fas fa-edit"></i> Düzenle</a>
+        </div>
+    </div>
+</div>
+

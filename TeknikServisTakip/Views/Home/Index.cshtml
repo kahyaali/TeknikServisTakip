@@ -1,0 +1,93 @@
+﻿@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+
+<div class="text-center">
+    <div class="display-1 text-primary">
+        <i class="fas fa-tools"></i>
+    </div>
+    <h1 class="display-4">Teknik Servis Yönetim Sistemi</h1>
+    <p class="lead">Elektronik cihazlarınızın tamir süreçlerini kolayca takip edin.</p>
+    
+    @if (!User.Identity.IsAuthenticated)
+    {
+        <div class="mt-5">
+            <a asp-controller="Account" asp-action="Register" class="btn btn-success btn-lg mx-2">
+                <i class="fas fa-user-plus"></i> Kayıt Ol
+            </a>
+            <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg mx-2">
+                <i class="fas fa-sign-in-alt"></i> Giriş Yap
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="mt-5">
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> Hoş geldiniz, @User.Identity.Name!
+            </div>
+            
+            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+            {
+                <a asp-controller="Admin" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i class="fas fa-cogs"></i> Admin Paneli
+                </a>
+            }
+            else if (User.IsInRole("Idari") || User.IsInRole("Depo") || User.IsInRole("Sevkiyat"))
+            {
+                <a asp-controller="Admin" asp-action="Index" class="btn btn-info btn-lg">
+                    <i class="fas fa-chalkboard-user"></i> Yönetim Paneli
+                </a>
+            }
+            else if (User.IsInRole("Personel"))
+            {
+                <a asp-controller="PersonelDashboard" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-cog"></i> Personel Paneli
+                </a>
+            }
+            else if (User.IsInRole("Customer"))
+            {
+                <a asp-controller="CustomerDashboard" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i class="fas fa-chart-line"></i> Müşteri Paneli
+                </a>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Hesabınıza henüz bir rol atanmamıştır. Lütfen yöneticinizle iletişime geçin.
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-clock fa-3x text-warning"></i>
+                <h4 class="mt-2">Hızlı Servis</h4>
+                <p>En kısa sürede tamir hizmeti</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-shield-alt fa-3x text-success"></i>
+                <h4 class="mt-2">Garantili İşçilik</h4>
+                <p>Tüm tamirlerimiz garantilidir</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-chart-line fa-3x text-info"></i>
+                <h4 class="mt-2">Online Takip</h4>
+                <p>Tamir sürecinizi anlık takip edin</p>
+            </div>
+        </div>
+    </div>
+</div>

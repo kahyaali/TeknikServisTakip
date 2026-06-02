@@ -1,0 +1,456 @@
+﻿@{
+    ViewData["Title"] = "Tamir Süre Raporu";
+}
+
+<style>
+    /* ==================== LIGHT MODE ==================== */
+    :root,
+    [data-theme="light"] {
+        --bg-card: #ffffff;
+        --bg-table-header: #f8fafc;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+        --gradient-start: #f8fafc;
+        --gradient-end: #f1f5f9;
+        --badge-fast-bg: #d1fae5;
+        --badge-fast-text: #059669;
+        --badge-normal-bg: #fef3c7;
+        --badge-normal-text: #d97706;
+        --badge-slow-bg: #fee2e2;
+        --badge-slow-text: #dc2626;
+        --progress-bg: #e5e7eb;
+    }
+
+    /* ==================== DARK MODE ==================== */
+    [data-theme="dark"] {
+        --bg-card: #1e1e2f;
+        --bg-table-header: #1a1a2e;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --border-color: #2c2c3a;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+        --gradient-start: #1a1a2e;
+        --gradient-end: #16213e;
+        --badge-fast-bg: #1a3b2e;
+        --badge-fast-text: #34d399;
+        --badge-normal-bg: #422b1a;
+        --badge-normal-text: #fbbf24;
+        --badge-slow-bg: #3b1a1a;
+        --badge-slow-text: #f87171;
+        --progress-bg: #2c2c3a;
+    }
+
+    .report-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s;
+    }
+
+    .stat-number {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-top: 5px;
+    }
+
+    .stat-box {
+        padding: 20px;
+        background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+        border-radius: 16px;
+        text-align: center;
+        transition: transform 0.2s;
+    }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+        }
+
+    .filter-group {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .filter-item {
+        flex: 1;
+        min-width: 150px;
+    }
+
+        .filter-item label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+            color: var(--text-secondary);
+        }
+
+        .filter-item input, .filter-item select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .data-table th {
+            background: var(--bg-table-header);
+            font-weight: 600;
+        }
+
+    .text-end {
+        text-align: right;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .badge-time {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .badge-fast {
+        background: var(--badge-fast-bg);
+        color: var(--badge-fast-text);
+    }
+
+    .badge-normal {
+        background: var(--badge-normal-bg);
+        color: var(--badge-normal-text);
+    }
+
+    .badge-slow {
+        background: var(--badge-slow-bg);
+        color: var(--badge-slow-text);
+    }
+
+    .progress-bar-container {
+        background: var(--progress-bg);
+        border-radius: 20px;
+        height: 6px;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        background: #10b981;
+        height: 100%;
+        border-radius: 20px;
+    }
+
+    .chart-container {
+        min-height: 350px;
+    }
+
+        .chart-container canvas {
+            max-height: 300px;
+        }
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Başlık -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="fas fa-stopwatch me-2 text-primary"></i> Tamir Süre Raporu</h2>
+            <p class="text-muted">Tamir süreleri analizi ve performans değerlendirmesi</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-2"></i> Yenile
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtreler -->
+    <div class="report-card mb-4">
+        <div class="filter-group">
+            <div class="filter-item">
+                <label><i class="fas fa-calendar me-1"></i> Başlangıç Tarihi</label>
+                <input type="date" id="startDate" class="form-control" />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-calendar me-1"></i> Bitiş Tarihi</label>
+                <input type="date" id="endDate" class="form-control" />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-user-tie me-1"></i> Personel Seç</label>
+                <select id="personelSelect" class="form-control">
+                    <option value="">Tüm Personel</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <button class="btn btn-primary w-100" id="filterBtn">
+                    <i class="fas fa-search me-2"></i> Filtrele
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number" id="avgRepairTime">0</div>
+                <div class="stat-label">Ortalama Tamir Süresi (Gün)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number" id="minRepairTime">0</div>
+                <div class="stat-label">En Hızlı Tamir (Gün)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number" id="maxRepairTime">0</div>
+                <div class="stat-label">En Yavaş Tamir (Gün)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number" id="totalCompleted">0</div>
+                <div class="stat-label">Tamamlanan Tamir</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personel Bazında Süreler Tablosu -->
+    <div class="report-card mb-4">
+        <h5 class="mb-3"><i class="fas fa-users me-2 text-primary"></i> Personel Bazında Ortalama Tamir Süreleri</h5>
+        <div class="table-responsive">
+            <table class="data-table" id="personelTable">
+                <thead>
+                    <tr>
+                        <th>Personel</th>
+                        <th class="text-center">Tamir Sayısı</th>
+                        <th class="text-end">Ortalama Süre (Gün)</th>
+                        <th class="text-end">En Hızlı (Gün)</th>
+                        <th class="text-end">En Yavaş (Gün)</th>
+                        <th class="text-center">Performans</th>
+                    </tr>
+                </thead>
+                <tbody id="personelTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- En Hızlı ve En Yavaş Tamirler -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="report-card">
+                <h5 class="mb-3"><i class="fas fa-rocket me-2 text-success"></i> En Hızlı Tamirler (Top 5)</h5>
+                <div class="table-responsive">
+                    <table class="data-table" id="fastestTable">
+                        <thead>
+                            <tr>
+                                <th>Takip Kodu</th>
+                                <th>Ürün</th>
+                                <th>Personel</th>
+                                <th class="text-end">Süre (Gün)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fastestBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="report-card">
+                <h5 class="mb-3"><i class="fas fa-turtle me-2 text-danger"></i> En Yavaş Tamirler (Top 5)</h5>
+                <div class="table-responsive">
+                    <table class="data-table" id="slowestTable">
+                        <thead>
+                            <tr>
+                                <th>Takip Kodu</th>
+                                <th>Ürün</th>
+                                <th>Personel</th>
+                                <th class="text-end">Süre (Gün)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="slowestBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aylık Süre Trendi -->
+    <div class="report-card chart-container">
+        <h5 class="mb-3"><i class="fas fa-chart-line me-2 text-primary"></i> Aylık Ortalama Tamir Süresi Trendi</h5>
+        <canvas id="trendChart" style="width: 100%;"></canvas>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let trendChart;
+
+        $(document).ready(function() {
+        var today = new Date();
+        var oneYearAgo = new Date();
+        oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+        $('#startDate').val(oneYearAgo.toISOString().split('T')[0]);
+        $('#endDate').val(today.toISOString().split('T')[0]);
+
+        loadPersonelList();
+        loadTamirSureRaporu();
+
+        $('#filterBtn').click(function() {
+        loadTamirSureRaporu();
+        });
+        });
+
+        function loadPersonelList() {
+        $.get('/Rapor/GetPersonelList', function(data) {
+        var select = $('#personelSelect');
+        select.empty().append('<option value="">Tüm Personel</option>');
+        if (data && data.length > 0) {
+        $.each(data, function(i, p) {
+        select.append(`<option value="${p.id}">${p.name}</option>`);
+        });
+        }
+        }).fail(function() {
+        console.log('Personel listesi yüklenemedi');
+        });
+        }
+
+        function loadTamirSureRaporu() {
+        var data = {
+        startDate: $('#startDate').val(),
+        endDate: $('#endDate').val(),
+        personelId: $('#personelSelect').val()
+        };
+
+        $.get('/Rapor/GetTamirSureRaporu', data, function(res) {
+        // Kartlar
+        $('#avgRepairTime').text(res.avgRepairTime || 0);
+        $('#minRepairTime').text(res.minRepairTime || 0);
+        $('#maxRepairTime').text(res.maxRepairTime || 0);
+        $('#totalCompleted').text(res.totalCompletedRepairs || 0);
+
+        // Personel Tablosu
+        var tbody = $('#personelTableBody');
+        tbody.empty();
+        if (!res.personelAvgTime || res.personelAvgTime.length === 0) {
+        tbody.html('运转<td colspan="6" class="text-center">Veri bulunamadı<\/td><\/tr>');
+        } else {
+        $.each(res.personelAvgTime, function(i, p) {
+        var badgeClass = p.avgDays <= 7 ? 'badge-fast' : (p.avgDays <= 14 ? 'badge-normal' : 'badge-slow');
+        var progressWidth = p.avgDays > 21 ? 100 : (p.avgDays / 21 * 100);
+        tbody.append(`
+        <tr>
+        <td><strong>${p.personelName}<\/strong><\/td>
+        <td class="text-center">${p.totalRepairs}<\/td>
+        <td class="text-end"><strong>${p.avgDays.toFixed(1)}<\/strong> gün<\/td>
+        <td class="text-end">${p.minDays.toFixed(1)} gün<\/td>
+        <td class="text-end">${p.maxDays.toFixed(1)} gün<\/td>
+        <td class="text-center">
+        <span class="badge-time ${badgeClass}">${p.avgDays.toFixed(1)} gün</span>
+        <div class="progress-bar-container mt-1">
+        <div class="progress-bar-fill" style="width: ${progressWidth}%;"></div>
+        </div>
+        <\/td>
+        </tr>
+        `);
+        });
+        }
+
+        // En Hızlı Tamirler
+        var fastestBody = $('#fastestBody');
+        fastestBody.empty();
+        if (res.fastestRepairs && res.fastestRepairs.length > 0) {
+        $.each(res.fastestRepairs, function(i, r) {
+        fastestBody.append(`运转<td><strong>${r.trackingCode}<\/strong><\/td><td>${r.productName}<\/td><td>${r.personel?.fullName || '-'}<\/td><td class="text-end"><span class="badge-time badge-fast">${r.repairDays.toFixed(1)} gün<\/span><\/td><\/tr>`);
+        });
+        } else {
+        fastestBody.html('运转<td colspan="4" class="text-center">Veri bulunamadı<\/td><\/tr>');
+        }
+
+        // En Yavaş Tamirler
+        var slowestBody = $('#slowestBody');
+        slowestBody.empty();
+        if (res.slowestRepairs && res.slowestRepairs.length > 0) {
+        $.each(res.slowestRepairs, function(i, r) {
+        slowestBody.append(`运转<td><strong>${r.trackingCode}<\/strong><\/td><td>${r.productName}<\/td><td>${r.personel?.fullName || '-'}<\/td><td class="text-end"><span class="badge-time badge-slow">${r.repairDays.toFixed(1)} gün<\/span><\/td><\/tr>`);
+        });
+        } else {
+        slowestBody.html('运转<td colspan="4" class="text-center">Veri bulunamadı<\/td><\/tr>');
+        }
+
+        // Trend Grafiği
+        if (trendChart) trendChart.destroy();
+        var months = res.monthlyTrend.map(x => x.month);
+        var avgDays = res.monthlyTrend.map(x => x.avgDays);
+
+        if (months.length > 0 && avgDays.length > 0) {
+        var ctx = document.getElementById('trendChart').getContext('2d');
+        trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+        labels: months,
+        datasets: [{
+        label: 'Ortalama Tamir Süresi (Gün)',
+        data: avgDays,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.1)',
+        fill: true,
+        tension: 0.3
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+        tooltip: {
+        callbacks: {
+        label: function(context) {
+        return context.raw.toFixed(1) + ' gün';
+        }
+        }
+        }
+        },
+        scales: {
+        y: { title: { display: true, text: 'Ortalama Süre (Gün)' } }
+        }
+        }
+        });
+        } else {
+        document.getElementById('trendChart').style.display = 'none';
+        document.getElementById('trendChart').parentElement.innerHTML = '<div class="text-center text-muted py-5">Trend verisi bulunamadı</div>';
+        }
+        }).fail(function() {
+        console.log('Tamir süre raporu yüklenemedi');
+        });
+        }
+    </script>
+}

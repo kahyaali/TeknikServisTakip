@@ -1,0 +1,274 @@
+﻿
+
+
+@{
+    ViewData["Title"] = "Tamir Arşivi";
+}
+
+<div class="container-fluid px-4">
+    <div class="archive-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1 class="display-5 fw-bold mb-2">
+                    <i class="fas fa-archive me-3"></i> Tamir Arşivi
+                </h1>
+                <p class="lead mb-0 opacity-75">Teslim edilen tamirlerin geçmiş kayıtları</p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="/Repair/Index" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-2"></i> Tamir Listesine Dön
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <table id="archiveTable" class="table table-bordered table-archive">
+                <thead>
+                    <tr>
+                        <th>Takip Kodu</th>
+                        <th>Müşteri No</th>
+                        <th>Müşteri Adı</th>
+                        <th>Ürün</th>
+                        <th>Geliş Tarihi</th>
+                        <th>Teslim Tarihi</th>
+                        <th>Personel</th>
+                        <th>Ücret</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- AJAX ile doldurulacak -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+               $(document).ready(function() {
+            $('#archiveTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '/Repair/GetArchiveRepairsJson',
+                    type: 'POST',
+                    data: function(d) {
+                        return {
+                            draw: d.draw,
+                            start: d.start,
+                            length: d.length,
+                            search: d.search?.value || ''
+                        };
+                    }
+                },
+                language: { url: '/datatables/tr.json' },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" +
+                     "<'row'<'col-sm-12'B>>",
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i> Excel',
+                        className: 'btn btn-success btn-sm',
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7] }
+                    },
+                                       
+                                       {
+            extend: 'pdf',
+            text: '<i class="fas fa-file-pdf"></i> PDF İndir',
+            className: 'btn btn-danger btn-sm',
+            orientation: 'landscape',
+            pageSize: 'A4',
+            title: 'Tamir Arşivi',
+            exportOptions: {
+                columns: [0, 1, 2, 3, 4, 5, 6, 7],
+                format: {
+                    body: function(data, row, column, node) {
+                        var cleanText = data.replace(/<[^>]*>/g, '').trim();
+                        if (column === 0) {
+                            return cleanText.split('Teslim')[0].trim();
+                        }
+                        return cleanText;
+                    }
+                }
+            },
+            customize: function(doc) {
+                doc.pageMargins = [20, 50, 20, 40];
+        
+                // Başlık
+                doc.content.splice(0, 0, {
+                    text: 'TEKNİK SERVİS TAMİR ARŞİVİ',
+                    fontSize: 16,
+                    bold: true,
+                    alignment: 'center',
+                    margin: [0, 0, 0, 15]
+                });
+        
+                // Tarih
+                doc.content.splice(1, 0, {
+                    text: 'Rapor Tarihi: ' + new Date().toLocaleString('tr-TR'),
+                    fontSize: 9,
+                    alignment: 'right',
+                    margin: [0, 0, 0, 20]
+                });
+        
+                var tableIndex = doc.content.findIndex(function(item) { return item.table; });
+                if (tableIndex !== -1) {
+                    // Kolon genişlikleri
+                    doc.content[tableIndex].table.widths = ['13%', '9%', '11%', '20%', '8%', '8%', '10%', '21%'];
+            
+                    // BELİRGİN TABLO ÇİZGİLERİ
+                    doc.content[tableIndex].layout = {
+                        hLineWidth: function(i) { return 0.8; },
+                        vLineWidth: function(i) { return 0.8; },
+                        hLineColor: function(i) { return '#000000'; },
+                        vLineColor: function(i) { return '#000000'; },
+                        paddingLeft: function(i) { return 6; },
+                        paddingRight: function(i) { return 6; },
+                        paddingTop: function(i) { return 8; },
+                        paddingBottom: function(i) { return 8; }
+                    };
+            
+                    // Başlık satırı - koyu arka plan
+                    for (var j = 0; j < doc.content[tableIndex].table.body[0].length; j++) {
+                        if (doc.content[tableIndex].table.body[0][j]) {
+                            doc.content[tableIndex].table.body[0][j].fillColor = '#2c3e50';
+                            doc.content[tableIndex].table.body[0][j].color = 'white';
+                            doc.content[tableIndex].table.body[0][j].alignment = 'center';
+                            doc.content[tableIndex].table.body[0][j].bold = true;
+                        }
+                    }
+            
+                    // Veri satırları - zebra desenli ve sola yaslı
+                    for (var i = 1; i < doc.content[tableIndex].table.body.length; i++) {
+                        for (var j = 0; j < doc.content[tableIndex].table.body[i].length; j++) {
+                            if (doc.content[tableIndex].table.body[i][j]) {
+                                doc.content[tableIndex].table.body[i][j].alignment = 'left';
+                                doc.content[tableIndex].table.body[i][j].fontSize = 9;
+                                // Zebra deseni
+                                if (i % 2 === 0) {
+                                    doc.content[tableIndex].table.body[i][j].fillColor = '#f9f9f9';
+                                }
+                            }
+                        }
+                    }
+                }
+        
+                // Stiller
+                doc.styles.tableBodyEven = { fontSize: 9 };
+                doc.styles.tableBodyOdd = { fontSize: 9 };
+        
+                // Footer
+                doc['footer'] = function(page, pages) {
+                    return { text: 'Sayfa ' + page + ' / ' + pages, alignment: 'center', fontSize: 8, margin: [0, 0, 0, 20] };
+                };
+            }
+        }
+                        ],
+                pageLength: 10,
+                order: [[4, 'desc']],
+                columns: [
+                    {
+                        data: null,
+                        render: function(data) {
+                            return '<strong>' + data.trackingCode + '</strong> <span class="badge-delivered">Teslim Edildi</span>';
+                        }
+                    },
+                    { data: 'customerNumber' },
+                    { data: 'customerName' },
+                    {
+                        data: null,
+                        render: function(data) {
+                            var html = '<strong>' + data.productName + '</strong>';
+                            if (data.productBrand) {
+                                html += '<br /><small class="text-muted">' + data.productBrand + ' ' + data.productModel + '</small>';
+                            }
+                            return html;
+                        }
+                    },
+                    { data: 'receivedDate' },
+                    { data: 'deliveryDate' },
+                    { data: 'personel' },
+                { data: null, render: function(data) { return '<span class="price-cell">' + data.currencySymbol + ' ' + data.price + ' <small style="font-size: 9px;">(' + data.currency + ')</small></span>'; } },
+                    {
+                        data: null,
+                        render: function(data) {
+                            return '<a href="/Repair/ArchiveRepairDetail/' + data.id + '" class="btn-detail"><i class="fas fa-eye"></i> Detay</a>' +
+                                   '<button onclick="deleteArchive(' + data.id + ', \'' + data.trackingCode + '\')" class="btn-delete"><i class="fas fa-trash"></i></button>';
+                        }
+                    }
+                ]
+            });
+        });
+
+        function deleteArchive(id, trackingCode) {
+            Swal.fire({
+                title: 'Silmek istiyor musunuz?',
+                html: '<b>' + trackingCode + '</b> takip kodlu arşiv kaydını silmek üzeresiniz!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/Repair/DeleteArchiveRepair',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success').then(() => $('#archiveTable').DataTable().ajax.reload());
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}
+
+<style>
+    .badge-delivered {
+        background: #10b981;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 10px;
+        margin-left: 8px;
+    }
+
+    .btn-detail {
+        background: #0d6efd;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        text-decoration: none;
+        margin-right: 4px;
+    }
+
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+    .price-cell {
+        font-weight: 600;
+        color: #198754;
+    }
+</style>

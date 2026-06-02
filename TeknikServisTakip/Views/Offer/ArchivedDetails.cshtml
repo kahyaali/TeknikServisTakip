@@ -1,0 +1,207 @@
+﻿
+
+
+@model TeknikServisTakip.Models.ViewModels.OfferDetailsViewModel
+
+@{
+    ViewData["Title"] = "Arşiv Teklif Detayı - " + Model.OfferNumber;
+    string symbol = TeknikServisTakip.Helpers.CurrencyHelper.GetSymbol(Model.Currency);
+
+    string cleanNote = Model.Note;
+    if (!string.IsNullOrEmpty(cleanNote))
+    {
+        cleanNote = System.Text.RegularExpressions.Regex.Replace(cleanNote, @"\s*\(v\d+\s+Revizyonu\)", "");
+        cleanNote = System.Text.RegularExpressions.Regex.Replace(cleanNote, @"\s*\[Onaylandı.*?\]", "");
+        cleanNote = cleanNote.Trim();
+    }
+}
+
+<div class="container-fluid mt-4">
+
+    <!-- Başlık ve Butonlar -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="fas fa-archive me-2 text-primary"></i> Arşiv Teklif Detayı</h2>
+            <small class="text-muted">Teklif No: @Model.OfferNumber (v@(Model.Version)) | @Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")</small>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Offer/Archived" class="btn btn-outline-secondary shadow-sm rounded-pill px-4">
+                <i class="fas fa-arrow-left me-1"></i> Arşive Dön
+            </a>
+            <a href="/Offer/DownloadPdf?id=@Model.OfferId" class="btn btn-danger shadow-sm rounded-pill px-4" target="_blank">
+                <i class="fas fa-file-pdf me-1"></i> PDF İndir
+            </a>
+        </div>
+    </div>
+
+    <!-- 1. KART: Teklif ve Süreç Kartı -->
+    <div class="card shadow-sm border-0 mb-4 rounded-4">
+        <div class="card-header bg-dark text-white fw-bold py-3 rounded-top-4">
+            <i class="fas fa-info-circle me-2"></i> Teklif ve Süreç Kartı
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-row py-2">
+                        <span class="text-muted fw-semibold" style="width: 140px; display: inline-block;">Teklif No:</span>
+                        <span class="fw-bold text-primary">@Model.OfferNumber (v@(Model.Version))</span>
+                    </div>
+                    <div class="info-row py-2">
+                        <span class="text-muted fw-semibold" style="width: 140px; display: inline-block;">Müşteri No:</span>
+                        <span class="badge bg-secondary">@Model.CustomerNumber</span>
+                    </div>
+                    <div class="info-row py-2">
+                        <span class="text-muted fw-semibold" style="width: 140px; display: inline-block;">Müşteri Adı:</span>
+                        <span class="fw-bold">@Model.CustomerName</span>
+                    </div>
+                    <div class="info-row py-2">
+                        <span class="text-muted fw-semibold" style="width: 140px; display: inline-block;">Firma Adı:</span>
+                        <span class="fw-bold">@(string.IsNullOrEmpty(Model.CompanyName) ? "---" : Model.CompanyName)</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row py-2">
+                        <span class="text-muted fw-semibold" style="width: 140px; display: inline-block;">Durum:</span>
+                        <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> Onaylanmış / Arşivlenmiş</span>
+                    </div>
+                    <div class="info-row py-2">
+                        <span class="text-muted fw-semibold" style="width: 140px; display: inline-block;">Teklif Tarihi:</span>
+                        <span class="font-monospace">@Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")</span>
+                    </div>
+                    <div class="info-row py-2">
+                        <span class="text-muted fw-semibold" style="width: 140px; display: inline-block;">Onay Tarihi:</span>
+                        <span class="font-monospace text-success fw-semibold">@(Model.ApprovedAt?.ToString("dd.MM.yyyy HH:mm") ?? "-")</span>
+                    </div>
+                    <div class="info-row py-2">
+                        <span class="text-muted fw-semibold" style="width: 140px; display: inline-block;">Onaylayan:</span>
+                        <span>@(string.IsNullOrEmpty(Model.ApprovedBy) ? "---" : Model.ApprovedBy)</span>
+                    </div>
+                    <div class="info-row py-2">
+                        <span class="text-muted fw-semibold" style="width: 140px; display: inline-block;">Para Birimi:</span>
+                        <span class="fw-bold">@Model.Currency (@symbol)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 2. KART: Ürün Bazlı Kalemler -->
+    @{
+        var groupedLines = Model.Lines.GroupBy(l => l.ProductName);
+    }
+
+    @foreach (var group in groupedLines)
+    {
+        <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
+            <div class="card-header bg-primary bg-gradient text-white fw-bold py-3">
+                <i class="fas fa-box me-2"></i> @group.Key
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-3 text-white">Yapılan İşlem / Parça</th>
+                                <th class="text-center text-white">Miktar</th>
+                                <th class="text-center text-white">Birim</th>
+                                <th class="text-center text-white">Birim Fiyat</th>
+                                <th class="text-start text-white">Teknisyen Notu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var line in group)
+                            {
+                                <tr>
+                                    <td class="ps-3 text-white">@line.Description</td>
+                                    <td class="text-center text-white fw-bold">@line.Quantity</td>
+                                    <td class="text-center"><span class="badge bg-secondary">@line.Unit</span></td>
+                                    <td class="text-center text-success fw-bold">@line.UnitPrice.ToString("N2") @symbol</td>
+                                    <td class="text-start text-white-50">@(string.IsNullOrEmpty(line.TechnicianNote) ? "-" : line.TechnicianNote)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- 3. KART: Mali Özet Tablosu -->
+    <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden">
+        <div class="card-header fw-bold py-3" style="background: linear-gradient(135deg, #11998e, #38ef7d); color: white;">
+            <i class="fas fa-chart-line me-2"></i> Mali Özet Tablosu
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-10 mx-auto">
+                    <!-- Parça Toplamı -->
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                        <div>
+                            <i class="fas fa-microchip me-2 text-primary fs-5"></i>
+                            <span class="fw-semibold">Yedek Parça Toplamı</span>
+                        </div>
+                        <div class="fs-5 fw-bold">@Model.TotalLinesAmount.ToString("N2") @symbol</div>
+                    </div>
+
+                    <!-- İşçilik Toplamı -->
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                        <div>
+                            <i class="fas fa-tools me-2 text-warning fs-5"></i>
+                            <span class="fw-semibold">Toplam İşçilik Bedeli</span>
+                        </div>
+                        <div class="fs-5 fw-bold">@Model.TotalLaborCost.ToString("N2") @symbol</div>
+                    </div>
+
+                    <!-- İskonto (varsa) -->
+                    @if (Model.TotalDiscountAmount > 0)
+                    {
+                        <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                            <div>
+                                <i class="fas fa-tag me-2 text-danger fs-5"></i>
+                                <span class="fw-semibold text-danger">Toplam Uygulanan İskonto</span>
+                            </div>
+                            <div class="fs-5 fw-bold text-danger">-@Model.TotalDiscountAmount.ToString("N2") @symbol</div>
+                        </div>
+                    }
+
+                    <!-- KDV -->
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                        <div>
+                            <i class="fas fa-receipt me-2 text-info fs-5"></i>
+                            <span class="fw-semibold">Hesaplanan KDV Tutarı</span>
+                        </div>
+                        <div class="fs-5 fw-bold">@Model.TotalTaxAmount.ToString("N2") @symbol</div>
+                    </div>
+
+                    <!-- Genel Toplam -->
+                    <div class="d-flex justify-content-between align-items-center py-4 mt-2 rounded-3" style="background: linear-gradient(135deg, rgba(17, 153, 142, 0.1), rgba(56, 239, 125, 0.1));">
+                        <div class="ps-3">
+                            <i class="fas fa-flag-checkered me-2 text-success fs-3"></i>
+                            <span class="fw-bold fs-3">GENEL TOPLAM</span>
+                        </div>
+                        <div class="pe-3 fw-bold fs-2 text-success">@Model.GrandTotal.ToString("N2") @symbol</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. KART: Notlar -->
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-secondary text-white fw-bold py-3 rounded-top-4">
+            <i class="fas fa-sticky-note me-2"></i> Şartlar ve Özel Notlar
+        </div>
+        <div class="card-body">
+            <p class="mb-0" style="white-space: pre-line;">
+                @(!string.IsNullOrEmpty(cleanNote) ? cleanNote : "Teklif onaylanmış ve arşivlenmiştir.")
+            </p>
+        </div>
+    </div>
+
+    <!-- Versiyon bilgisi -->
+    <div class="text-end mt-3">
+        <small class="text-muted">Teklif Versiyonu: v@(Model.Version) | Onaylanmış / Arşivlenmiş</small>
+    </div>
+</div>
+

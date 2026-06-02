@@ -1,0 +1,303 @@
+﻿@model Entities.Concrete.Product
+@{
+    ViewData["Title"] = "Yeni Ürün Ekle";
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <div class="d-flex align-items-center mb-2">
+            <i class="fas fa-exclamation-triangle me-2 fs-5"></i>
+            <strong>Lütfen Formdaki Hataları Düzelteniz:</strong>
+        </div>
+
+        @* Sadece ModelOnly dersek genel hataları gösterir, All dersek inputların altındaki hataları da buraya toplarız *@
+        <div asp-validation-summary="ModelOnly" class="small fw-semibold ps-4"></div>
+
+  
+        <ul class="mb-0 small ps-4">
+            @foreach (var modelState in ViewData.ModelState.Values)
+            {
+                foreach (var error in modelState.Errors)
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            }
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> <strong>Başarılı!</strong> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i> <strong>Hata!</strong> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i> Yeni Ürün Ekle</h4>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post">
+                <!-- Ürün Bilgileri Başlık -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="section-title">
+                            <i class="fas fa-info-circle text-primary me-2"></i>
+                            <span>Temel Bilgiler</span>
+                        </div>
+                        <hr class="mt-2 mb-3" />
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="ProductCode" class="form-control" placeholder="Ürün Kodu" />
+                            <label asp-for="ProductCode">Ürün Kodu <span class="text-danger">*</span></label>
+                            <span asp-validation-for="ProductCode" class="text-danger small"></span>
+                            <div class="form-text small text-muted">Benzersiz bir ürün kodu giriniz. (Örn: DEP-2025001)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="ProductName" class="form-control" placeholder="Ürün Adı" />
+                            <label asp-for="ProductName">Ürün Adı <span class="text-danger">*</span></label>
+                            <span asp-validation-for="ProductName" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories">
+                                <option value="">-- Kategori Seçin --</option>
+                            </select>
+                            <label class="form-label ps-3" style="top: -8px;">Kategori</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="Unit" class="form-control" placeholder="Birim" value="Adet" />
+                            <label asp-for="Unit">Birim</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Marka/Model -->
+                <div class="row mt-4 mb-3">
+                    <div class="col-12">
+                        <div class="section-title">
+                            <i class="fas fa-tag text-primary me-2"></i>
+                            <span>Ürün Özellikleri</span>
+                        </div>
+                        <hr class="mt-2 mb-3" />
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="Brand" class="form-control" placeholder="Marka" />
+                            <label asp-for="Brand">Marka</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="Model" class="form-control" placeholder="Model" />
+                            <label asp-for="Model">Model</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="SerialNo" class="form-control" placeholder="Seri No" />
+                            <label asp-for="SerialNo">Seri No</label>
+                            <span asp-validation-for="SerialNo" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="IMEINo" class="form-control" placeholder="IMEI No" />
+                            <label asp-for="IMEINo">IMEI No</label>
+                            <span asp-validation-for="IMEINo" class="text-danger small"></span>
+                            <div class="form-text small text-muted">15 haneli sayı olmalıdır.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stok Bilgileri -->
+                <div class="row mt-4 mb-3">
+                    <div class="col-12">
+                        <div class="section-title">
+                            <i class="fas fa-boxes text-primary me-2"></i>
+                            <span>Stok Bilgileri</span>
+                        </div>
+                        <hr class="mt-2 mb-3" />
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input asp-for="Quantity" class="form-control" type="number" placeholder="Miktar" />
+                            <label asp-for="Quantity">Miktar</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input asp-for="MinStockLevel" class="form-control" type="number" placeholder="Min Stok" />
+                            <label asp-for="MinStockLevel">Min. Stok <span class="text-warning">(🟡 Sarı)</span></label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input asp-for="MaxStockLevel" class="form-control" type="number" placeholder="Max Stok" />
+                            <label asp-for="MaxStockLevel">Max. Stok <span class="text-danger">(🔴 Kırmızı)</span></label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input asp-for="Location" class="form-control" placeholder="Lokasyon" />
+                            <label asp-for="Location">Lokasyon (Raf)</label>
+                            <div class="form-text small text-muted">Örn: A-01, B-02</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fiyat Bilgileri -->
+                <div class="row mt-4 mb-3">
+                    <div class="col-12">
+                        <div class="section-title">
+                            <i class="fas fa-money-bill-wave text-primary me-2"></i>
+                            <span>Fiyat Bilgileri</span>
+                        </div>
+                        <hr class="mt-2 mb-3" />
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select asp-for="Currency" class="form-select" asp-items="ViewBag.CurrencyList" data-val="false">
+                                <option value="">-- Para Birimi Seçin --</option>
+                            </select>
+                            <label asp-for="Currency">Para Birimi</label>
+                            <span asp-validation-for="Currency" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input asp-for="PurchasePrice" class="form-control" type="number" step="0.01" placeholder="Alış Fiyatı" />
+                            <label asp-for="PurchasePrice">Alış Fiyatı</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input asp-for="SalePrice" class="form-control" type="number" step="0.01" placeholder="Satış Fiyatı" />
+                            <label asp-for="SalePrice">Satış Fiyatı</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="Supplier" class="form-control" placeholder="Tedarikçi" />
+                            <label asp-for="Supplier">Tedarikçi</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Açıklamalar -->
+                <div class="row mt-4 mb-3">
+                    <div class="col-12">
+                        <div class="section-title">
+                            <i class="fas fa-file-alt text-primary me-2"></i>
+                            <span>Açıklamalar</span>
+                        </div>
+                        <hr class="mt-2 mb-3" />
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="form-floating">
+                            <textarea asp-for="Description" class="form-control" placeholder="Açıklama" style="height: 100px;"></textarea>
+                            <label asp-for="Description">Açıklama</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-2">
+                    <div class="col-12">
+                        <div class="form-floating">
+                            <textarea asp-for="Notes" class="form-control" placeholder="Notlar" style="height: 80px;"></textarea>
+                            <label asp-for="Notes">Notlar</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Butonlar -->
+                <div class="mt-5 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4 py-2">
+                        <i class="fas fa-save me-2"></i> Kaydet
+                    </button>
+                    <a href="/Stock/Index" class="btn btn-secondary px-4 py-2 ms-2">
+                        <i class="fas fa-times me-2"></i> İptal
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+
+<style>
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .form-floating > .form-select {
+        padding-top: 1.625rem;
+        padding-bottom: 0.625rem;
+    }
+    
+    .form-floating > label {
+        padding: 1rem 0.75rem;
+    }
+    
+    .card {
+        border-radius: 1rem;
+    }
+    
+    .card-header {
+        border-radius: 1rem 1rem 0 0;
+    }
+    
+    hr {
+        opacity: 0.5;
+    }
+</style>

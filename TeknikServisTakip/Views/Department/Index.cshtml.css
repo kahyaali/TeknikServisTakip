@@ -1,0 +1,284 @@
+﻿
+.content {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.page-header {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-radius: 20px;
+    padding: 25px 30px;
+    margin-bottom: 30px;
+    color: white;
+}
+
+    .page-header h1 {
+        font-size: 28px;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .page-header p {
+        margin: 5px 0 0;
+        opacity: 0.9;
+        font-size: 14px;
+    }
+
+.btn-ekle {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.3s;
+    border: none;
+}
+
+    .btn-ekle:hover {
+        transform: translateY(-2px);
+        color: white;
+    }
+
+.btn-geri {
+    background: linear-gradient(135deg, #6c757d 0%, #5c636a 100%);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.3s;
+    margin-left: 10px;
+}
+
+    .btn-geri:hover {
+        transform: translateY(-2px);
+        color: white;
+    }
+
+.dataTables_wrapper {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+table.dataTable {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+    table.dataTable thead th {
+        background-color: #1e293b;
+        color: white;
+        font-weight: 600;
+        padding: 15px 10px;
+        border: none;
+    }
+
+    table.dataTable tbody td {
+        padding: 12px 10px;
+        vertical-align: middle;
+    }
+
+    table.dataTable tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+.badge-active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-passive {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.btn-duzenle {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s;
+    margin: 0 2px;
+}
+
+    .btn-duzenle:hover {
+        transform: scale(1.05);
+        color: white;
+    }
+
+.btn-sil {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s;
+}
+
+    .btn-sil:hover {
+        transform: scale(1.05);
+        color: white;
+    }
+
+.dt-buttons .btn {
+    border-radius: 10px !important;
+    margin: 0 5px !important;
+    padding: 8px 16px !important;
+}
+
+.buttons-excel {
+    background-color: #10b981 !important;
+    border: none !important;
+}
+
+.buttons-pdf {
+    background-color: #ef4444 !important;
+    border: none !important;
+}
+
+.buttons-print {
+    background-color: #3b82f6 !important;
+    border: none !important;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: none;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+    border: none;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+}
+
+.badge-date {
+    background-color: #e2e8f0;
+    color: #1e293b;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+
+/* ==================== DARK MOD DESTEĞİ ==================== */
+
+[data-theme="dark"] .content {
+    background-color: #0f172a;
+}
+
+[data-theme="dark"] .page-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+[data-theme="dark"] .dataTables_wrapper {
+    background: #1e293b;
+}
+
+[data-theme="dark"] table.dataTable tbody td {
+    color: #e2e8f0;
+    border-bottom-color: #334155;
+}
+
+[data-theme="dark"] table.dataTable tbody tr:hover {
+    background-color: #334155;
+}
+
+    [data-theme="dark"] table.dataTable tbody tr:hover td {
+        color: #f1f5f9;
+    }
+
+[data-theme="dark"] .alert-success {
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+    color: #a7f3d0;
+}
+
+[data-theme="dark"] .alert-danger {
+    background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+    color: #fecaca;
+}
+
+[data-theme="dark"] .badge-date {
+    background-color: #334155;
+    color: #e2e8f0;
+}
+
+
+[data-theme="dark"] .buttons-excel {
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%) !important;
+}
+
+[data-theme="dark"] .buttons-pdf {
+    background: linear-gradient(135deg, #991b1b 0%, #b91c1c 100%) !important;
+}
+
+[data-theme="dark"] .buttons-print {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+}
+
+[data-theme="dark"] .paginate_button {
+    color: #e2e8f0 !important;
+}
+
+    [data-theme="dark"] .paginate_button.current {
+        background: #3b82f6 !important;
+        color: white !important;
+        border-color: #3b82f6 !important;
+    }
+
+    [data-theme="dark"] .paginate_button:hover {
+        background: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+
+[data-theme="dark"] .dataTables_wrapper .dataTables_filter input,
+[data-theme="dark"] .dataTables_wrapper .dataTables_length select {
+    background-color: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .dataTables_wrapper .dataTables_filter label,
+[data-theme="dark"] .dataTables_wrapper .dataTables_length label,
+[data-theme="dark"] .dataTables_wrapper .dataTables_info {
+    color: #94a3b8;
+}

@@ -1,0 +1,282 @@
+﻿@{
+    ViewData["Title"] = "Vizyon & Misyon";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var vm = ViewBag.VisionMission as Entities.Concrete.PageContent;
+}
+
+<div class="vision-mission-page">
+    <div class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <h1 class="hero-title">@(vm?.Title ?? "Vizyon & Misyon")</h1>
+                <p class="hero-subtitle">Geleceğe yön veren değerlerimiz ve hedeflerimiz</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        @if (!string.IsNullOrEmpty(vm?.Content))
+        {
+            <div class="content-wrapper">
+                @Html.Raw(vm.Content)
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-info-circle"></i>
+                <h3>İçerik Henüz Eklenmemiş</h3>
+                <p>Vizyon ve misyon içeriği henüz eklenmemiştir.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .vision-mission-page {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
+    }
+
+    [data-theme="dark"] .vision-mission-page {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+
+    /* HERO BÖLÜMÜ */
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 80px 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    [data-theme="dark"] .hero-section {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+        animation: pulse 20s ease-in-out infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.3; }
+        50% { transform: scale(1.1); opacity: 0.5; }
+    }
+
+    .hero-content {
+        text-align: center;
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 25px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .hero-icon i {
+        font-size: 40px;
+        color: white;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 15px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+        color: rgba(255,255,255,0.9);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* İÇERİK BÖLÜMÜ */
+    .content-wrapper {
+        background: white;
+        border-radius: 24px;
+        padding: 50px;
+        margin-top: -40px;
+        position: relative;
+        z-index: 3;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    [data-theme="dark"] .content-wrapper {
+        background: #1e293b;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    /* VİZYON VE MİSYON KARTLARI (HTML içinde class kullanılırsa) */
+    .vision-mission-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+
+    .vision-card, .mission-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 20px;
+        padding: 30px;
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] .vision-card,
+    [data-theme="dark"] .mission-card {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+
+    .vision-card:hover, .mission-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .card-icon i {
+        font-size: 30px;
+        color: white;
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+        color: #1e293b;
+    }
+
+    [data-theme="dark"] .card-title {
+        color: #f1f5f9;
+    }
+
+    .card-text {
+        color: #64748b;
+        line-height: 1.6;
+    }
+
+    [data-theme="dark"] .card-text {
+        color: #94a3b8;
+    }
+
+    /* MADDE LİSTELERİ */
+    .values-list {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+    }
+
+    .values-list li {
+        padding: 12px 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    [data-theme="dark"] .values-list li {
+        border-bottom-color: #334155;
+    }
+
+    .values-list li i {
+        color: #10b981;
+        font-size: 20px;
+    }
+
+    .values-list li strong {
+        color: #1e293b;
+        min-width: 100px;
+    }
+
+    [data-theme="dark"] .values-list li strong {
+        color: #f1f5f9;
+    }
+
+    /* BOŞ İÇERİK */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 24px;
+        margin-top: -40px;
+        position: relative;
+        z-index: 3;
+    }
+
+    [data-theme="dark"] .empty-state {
+        background: #1e293b;
+    }
+
+    .empty-state i {
+        font-size: 64px;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        font-size: 1.5rem;
+        color: #1e293b;
+        margin-bottom: 10px;
+    }
+
+    [data-theme="dark"] .empty-state h3 {
+        color: #f1f5f9;
+    }
+
+    .empty-state p {
+        color: #64748b;
+    }
+
+    /* RESPONSIVE */
+    @@media (max-width: 768px) {
+        .hero-section {
+            padding: 50px 0;
+        }
+
+        .hero-title {
+            font-size: 2rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+
+        .content-wrapper {
+            padding: 30px 20px;
+        }
+
+        .vision-mission-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

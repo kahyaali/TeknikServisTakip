@@ -1,0 +1,415 @@
+﻿@{
+    ViewData["Title"] = "Sayfa İçerikleri";
+    var about = ViewBag.About as Entities.Concrete.PageContent;
+    var contact = ViewBag.Contact as Entities.Concrete.PageContent;
+    var visionMission = ViewBag.VisionMission as Entities.Concrete.PageContent;
+    var sliderImages = !string.IsNullOrEmpty(about?.SliderImages) ? System.Text.Json.JsonSerializer.Deserialize<List<string>>(about.SliderImages) : new List<string>();
+    var activeTab = ViewBag.ActiveTab as string ?? "about";
+}
+
+
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0"><i class="fas fa-edit"></i> Sayfa İçerikleri</h1>
+    </div>
+    <hr />
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs mb-3">
+                <li class="nav-item">
+                    <a class="nav-link @(activeTab == "about" ? "active" : "")" href="#about" data-bs-toggle="tab">
+                        <i class="fas fa-info-circle"></i> Hakkımızda
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(activeTab == "visionmission" ? "active" : "")" href="#visionmission" data-bs-toggle="tab">
+                        <i class="fas fa-eye"></i> Vizyon & Misyon
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(activeTab == "contact" ? "active" : "")" href="#contact" data-bs-toggle="tab">
+                        <i class="fas fa-envelope"></i> İletişim
+                    </a>
+                </li>              
+            </ul>
+
+            <div class="tab-content">
+                <!-- HAKKIMIZDA SEKMESİ -->
+                <div class="tab-pane fade @(activeTab == "about" ? "show active" : "")" id="about">
+                    <form method="post" asp-action="SaveAbout" enctype="multipart/form-data" id="aboutForm">
+                        @Html.AntiForgeryToken()
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Başlık</label>
+                                    <input type="text" name="title" class="form-control" value="@(about?.Title ?? "Hakkımızda")" required />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">İçerik</label>
+                                    <textarea name="content" class="form-control" rows="8" required>@about?.Content</textarea>
+                                </div>
+
+                                <!-- ANA RESİM -->
+                                <div class="mb-3">
+                                    <label class="form-label">Ana Resim</label>
+                                    <input type="file" name="mainImage" class="form-control" accept="image/*" />
+                                    @if (!string.IsNullOrEmpty(about?.ImageUrl))
+                                    {
+                                        <div class="mt-2">
+                                            <img src="@about.ImageUrl" style="max-width: 200px; border-radius: 8px;" />
+                                            <br />
+                                            <small class="text-muted">Mevcut resim. Yeni resim seçerseniz değişir.</small>
+                                        </div>
+                                    }
+                                </div>
+
+                                <hr />
+
+                                <!-- SLIDER RESİMLERİ -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Slider Resimleri (En fazla 10 resim)</label>
+
+                                    @if (sliderImages != null && sliderImages.Any())
+                                    {
+                                        <div class="existing-images mb-3" id="existingSliderImages">
+                                            <div class="mb-2" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                                <button type="button" id="selectAllSlider" class="btn btn-sm btn-primary">✅ Tümünü Seç</button>
+                                                <button type="button" id="deselectAllSlider" class="btn btn-sm btn-secondary">❌ Seçimi Kaldır</button>
+                                                <button type="button" id="deleteSelectedSlider" class="btn btn-sm btn-danger">🗑️ Seçilenleri Sil</button>
+                                            </div>
+                                            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                                @for (int i = 0; i < sliderImages.Count; i++)
+                                                {
+                                                    var img = sliderImages[i];
+                                                    <div class="existing-image-item" id="sliderImg_@i" style="position: relative;">
+                                                        <img src="@img" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;" />
+                                                        <button type="button" class="delete-slider-image btn btn-danger btn-sm" data-url="@img" style="position: absolute; top: -8px; right: -8px;">×</button>
+                                                        <input type="checkbox" class="slider-checkbox" data-url="@img" />
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <hr />
+                                    }
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Toplu Resim Seç (Tek seferde 10'a kadar)</label>
+                                        <input type="file" id="multipleSliderInput" class="form-control" accept="image/*" multiple />
+                                        <button type="button" id="addMultipleSlider" class="btn btn-success btn-sm mt-2">+ Toplu Ekle</button>
+                                        <div id="multipleSliderList" class="file-list mt-2"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Tek Tek Resim Ekle</label>
+                                        <div id="sliderSingleContainer"></div>
+                                        <button type="button" id="addSingleSlider" class="btn btn-info btn-sm">+ Tek Resim Ekle</button>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Kaydet</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- İLETİŞİM SEKMESİ -->
+                <div class="tab-pane fade @(activeTab == "contact" ? "show active" : "")" id="contact">
+                    <form method="post" asp-action="SaveContact">
+                        @Html.AntiForgeryToken()
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Başlık</label>
+                                    <input type="text" name="title" class="form-control" value="@(contact?.Title ?? "İletişim")" required />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Açıklama</label>
+                                    <textarea name="content" class="form-control" rows="4" required>@(contact?.Content)</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Adres</label>
+                                    <input type="text" name="address" class="form-control" value="@(contact?.Address)" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Telefon</label>
+                                    <input type="tel" name="phone" id="phoneInput" class="form-control" value="@(contact?.Phone)" placeholder="05XX XXX XX XX" />
+                                    <small class="text-muted">Format: 05XX XXX XX XX</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">E-posta</label>
+                                    <input type="email" name="email" class="form-control" value="@(contact?.Email)" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Harita URL</label>
+                                    <input type="text" name="mapUrl" class="form-control" value="@(contact?.MapUrl)" placeholder="Google Maps embed linki" />
+                                </div>
+                                <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Kaydet</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>  
+                
+                <!-- VİZYON & MİSYON SEKMESİ -->
+                <div class="tab-pane fade @(activeTab == "visionmission" ? "show active" : "")" id="visionmission">
+                    <form method="post" asp-action="SaveVisionMission">
+                        @Html.AntiForgeryToken()
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Başlık</label>
+                                    <input type="text" name="title" class="form-control" value="@(visionMission?.Title ?? "Vizyon & Misyon")" required />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">İçerik</label>
+                                    <textarea name="content" class="form-control" rows="12" required>@(visionMission?.Content)</textarea>
+                                    <small class="text-muted">HTML etiketleri kullanabilirsiniz. Örn: &lt;ul&gt;&lt;li&gt;Vizyonumuz...&lt;/li&gt;&lt;/ul&gt;</small>
+                                </div>
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Kaydet</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+@section Scripts {
+    
+    <script>
+        // Telefon formatlama
+        const phoneInput = document.getElementById('phoneInput');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.substring(0, 11);
+                
+                if (value.length >= 4) {
+                    value = value.substring(0, 3) + ' ' + value.substring(3);
+                }
+                if (value.length >= 8) {
+                    value = value.substring(0, 8) + ' ' + value.substring(8);
+                }
+                if (value.length >= 11) {
+                    value = value.substring(0, 11) + ' ' + value.substring(11);
+                }
+                
+                e.target.value = value;
+            });
+        }
+
+        // ========== SLIDER RESİMLERİ İÇİN ==========
+        let pendingSliderFiles = [];
+        let singleSliderCount = 0;
+
+        $(document).on('click', '.delete-slider-image', function() {
+            var imageUrl = $(this).data('url');
+            
+            Swal.fire({
+                title: 'Resmi silmek istiyor musunuz?',
+                text: 'Bu işlem geri alınamaz!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/PageContent/DeleteSliderImage',
+                        type: 'POST',
+                        data: { imageUrl: imageUrl },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire('Silindi!', response.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', response.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        $('#selectAllSlider').click(function() {
+            $('.slider-checkbox').prop('checked', true);
+        });
+        
+        $('#deselectAllSlider').click(function() {
+            $('.slider-checkbox').prop('checked', false);
+        });
+        
+        $('#deleteSelectedSlider').click(function() {
+            var selectedUrls = [];
+            $('.slider-checkbox:checked').each(function() {
+                selectedUrls.push($(this).data('url'));
+            });
+            
+            if (selectedUrls.length === 0) {
+                Swal.fire('Uyarı', 'Silmek için resim seçin!', 'warning');
+                return;
+            }
+            
+            Swal.fire({
+                title: selectedUrls.length + ' resim silinecek!',
+                text: 'Bu işlem geri alınamaz!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/PageContent/DeleteSliderImage',
+                        type: 'POST',
+                        data: { imageUrl: selectedUrls.join(',') },
+                        traditional: true,
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire('Silindi!', response.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', response.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        $('#addSingleSlider').click(function() {
+            singleSliderCount++;
+            var newId = singleSliderCount;
+            $('#sliderSingleContainer').append(`
+                <div class="image-row" id="sliderRow${newId}">
+                    <input type="file" name="sliderImages" class="form-control" accept="image/*" />
+                    <button type="button" class="btn btn-danger btn-sm remove-single-slider" data-id="${newId}">X</button>
+                </div>
+            `);
+        });
+        
+        $(document).on('click', '.remove-single-slider', function() {
+            var id = $(this).data('id');
+            $('#sliderRow' + id).remove();
+        });
+        
+        $('#addMultipleSlider').click(function() {
+            var files = $('#multipleSliderInput')[0].files;
+            var totalFiles = pendingSliderFiles.length + files.length;
+            
+            if (files.length === 0) {
+                Swal.fire('Uyarı!', 'Lütfen resim seçin!', 'warning');
+                return;
+            }
+            
+            if (totalFiles > 10) {
+                Swal.fire('Uyarı!', 'En fazla 10 resim ekleyebilirsiniz!', 'warning');
+                return;
+            }
+            
+            for (var i = 0; i < files.length; i++) {
+                pendingSliderFiles.push(files[i]);
+            }
+            
+            updateMultipleSliderList();
+            $('#multipleSliderInput').val('');
+        });
+        
+        function updateMultipleSliderList() {
+            var listDiv = $('#multipleSliderList');
+            listDiv.empty();
+            if (pendingSliderFiles.length > 0) {
+                listDiv.html('<strong>Seçilenler:</strong> <button type="button" id="selectAllPendingSlider" class="btn btn-sm btn-primary">Tümünü Seç</button> <button type="button" id="deleteSelectedPendingSlider" class="btn btn-sm btn-danger">Seçilenleri Sil</button><br/>');
+                for (var i = 0; i < pendingSliderFiles.length; i++) {
+                    listDiv.append(`<span class="pending-slider-item" data-index="${i}" style="cursor:pointer;">${pendingSliderFiles[i].name} <button type="button" class="remove-pending-slider" data-index="${i}" style="background:none; border:none; color:red; cursor:pointer;">×</button></span>`);
+                }
+            } else {
+                listDiv.html('');
+            }
+            
+            $('.pending-slider-item').off('click').on('click', function(e) {
+                if ($(e.target).hasClass('remove-pending-slider')) return;
+                $(this).toggleClass('selected');
+            });
+            
+            $('#selectAllPendingSlider').off('click').on('click', function() {
+                $('.pending-slider-item').addClass('selected');
+            });
+            
+            $('#deleteSelectedPendingSlider').off('click').on('click', function() {
+                var selectedIndexes = [];
+                $('.pending-slider-item.selected').each(function() {
+                    selectedIndexes.push($(this).data('index'));
+                });
+                if (selectedIndexes.length === 0) {
+                    Swal.fire('Uyarı', 'Silmek için resim seçin!', 'warning');
+                    return;
+                }
+                selectedIndexes.sort((a, b) => b - a);
+                for (var idx of selectedIndexes) {
+                    pendingSliderFiles.splice(idx, 1);
+                }
+                updateMultipleSliderList();
+            });
+            
+            $('.remove-pending-slider').off('click').on('click', function(e) {
+                e.stopPropagation();
+                var index = $(this).data('index');
+                pendingSliderFiles.splice(index, 1);
+                updateMultipleSliderList();
+            });
+        }
+        
+        $('#aboutForm').on('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            
+            for (var i = 0; i < pendingSliderFiles.length; i++) {
+                formData.append('sliderImages', pendingSliderFiles[i]);
+            }
+            
+            Swal.fire({
+                title: 'Kaydediliyor...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+            
+            $.ajax({
+                url: '/PageContent/SaveAbout',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                global: false,
+                success: function(response) {
+                    Swal.fire('Başarılı!', 'Hakkımızda sayfası güncellendi.', 'success').then(() => {
+                        location.reload();
+                    });
+                },
+                error: function(xhr) {
+                    Swal.fire('Hata!', 'Bir sorun oluştu: ' + xhr.status, 'error');
+                }
+            });
+        });
+    </script>
+}

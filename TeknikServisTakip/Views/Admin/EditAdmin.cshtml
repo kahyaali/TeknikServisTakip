@@ -1,0 +1,72 @@
+﻿@model Entities.Concrete.AppUser
+@{
+    ViewData["Title"] = "Admin Düzenle";
+}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Admin Düzenle</h3>
+        </div>
+        <div class="card-body">
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger">@TempData["Error"]</div>
+            }
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">@TempData["Success"]</div>
+            }
+
+            <form method="post" asp-action="EditAdmin">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Ad Soyad</label>
+                        <input type="text" name="fullName" class="form-control" value="@Model.FullName" required />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">E-posta</label>
+                        <input type="email" name="email" class="form-control" value="@Model.Email" required />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Telefon</label>
+                        <input type="tel" name="phoneNumber" class="form-control" value="@Model.PhoneNumber" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Rol</label>
+                        <input type="text" class="form-control" value="@ViewBag.CurrentRole" disabled />
+                        <small class="text-muted">Rol değişikliği için "Kullanıcı Rolleri" sayfasını kullanın.</small>
+                        <input type="hidden" name="selectedRole" value="@ViewBag.CurrentRole" />
+                    </div>
+                </div>        
+
+                <div class="mb-3">
+                    <label class="form-label">Adres</label>
+                    <textarea name="address" class="form-control" rows="2">@Model.Address</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Şehir</label>
+                        <input type="text" name="city" class="form-control" value="@Model.City" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">İlçe</label>
+                        <input type="text" name="district" class="form-control" value="@Model.District" />
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                    <a href="/Admin/AdminList" class="btn btn-secondary">Geri</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

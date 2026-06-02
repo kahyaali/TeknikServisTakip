@@ -1,0 +1,209 @@
+﻿@using Entities.Enum
+@using TeknikServisTakip.Helpers
+@model Entities.Concrete.RepairItem
+
+@{
+    ViewData["Title"] = "Expertiz Ekle";
+}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="fas fa-clipboard-list"></i> Expertiz Ekle</h4>
+            <p>Ürün: <strong>@Model.ProductName</strong> | Müşteri: @Model.AppUser?.FullName</p>
+        </div>
+        <div class="card-body">
+
+            <!-- Ürün Bilgileri (Özet) -->
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Takip Kodu:</strong> @Model.TrackingCode</div>
+                <div class="col-md-3"><strong>Marka:</strong> @Model.ProductBrand</div>
+                <div class="col-md-3"><strong>Model:</strong> @Model.ProductModel</div>
+                <div class="col-md-3"><strong>Seri No:</strong> @Model.SerialNumber</div>
+            </div>
+
+            <hr />
+
+            <!-- Expertiz Tablosu -->
+            <div class="table-responsive">
+                <table class="table table-bordered" id="expertiseTable">
+                    <thead>
+                        <tr>
+                            <th style="width:5%">#</th>
+                            <th style="width:40%">Yapılacak İşlem / Parça</th>
+                            <th style="width:10%">Miktar</th>
+                            <th style="width:10%">Birim</th>
+                            <th style="width:30%">Açıklama / Not</th>
+                            <th style="width:5%">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="row_0">
+                            <td class="row-number">1</td>
+                            <td><input type="text" name="Description" class="form-control" placeholder="Örn: Ekran değişimi" /></td>
+                            <td><input type="number" name="Quantity" class="form-control" value="1" min="1" /></td>
+                            <td>
+                                <select name="Unit" class="form-control">
+                                    <option value="Adet">Adet</option>
+                                    <option value="Takım">Takım</option>
+                                    <option value="Saat">Saat</option>
+                                    <option value="Metre">Metre</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="Note" class="form-control" placeholder="Varsa ek not..." /></td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-danger remove-row" disabled>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-2 mb-3">
+                <button type="button" id="addRowBtn" class="btn btn-sm btn-info">
+                    <i class="fas fa-plus"></i> Satır Ekle
+                </button>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="sendExpertiseBtn" class="btn btn-warning btn-lg">
+                    <i class="fas fa-paper-plane"></i> Expertize Gönder
+                </button>
+                <a href="/PersonelDashboard/Index" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-arrow-left"></i> Geri
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let rowCount = 1;
+
+        // Satır ekleme
+        $('#addRowBtn').click(function() {
+            let newRow = `
+                <tr id="row_${rowCount}">
+                    <td class="row-number">${rowCount + 1}</td>
+                    <td><input type="text" name="Description" class="form-control" placeholder="Örn: Ekran değişimi" /></td>
+                    <td><input type="number" name="Quantity" class="form-control" value="1" min="1" /></td>
+                    <td>
+                        <select name="Unit" class="form-control">
+                            <option value="Adet">Adet</option>
+                            <option value="Takım">Takım</option>
+                            <option value="Saat">Saat</option>
+                            <option value="Metre">Metre</option>
+                        </select>
+                    </td>
+                    <td><input type="text" name="Note" class="form-control" placeholder="Varsa ek not..." /></td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-danger remove-row">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            $('#expertiseTable tbody').append(newRow);
+            rowCount++;
+            updateRowNumbers();
+            toggleRemoveButtons();
+        });
+
+        // Satır silme
+        $(document).on('click', '.remove-row', function() {
+            if ($('#expertiseTable tbody tr').length > 1) {
+                $(this).closest('tr').remove();
+                rowCount--;
+                updateRowNumbers();
+                toggleRemoveButtons();
+            }
+        });
+
+        // Satır numaralarını güncelle
+        function updateRowNumbers() {
+            $('#expertiseTable tbody tr').each(function(index, row) {
+                $(row).find('.row-number').text(index + 1);
+            });
+        }
+
+        // Silme butonlarını kontrol et (ilk satır disable)
+        function toggleRemoveButtons() {
+            let rows = $('#expertiseTable tbody tr');
+            rows.each(function(index, row) {
+                let removeBtn = $(row).find('.remove-row');
+                if (index === 0) {
+                    removeBtn.prop('disabled', true);
+                } else {
+                    removeBtn.prop('disabled', false);
+                }
+            });
+        }
+
+   // Expertize Gönder
+$('#sendExpertiseBtn').click(function() {
+    let expertiseData = [];
+    let isValid = true;
+
+    $('#expertiseTable tbody tr').each(function(index, row) {
+        let description = $(row).find('input[name="Description"]').val();
+        if (!description || description.trim() === '') {
+            isValid = false;
+            $(row).find('input[name="Description"]').addClass('is-invalid');
+        } else {
+            $(row).find('input[name="Description"]').removeClass('is-invalid');
+        }
+
+        expertiseData.push({
+            Description: description,
+            Quantity: $(row).find('input[name="Quantity"]').val(),
+            Unit: $(row).find('select[name="Unit"]').val(),
+            Note: $(row).find('input[name="Note"]').val(),
+            LineOrder: index
+        });
+    });
+
+    if (!isValid) {
+        Swal.fire('Uyarı!', 'Lütfen tüm satırlar için işlem/parça açıklaması giriniz.', 'warning');
+        return;
+    }
+
+    Swal.fire({
+        title: 'Expertize Gönder',
+        text: expertiseData.length + ' kalem expertiz notunu onaya göndermek istediğinize emin misiniz?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        confirmButtonText: 'Evet, Gönder',
+        cancelButtonText: 'İptal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({ title: 'Gönderiliyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+            $.ajax({
+                url: '/PersonelDashboard/SendExpertise?repairId=' + @Model.Id,
+                type: 'POST',
+                data: JSON.stringify(expertiseData),
+                contentType: 'application/json',
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire('Başarılı!', res.message, 'success').then(() => {
+                            window.location.href = '/PersonelDashboard/Index';
+                        });
+                    } else {
+                        Swal.fire('Hata!', res.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                }
+            });
+        }
+    });
+});
+       
+    </script>
+}

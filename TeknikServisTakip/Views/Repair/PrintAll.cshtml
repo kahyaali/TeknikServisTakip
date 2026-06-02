@@ -1,0 +1,249 @@
+﻿@model IEnumerable<Entities.Concrete.RepairItem>
+@using Entities.Enum
+@using TeknikServisTakip.Helpers
+@{
+    Layout = null;
+    ViewData["Title"] = "Tamir Listesi Raporu";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Tamir Listesi Raporu</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+        }
+        
+        .print-header {
+            text-align: center;
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .print-header h1 {
+            color: #0d6efd;
+            margin: 0;
+        }
+        
+        .print-header p {
+            margin: 5px 0 0;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 11px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            text-align: left;
+        }
+        
+        th {
+            background: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        td {
+            text-align: left;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .badge-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .badge-teslim { background: #dc3545; color: white; }
+        .badge-tamamlandi { background: #198754; color: white; }
+        .badge-islemde { background: #ffc107; color: #000; }
+        .badge-beklemede { background: #6c757d; color: white; }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            font-size: 10px;
+            color: #999;
+        }
+        
+        @@media print {
+            body {
+                margin: 0;
+                padding: 15px;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+        
+        .no-print {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: #0d6efd;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+            .badge-teslim {
+                background: #343a40;
+                color: white;
+            }
+
+            .badge-tamamlandi {
+                background: #198754;
+                color: white;
+            }
+
+            .badge-islemde {
+                background: #0dcaf0;
+                color: #000;
+            }
+
+            .badge-beklemede {
+                background: #6c757d;
+                color: white;
+            }
+
+            .badge-teklif-onay {
+                background: #0d6efd;
+                color: white;
+            }
+
+            .badge-teklif-gonderildi {
+                background: #6f42c1;
+                color: white;
+            }
+
+            .badge-teklif-hazirlaniyor {
+                background: #fd7e14;
+                color: white;
+            }
+
+            .badge-expertize-gonderildi {
+                background: #20c997;
+                color: white;
+            }
+
+            .badge-expertiz-bekleniyor {
+                background: #ffc107;
+                color: #000;
+            }
+    </style>
+</head>
+<body>
+    <div class="print-header">
+        <h1>TEKNİK SERVİS - TAMİR LİSTESİ RAPORU</h1>
+        <p>Rapor Tarihi: @DateTime.Now.ToString("dd.MM.yyyy HH:mm")</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Müşteri No</th>
+                <th>Ürün Adı</th>
+                <th>Marka</th>
+                <th>Model</th>
+                <th>Seri No</th>
+                <th>Arıza Açıklaması</th>
+                <th>Geliş Tarihi</th>
+                <th>Teslim Tarihi</th>
+                <th>Personel</th>
+                <th>Durum</th>
+                <th>Ücret</th>
+                <th>Takip Kodu</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int sayac = 1;
+            }
+            @foreach (var item in Model)
+            {
+                var statusEnum = (RepairStatusEnum)(item.StatusId ?? 1);
+                var statusName = statusEnum.GetDisplayName();
+                var badgeClass = statusEnum switch
+                {
+                    RepairStatusEnum.TeslimEdildi => "badge-teslim",
+                    RepairStatusEnum.Tamamlandi => "badge-tamamlandi",
+                    RepairStatusEnum.IslemeAlindi => "badge-islemde",
+                    RepairStatusEnum.TeklifOnaylandi => "badge-teklif-onay",
+                    RepairStatusEnum.TeklifGonderildi => "badge-teklif-gonderildi",
+                    RepairStatusEnum.TeklifHazirlaniyor => "badge-teklif-hazirlaniyor",
+                    RepairStatusEnum.ExpertizeGonderildi => "badge-expertize-gonderildi",
+                    RepairStatusEnum.ExpertizBekleniyor => "badge-expertiz-bekleniyor",
+                    RepairStatusEnum.UrunKaydedildi => "badge-beklemede",
+                    _ => "badge-beklemede"
+                };
+                
+                <tr>
+                    <td class="text-center">@sayac</td>
+                    <td>@item.CustomerNumber</td>
+                    <td>@item.ProductName</td>
+                    <td>@(string.IsNullOrEmpty(item.ProductBrand) ? "-" : item.ProductBrand)</td>
+                    <td>@(string.IsNullOrEmpty(item.ProductModel) ? "-" : item.ProductModel)</td>
+                    <td>@(string.IsNullOrEmpty(item.SerialNumber) ? "-" : item.SerialNumber)</td>
+                    <td>@(item.ProblemDescription?.Length > 40 ? item.ProblemDescription.Substring(0,40)+"..." : item.ProblemDescription ?? "-")</td>
+                    <td class="text-center">@item.ReceivedDate.ToString("dd.MM.yyyy")</td>
+                    <td class="text-center">
+                        @if (item.DeliveryDate.HasValue)
+                        {
+                            @item.DeliveryDate.Value.ToString("dd.MM.yyyy")
+                        }
+                        else
+                        {
+                            <span style="color:#999;">-</span>
+                        }
+                    </td>
+                    <td>@(item.Personel?.FullName ?? "Atanmamış")</td>
+                    <td class="text-center"><span class="badge-status @badgeClass">@statusName</span></td>
+                    <td class="text-center">@item.Price.ToString("C2")</td>
+                    <td class="text-center"><strong>@item.TrackingCode</strong></td>
+                </tr>
+                sayac++;
+            }
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Bu belge @DateTime.Now.ToString("dd.MM.yyyy HH:mm") tarihinde sistem tarafından oluşturulmuştur.</p>
+        <p>Toplam @Model.Count() adet tamir kaydı bulunmaktadır.</p>
+        <p>Teslim edilen ürün sayısı: @Model.Count(x => x.DeliveryDate.HasValue)</p>
+    </div>
+
+    <div class="no-print">
+        <button onclick="window.print();"><i class="fas fa-print"></i> Yazdır</button>
+        <button onclick="window.close();"><i class="fas fa-times"></i> Kapat</button>
+    </div>
+
+    <script>
+        // Otomatik yazdırma istenirse:
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

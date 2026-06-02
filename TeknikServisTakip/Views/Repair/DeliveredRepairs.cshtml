@@ -1,0 +1,229 @@
+﻿@{
+    ViewData["Title"] = "Teslim Edilen Tamirler";
+}
+
+<div class="content">
+    <h1><i class="fas fa-archive"></i> Teslim Edilen Tamirler</h1>
+    <p>Teslim edilmiş tamir kayıtları listelenmektedir.</p>
+
+    <div class="button-group mb-3">
+        <a href="/Repair/Index" class="btn btn-secondary">Aktif Tamirlere Dön</a>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="deliveredTable" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Müşteri No</th>
+                    <th>Ürün Adı</th>
+                    <th>Marka</th>
+                    <th>Model</th>
+                    <th>Seri No</th>
+                    <th>Arıza Açıklaması</th>
+                    <th>Geliş Tarihi</th>
+                    <th>Teslim Tarihi</th>
+                    <th>Personel</th>
+                    <th>Ücret</th>
+                    <th>Öncesi Resimler</th>
+                    <th>Sonrası Resimler</th>
+                    <th>Takip Kodu</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- AJAX ile doldurulacak -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var rowImages = {};
+        var currentSlideImages = [];
+        var currentSlideIndex = 0;
+
+        $(document).ready(function() {
+            var table = $('#deliveredTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '/Repair/GetDeliveredRepairsJson',
+                    type: 'POST',
+                    data: function(d) {
+                        return {
+                            draw: d.draw,
+                            start: d.start,
+                            length: d.length,
+                            search: d.search?.value || ''
+                        };
+                    }
+                },
+                language: { url: '/datatables/tr.json' },
+                pageLength: 10,
+                responsive: true,
+                order: [[7, 'desc']],
+                columns: [
+                    { data: null, render: function(data, type, row, meta) { return meta.row + 1 + meta.settings._iDisplayStart; } },
+                    { data: 'customerNumber' },
+                    { data: 'productName' },
+                    { data: 'productBrand' },
+                    { data: 'productModel' },
+                    { data: 'serialNumber' },
+                    { data: 'problemDescription' },
+                    { data: 'receivedDate' },
+                    { data: 'deliveryDate' },
+                    { data: 'personel' },
+                           {
+            data: null,
+            render: function(data) {
+                return '<span class="price-cell">' + data.currencySymbol + ' ' + data.price + ' <small style="font-size: 9px;">(' + data.currency + ')</small></span>';
+            }
+        },
+                    { 
+                        data: null,
+                        render: function(data) {
+                            if (data.beforeImageCount === 0) return '<span class="text-muted">Yok</span>';
+                            var html = '<img src="' + data.beforeFirstImage + '" class="resim-thumb" onclick="openSlideshow(' + data.id + ', 0)" style="width:40px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;" />';
+                            if (data.beforeImageCount > 1) html += '<span class="resim-badge" onclick="openSlideshow(' + data.id + ', 0)">+' + (data.beforeImageCount - 1) + '</span>';
+                            return html;
+                        }
+                    },
+                    { 
+                        data: null,
+                        render: function(data) {
+                            if (data.afterImageCount === 0) return '<span class="text-muted">Yok</span>';
+                            var html = '<img src="' + data.afterFirstImage + '" class="resim-thumb" onclick="openSlideshow(' + data.id + ', ' + data.beforeImageCount + ')" style="width:40px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;" />';
+                            if (data.afterImageCount > 1) html += '<span class="resim-badge" onclick="openSlideshow(' + data.id + ', ' + data.beforeImageCount + ')">+' + (data.afterImageCount - 1) + '</span>';
+                            return html;
+                        }
+                    },
+                    { data: 'trackingCode', render: function(data) { return '<span class="badge bg-dark">' + data + '</span>'; } },
+                    { 
+                        data: null,
+                        render: function(data) {
+                            return '<div class="action-buttons">' +
+                                '<a href="/Repair/DeliveredDetails/' + data.id + '" class="action-btn btn-detay"><i class="fas fa-eye"></i> Detay</a>' +
+                                '</div>';
+                        }
+                    }
+                ],
+                drawCallback: function() {
+                    var data = table.rows().data();
+                    for (var i = 0; i < data.length; i++) {
+                        if (data[i].imagesJson) {
+                            rowImages[data[i].id] = JSON.parse(data[i].imagesJson);
+                        }
+                    }
+                }
+            });
+        });
+
+        function openSlideshow(repairId, index) {
+            var images = rowImages[repairId] || [];
+            if (images.length === 0) {
+                Swal.fire('Bilgi', 'Bu kayıt için resim bulunamadı.', 'info');
+                return;
+            }
+            currentSlideImages = images;
+            currentSlideIndex = index;
+            updateSlide();
+            document.getElementById('slideshowModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function updateSlide() {
+            if (currentSlideImages && currentSlideImages.length > 0 && currentSlideIndex >= 0 && currentSlideIndex < currentSlideImages.length) {
+                var imgPath = currentSlideImages[currentSlideIndex];
+                var imgElement = document.getElementById('slideImage');
+                imgElement.src = imgPath;
+                imgElement.onerror = function() { this.src = '/images/no-image.png'; };
+                document.getElementById('slideCounter').innerHTML = (currentSlideIndex + 1) + ' / ' + currentSlideImages.length;
+                document.getElementById('slideDownloadBtn').onclick = function() { downloadImage(imgPath); };
+            }
+        }
+
+        function changeSlide(direction) {
+            if (currentSlideImages && currentSlideImages.length > 0) {
+                currentSlideIndex += direction;
+                if (currentSlideIndex < 0) currentSlideIndex = currentSlideImages.length - 1;
+                if (currentSlideIndex >= currentSlideImages.length) currentSlideIndex = 0;
+                updateSlide();
+            }
+        }
+
+        function closeSlideshow() {
+            document.getElementById('slideshowModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function downloadImage(url) {
+            fetch(url).then(response => response.blob()).then(blob => {
+                const link = document.createElement('a');
+                const objectURL = URL.createObjectURL(blob);
+                link.href = objectURL;
+                link.download = url.split('/').pop() || 'resim.jpg';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(objectURL);
+                Swal.fire('Başarılı!', 'Resim indiriliyor...', 'success');
+            }).catch(() => {
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = url.split('/').pop() || 'resim.jpg';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                Swal.fire('Başarılı!', 'Resim indiriliyor...', 'success');
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            var modal = document.getElementById('slideshowModal');
+            if (modal.style.display === 'flex') {
+                if (e.key === 'Escape') closeSlideshow();
+                if (e.key === 'ArrowLeft') changeSlide(-1);
+                if (e.key === 'ArrowRight') changeSlide(1);
+                e.preventDefault();
+            }
+        });
+
+        document.getElementById('slideshowModal').addEventListener('click', function(e) {
+            if (e.target === this) closeSlideshow();
+        });
+    </script>
+}
+
+<style>
+    .resim-thumb {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .resim-badge {
+        background: #0d6efd;
+        color: white;
+        border-radius: 12px;
+        padding: 2px 6px;
+        font-size: 10px;
+        cursor: pointer;
+        margin-left: 4px;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+    }
+    .action-btn {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        text-decoration: none;
+    }
+    .btn-detay { background: #17a2b8; color: white; }
+    .badge.bg-dark { background: #343a40; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+</style>

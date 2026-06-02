@@ -1,0 +1,225 @@
+﻿
+
+
+@{
+    ViewData["Title"] = "Toplu Ürün Yükleme";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0"><i class="fas fa-file-excel"></i> Excel'den Toplu Ürün Yükleme</h4>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Excel Formatı:</strong> İlk satır başlık olmalıdır.
+                <hr class="my-2">
+                <strong>Sütunlar:</strong>
+                <ul class="mb-0 mt-1">
+                    <li><strong>A</strong> - Ürün Kodu * (Benzersiz)</li>
+                    <li><strong>B</strong> - Ürün Adı *</li>
+                    <li><strong>C</strong> - Kategori</li>
+                    <li><strong>D</strong> - Marka</li>
+                    <li><strong>E</strong> - Model</li>
+                    <li><strong>F</strong> - Seri No (Benzersiz)</li>
+                    <li><strong>G</strong> - IMEI No (Benzersiz)</li>
+                    <li><strong>H</strong> - Miktar *</li>
+                    <li><strong>I</strong> - Min Stok</li>
+                    <li><strong>J</strong> - Max Stok</li>
+                    <li><strong>K</strong> - Lokasyon</li>
+                    <li><strong>L</strong> - Tedarikçi</li>
+                    <li><strong>M</strong> - Alış Fiyatı</li>
+                    <li><strong>N</strong> - Satış Fiyatı</li>
+                    <li><strong>O</strong> - Açıklama</li>
+                </ul>
+            </div>
+
+            <form id="bulkImportForm" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label">Excel Dosyası Seçin</label>
+                            <input type="file" id="excelFile" class="form-control" accept=".xlsx, .xls" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" class="btn btn-primary form-control" onclick="downloadTemplate()">
+                                <i class="fas fa-download"></i> Şablon İndir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-success" onclick="uploadExcel()">
+                    <i class="fas fa-upload"></i> Yüklemeyi Başlat
+                </button>
+                <a href="/Stock/Index" class="btn btn-secondary">İptal</a>
+            </form>
+
+            <div id="progressDiv" style="display:none;" class="mt-4">
+                <div class="progress">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                         role="progressbar" style="width: 0%">
+                        0%
+                    </div>
+                </div>
+                <div id="resultDiv" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function downloadTemplate() {
+            window.location.href = '/Stock/ExportTemplate';
+        }
+
+               function uploadExcel() {
+            var fileInput = document.getElementById('excelFile');
+            var file = fileInput.files[0];
+
+            if (!file) {
+                Swal.fire('Hata!', 'Lütfen bir Excel dosyası seçin!', 'error');
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('excelFile', file);
+
+            $('#progressDiv').show();
+            $('#progressBar').css('width', '0%').text('0%');
+
+            $.ajax({
+                url: '/Stock/BulkImport',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                xhr: function() {
+                    var xhr = new window.XMLHttpRequest();
+                    xhr.upload.addEventListener('progress', function(evt) {
+                        if (evt.lengthComputable) {
+                            var percent = Math.round((evt.loaded / evt.total) * 100);
+                            $('#progressBar').css('width', percent + '%').text(percent + '%');
+                        }
+                    }, false);
+                    return xhr;
+                },
+                success: function(res) {
+                    $('#progressDiv').hide();
+            
+                    console.log("Response:", res);
+            
+                    if (res.success) {
+                        var html = '';
+                
+                        // Başarılı mesajı
+                        if (res.successCount > 0) {
+                            html += `<div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Başarılı!</strong> ${res.successCount} ürün başarıyla eklendi.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>`;
+                        }
+                
+                        // Hataları göster
+                        if (res.errors && res.errors.length > 0) {
+                            var errorList = '';
+                            for (var i = 0; i < res.errors.length; i++) {
+                                var err = res.errors[i];
+                                var colorClass = '';
+                                if (err.indexOf('kullanımda') > -1) colorClass = 'text-danger';
+                                else if (err.indexOf('bulunamadı') > -1) colorClass = 'text-warning';
+                                else if (err.indexOf('boş olamaz') > -1) colorClass = 'text-danger';
+                                errorList += `<li class="${colorClass}">${err}</li>`;
+                            }
+                    
+                            html += `<div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>${res.errors.length} Hata Oluştu!</strong>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <hr>
+                                <div style="max-height: 400px; overflow-y: auto;">
+                                    <ul class="mb-0">${errorList}</ul>
+                                </div>
+                                <button class="btn btn-sm btn-primary mt-2" onclick="copyErrorsToClipboard()">
+                                    <i class="fas fa-copy"></i> Hataları Kopyala
+                                </button>
+                            </div>`;
+                        }
+                
+                        $('#resultDiv').html(html);
+                
+                        // 🔥 DÜZELTİLMİŞ SWEETALERT - KAPANMIYOR!
+                        if (res.errors && res.errors.length > 0) {
+                            // Hata listesini HTML olarak hazırla
+                            var sweetErrorList = '<div style="text-align:left; max-height:300px; overflow:auto;">';
+                            sweetErrorList += '<b>Başarılı:</b> ' + res.successCount + ' ürün<br>';
+                            sweetErrorList += '<b>Hatalar:</b> ' + res.errors.length + '<br><br>';
+                            sweetErrorList += '<u>Hata Detayları:</u><br>';
+                            sweetErrorList += '<ul style="margin-left:20px;">';
+                            for (var i = 0; i < Math.min(res.errors.length, 20); i++) {
+                                sweetErrorList += '<li>' + res.errors[i] + '</li>';
+                            }
+                            if (res.errors.length > 20) {
+                                sweetErrorList += '<li><i>ve ' + (res.errors.length - 20) + ' hata daha...</i></li>';
+                            }
+                            sweetErrorList += '</ul></div>';
+                    
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Kısmen Tamamlandı!',
+                                html: sweetErrorList,
+                                confirmButtonText: 'Tamam',
+                                confirmButtonColor: '#3085d6',
+                                width: '800px'
+                            });
+                        } else if (res.successCount > 0) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Tamamlandı!',
+                                text: `${res.successCount} ürün başarıyla eklendi.`,
+                                confirmButtonColor: '#28a745'
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Bilgi!',
+                                text: 'Hiç ürün eklenemedi. Excel dosyasını kontrol edin.',
+                                confirmButtonColor: '#3085d6'
+                            });
+                        }
+                
+                        // Tabloyu yenile
+                        if (typeof $('#stockTable').DataTable !== 'undefined') {
+                            $('#stockTable').DataTable().ajax.reload();
+                        }
+                    } else {
+                        $('#resultDiv').html(`<div class="alert alert-danger">${res.message}</div>`);
+                        Swal.fire('Hata!', res.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    $('#progressDiv').hide();
+                    var errorMsg = xhr.responseJSON?.message || 'Bir sorun oluştu!';
+                    $('#resultDiv').html(`<div class="alert alert-danger">${errorMsg}</div>`);
+                    Swal.fire('Hata!', errorMsg, 'error');
+                }
+            });
+        }
+
+        // Hataları kopyalama fonksiyonu
+        function copyErrorsToClipboard() {
+            var errorText = '';
+            $('.alert-warning ul li').each(function() {
+                errorText += $(this).text() + '\n';
+            });
+            navigator.clipboard.writeText(errorText);
+            Swal.fire('Kopyalandı!', 'Hatalar panoya kopyalandı.', 'success');
+        }
+    </script>
+}

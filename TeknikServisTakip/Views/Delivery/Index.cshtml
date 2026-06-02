@@ -1,0 +1,1077 @@
+﻿@{
+    ViewData["Title"] = "Ürün Teslim";
+}
+
+
+
+<div class="delivery-container">
+    <div class="page-header">
+        <h1><i class="fas fa-truck me-3"></i> Ürün Teslimatı</h1>
+        <p>Müşteri No veya Takip Kodu ile arama yapın, teslim edilecek ürünü seçin</p>
+    </div>
+    
+    <!-- Arama Kartı -->
+    <div class="search-card">
+        <div class="search-tabs">
+            <div class="search-tab active" data-tab="customer">Müşteri No ile Ara</div>
+            <div class="search-tab" data-tab="tracking">Takip Kodu ile Ara</div>
+        </div>
+        
+        <div id="customerSearch" class="search-group active">
+            <input type="text" id="customerNumber" class="form-control" placeholder="Müşteri No giriniz (Örn: MUS-202600001)" />
+            <button id="btnSearchCustomer" class="btn-search"><i class="fas fa-search"></i> Ara</button>
+        </div>
+        
+        <div id="trackingSearch" class="search-group">
+            <input type="text" id="trackingCode" class="form-control" placeholder="Takip Kodu giriniz (Örn: TAK-2026-0001)" />
+            <button id="btnSearchTracking" class="btn-search"><i class="fas fa-search"></i> Ara</button>
+        </div>
+
+      
+    </div>
+    
+    <!-- Müşteri Bilgi Kartı -->
+    <div id="customerInfo" class="customer-info-card">
+        <div class="row">
+            <div class="col-md-3">
+                <small>Müşteri Adı</small>
+                <p class="fw-bold mb-0" id="customerName">-</p>
+            </div>
+            <div class="col-md-3">
+                <small>Telefon</small>
+                <p class="fw-bold mb-0" id="customerPhone">-</p>
+            </div>
+            <div class="col-md-3">
+                <small>Müşteri No</small>
+                <p class="fw-bold mb-0" id="customerNo">-</p>
+            </div>  
+            <div class="col-md-3">
+        
+                <small>Firma</small>
+                <p class="fw-bold mb-0" id="customerCompany">-</p>
+            </div>
+        </div>
+       
+    </div>
+    
+    <!-- Ürün Tablosu -->
+    <div id="repairTableWrapper" class="repair-table-wrapper">
+        <table id="repairTable" class="repair-table">
+            <thead>
+                <tr>
+                    <th>Takip Kodu</th>
+                    <th>Ürün Adı</th>
+                    <th>Marka/Model</th>
+                    <th>Geliş Tarihi</th>
+                    <th>Durum</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody id="repairTableBody">
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Teslim Formu -->
+    <div id="deliveryForm" class="delivery-form">
+        <h4 class="mb-3"><i class="fas fa-clipboard-list"></i> Teslim Bilgileri</h4>
+        <div id="selectedRepairInfo" class="selected-repair"></div>
+        
+        <input type="hidden" id="selectedRepairId" />
+        
+        <div class="delivery-type-group">
+            <label>
+                <input type="radio" name="deliveryType" value="Cargo" checked /> <i class="fas fa-truck"></i> Kargo
+            </label>
+            <label>
+                <input type="radio" name="deliveryType" value="InPerson" /> <i class="fas fa-handshake"></i> Elden Teslim
+            </label>
+        </div>
+        
+        <!-- Kargo Alanları -->
+        <div id="cargoFields" class="cargo-fields active">
+            <div class="form-group">
+                <label class="form-label">Kargo Firması *</label>
+                <input type="text" id="cargoCompany" class="form-control" placeholder="Örn: Yurtiçi Kargo, MNG, Aras..." />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Kargo Takip No</label>
+                <input type="text" id="cargoTrackingNumber" class="form-control" placeholder="Takip numarası" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Alıcı Ad Soyad *</label>
+                <input type="text" id="recipientName" class="form-control" placeholder="Teslim alacak kişi" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Alıcı Telefon</label>
+                <input type="tel" id="recipientPhone" class="form-control phone-mask"
+                placeholder="05XX XXX XX XX" 
+                       value="@(Model?.PhoneNumber.FormatPhoneSafe())" />
+                <small class="text-muted">Opsiyonel - 05XX XXX XX XX</small>
+            </div>
+        </div>
+        
+        <!-- Elden Teslim Alanları -->
+        <div id="inpersonFields" class="inperson-fields">
+            <div class="form-group">
+                <label class="form-label">Teslim Alan Ad Soyad *</label>
+                <input type="text" id="receiverName" class="form-control" placeholder="Teslim alan kişi" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Teslim Alan Telefon</label>
+                <input type="tel" id="receiverPhone" class="form-control phone-mask"
+                placeholder="05XX XXX XX XX" 
+                       value="@(Model?.PhoneNumber.FormatPhoneSafe())" />
+                <small class="text-muted">Opsiyonel - 05XX XXX XX XX</small>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Not (Opsiyonel)</label>
+            <textarea id="note" class="form-control" rows="2" placeholder="Teslim ile ilgili not..."></textarea>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <button id="btnDeliver" class="btn btn-success w-100"><i class="fas fa-check-circle"></i> Teslim Et</button>
+            </div>
+            <div class="col-md-6">
+                <button id="btnCancel" class="btn btn-secondary w-100"><i class="fas fa-times"></i> İptal</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+
+    
+
+    .delivery-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+
+    [data-theme="light"] .delivery-container {
+        background-color: #f8fafc;
+    }
+
+    [data-theme="dark"] .delivery-container {
+        background-color: #0f172a;
+    }
+
+
+    .page-header {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        border-radius: 20px;
+        padding: 25px 30px;
+        margin-bottom: 30px;
+        color: white;
+    }
+
+    [data-theme="dark"] .page-header {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+
+    .page-header h1 {
+        font-size: 28px;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .page-header p {
+        margin: 5px 0 0;
+        opacity: 0.9;
+        font-size: 14px;
+    }
+
+
+    .search-card {
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+
+    [data-theme="light"] .search-card {
+        background: white;
+    }
+
+    [data-theme="dark"] .search-card {
+        background: #1e293b;
+    }
+
+    .search-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 10px;
+    }
+
+    [data-theme="dark"] .search-tabs {
+        border-bottom-color: #334155;
+    }
+
+    .search-tab {
+        padding: 8px 20px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    [data-theme="light"] .search-tab {
+        background: #f1f5f9;
+    }
+
+    [data-theme="dark"] .search-tab {
+        background: #334155;
+        color: #e2e8f0;
+    }
+
+    .search-tab.active {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .search-group {
+        display: none;
+    }
+
+        .search-group.active {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-group input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+        }
+
+    [data-theme="light"] .search-group input {
+        border: 1px solid #ddd;
+        background: white;
+    }
+
+    [data-theme="dark"] .search-group input {
+        border: 1px solid #334155;
+        background: #0f172a;
+        color: #e2e8f0;
+    }
+
+    .btn-search {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+
+    .customer-info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 20px;
+        color: white;
+        display: none;
+    }
+
+
+    .repair-table-wrapper {
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        overflow-x: auto;
+        display: none;
+    }
+
+    [data-theme="light"] .repair-table-wrapper {
+        background: white;
+    }
+
+    [data-theme="dark"] .repair-table-wrapper {
+        background: #1e293b;
+    }
+
+    .repair-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+
+        .repair-table th,
+        .repair-table td {
+            padding: 14px 15px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+     
+            .repair-table th:last-child {
+                text-align: right !important;
+                padding-right: 25px;
+            }
+
+            .repair-table td:last-child {
+                text-align: right !important;
+                padding-right: 20px;
+            }
+
+ 
+    [data-theme="light"] .repair-table th {
+        background-color: #1e293b;
+        color: white;
+    }
+
+    [data-theme="dark"] .repair-table th {
+        background-color: #0f172a;
+        color: #f1f5f9;
+    }
+
+    [data-theme="light"] .repair-table td {
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    [data-theme="dark"] .repair-table td {
+        border-bottom: 1px solid #334155;
+        color: #e2e8f0;
+    }
+
+
+    [data-theme="light"] .repair-table tr:hover {
+        background-color: #f8fafc;
+    }
+
+    [data-theme="dark"] .repair-table tr:hover {
+        background-color: #334155;
+    }
+
+    .action-column {
+        min-width: 260px;
+        text-align: right !important;
+    }
+
+    .btn-group-custom {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .btn-table-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 18px;
+        border-radius: 12px;
+        border: none;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
+        position: relative;
+        overflow: hidden;
+        letter-spacing: 0.3px;
+    }
+
+    
+        .btn-table-action::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-table-action:hover::before {
+            left: 100%;
+        }
+
+
+    .btn-view {
+        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+
+        .btn-view:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-view:active {
+            transform: translateY(0);
+        }
+
+
+    .btn-deliver-action {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+        .btn-deliver-action:hover:not(:disabled) {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-deliver-action:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-deliver-action:disabled {
+            background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+            cursor: not-allowed;
+            opacity: 0.7;
+            transform: none;
+            box-shadow: none;
+        }
+
+    [data-theme="dark"] .btn-view {
+        background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    [data-theme="dark"] .btn-deliver-action {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    }
+
+
+    .btn-table-action i {
+        font-size: 13px;
+        transition: transform 0.2s ease;
+    }
+
+    .btn-view:hover i,
+    .btn-deliver-action:hover:not(:disabled) i {
+        transform: scale(1.1);
+    }
+
+
+    .badge-pending,
+    .badge-progress,
+    .badge-completed,
+    .badge-delivered {
+        padding: 5px 12px;
+        border-radius: 30px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .badge-pending {
+        background: #f59e0b;
+        color: #1e293b;
+    }
+
+    .badge-progress {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .badge-completed {
+        background: #10b981;
+        color: white;
+    }
+
+    .badge-delivered {
+        background: #6c757d;
+        color: white;
+    }
+
+    [data-theme="dark"] .badge-pending {
+        background: #b45309;
+        color: #fef3c7;
+    }
+
+    [data-theme="dark"] .badge-progress {
+        background: #2563eb;
+    }
+
+    [data-theme="dark"] .badge-completed {
+        background: #059669;
+    }
+
+    [data-theme="dark"] .badge-delivered {
+        background: #475569;
+    }
+
+    .delivery-form {
+        border-radius: 20px;
+        padding: 25px;
+        margin-top: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        display: none;
+    }
+
+    [data-theme="light"] .delivery-form {
+        background: white;
+    }
+
+    [data-theme="dark"] .delivery-form {
+        background: #1e293b;
+    }
+
+        [data-theme="dark"] .delivery-form h4 {
+            color: #f1f5f9;
+        }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    [data-theme="light"] .form-label {
+        color: #1e293b;
+    }
+
+    [data-theme="dark"] .form-label {
+        color: #e2e8f0;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+
+    [data-theme="light"] .form-control {
+        border: 1px solid #ddd;
+        background: white;
+    }
+
+    [data-theme="dark"] .form-control {
+        border: 1px solid #334155;
+        background: #0f172a;
+        color: #e2e8f0;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .delivery-type-group {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+        .delivery-type-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+    [data-theme="light"] .delivery-type-group label {
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+
+    [data-theme="dark"] .delivery-type-group label {
+        background: #0f172a;
+        color: #e2e8f0;
+    }
+
+    .delivery-type-group label:hover {
+        transform: translateY(-1px);
+    }
+
+    .cargo-fields, .inperson-fields {
+        display: none;
+    }
+
+        .cargo-fields.active, .inperson-fields.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .selected-repair {
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    [data-theme="light"] .selected-repair {
+        background: #f0fdf4;
+        border: 1px solid #10b981;
+    }
+
+    [data-theme="dark"] .selected-repair {
+        background: #064e3b;
+        border: 1px solid #059669;
+    }
+
+    .selected-repair-content {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+        .selected-repair-content i {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .selected-repair-content strong {
+            font-size: 14px;
+        }
+
+        .selected-repair-content span {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        padding: 12px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        border: none;
+        padding: 12px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+        }
+
+
+    @@media (max-width: 768px) {
+        .delivery-container {
+            padding: 10px;
+        }
+
+        .search-group.active {
+            flex-direction: column;
+        }
+
+        .btn-search {
+            width: 100%;
+        }
+
+        .action-column {
+            min-width: auto;
+            text-align: left !important;
+        }
+
+        .repair-table th:last-child,
+        .repair-table td:last-child {
+            text-align: left !important;
+        }
+
+        .btn-group-custom {
+            flex-direction: column;
+            gap: 8px;
+            justify-content: flex-start;
+        }
+
+        .btn-table-action {
+            width: 100%;
+            justify-content: center;
+            padding: 8px 16px;
+        }
+
+        .repair-table th,
+        .repair-table td {
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+
+        .badge-pending, .badge-progress, .badge-completed, .badge-delivered {
+            min-width: 80px;
+            font-size: 10px;
+        }
+    }
+
+
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+   
+        $(document).ready(function() {
+        // Tab değişimi
+        $('.search-tab').click(function() {
+        $('.search-tab').removeClass('active');
+        $(this).addClass('active');
+        var tab = $(this).data('tab');
+        $('.search-group').removeClass('active');
+        if (tab === 'customer') {
+        $('#customerSearch').addClass('active');
+        } else if (tab === 'tracking') {
+        $('#trackingSearch').addClass('active');
+        }
+
+            // Arama sonuçlarını temizle
+            $('#customerInfo').hide();
+            $('#repairTableWrapper').hide();
+            $('#deliveryForm').hide();
+        });
+        
+        // Teslim tipi değişimi
+        $('input[name="deliveryType"]').change(function() {
+            if ($(this).val() === 'Cargo') {
+                $('#cargoFields').addClass('active');
+                $('#inpersonFields').removeClass('active');
+            } else {
+                $('#cargoFields').removeClass('active');
+                $('#inpersonFields').addClass('active');
+            }
+        });
+        
+        // Müşteri No ile ara
+        $('#btnSearchCustomer').click(function() {
+            var customerNumber = $('#customerNumber').val().trim();
+            if (!customerNumber) {
+                Swal.fire('Uyarı', 'Lütfen müşteri no giriniz!', 'warning');
+                return;
+            }
+            searchByCustomerNumber(customerNumber);
+        });
+        
+        // Takip Kodu ile ara
+        $('#btnSearchTracking').click(function() {
+            var trackingCode = $('#trackingCode').val().trim();
+            if (!trackingCode) {
+                Swal.fire('Uyarı', 'Lütfen takip kodu giriniz!', 'warning');
+                return;
+            }
+            searchByTrackingCode(trackingCode);
+        });
+        
+        // Müşteri No ile arama fonksiyonu
+        function searchByCustomerNumber(customerNumber) {
+            Swal.fire({ title: 'Aranıyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            
+            $.ajax({
+                url: '/Delivery/SearchByCustomerNumber',
+                type: 'POST',
+                data: { customerNumber: customerNumber },
+                success: function(res) {
+                    Swal.close();
+                    if (res.success) {
+                        displayResults(res);
+                    } else {
+                        Swal.fire('Hata', res.message, 'error');
+                        $('#customerInfo').hide();
+                        $('#repairTableWrapper').hide();
+                    }
+                },
+                error: function() {
+                    Swal.close();
+                    Swal.fire('Hata', 'Bir sorun oluştu!', 'error');
+                }
+            });
+        }
+        
+        // Takip Kodu ile arama fonksiyonu
+        function searchByTrackingCode(trackingCode) {
+            Swal.fire({ title: 'Aranıyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            
+            $.ajax({
+                url: '/Delivery/SearchByTrackingCode',
+                type: 'POST',
+                data: { trackingCode: trackingCode },
+                success: function(res) {
+                    Swal.close();
+                    if (res.success) {
+                        displayResults(res);
+                    } else {
+                        Swal.fire('Hata', res.message, 'error');
+                        $('#customerInfo').hide();
+                        $('#repairTableWrapper').hide();
+                    }
+                },
+                error: function() {
+                    Swal.close();
+                    Swal.fire('Hata', 'Bir sorun oluştu!', 'error');
+                }
+            });
+        }
+
+
+        // Sonuçları göster
+        function displayResults(res) {
+        if (res.customer) {
+        $('#customerName').text(res.customer.fullName);
+        $('#customerPhone').text(res.customer.phoneNumber || '-');
+        $('#customerNo').text(res.customer.customerNumber);
+        $('#customerCompany').text(res.customer.companyName || '-');
+        $('#customerInfo').show();
+        }
+
+        var tbody = $('#repairTableBody');
+        tbody.empty();
+
+        if (res.repairs && res.repairs.length > 0) {
+        for (var i = 0; i < res.repairs.length; i++) {
+        var r = res.repairs[i];
+        var statusClass = '';
+        var statusText = '';
+          if (r.statusId === 1) { statusClass = 'badge-pending'; statusText = 'Ürün Kaydedildi'; }
+        else if (r.statusId === 2) { statusClass = 'badge-pending'; statusText = 'Expertiz Bekleniyor'; }
+        else if (r.statusId === 3) { statusClass = 'badge-pending'; statusText = 'Expertize Gönderildi'; }
+        else if (r.statusId === 4) { statusClass = 'badge-pending'; statusText = 'Teklif Hazırlanıyor'; }
+        else if (r.statusId === 5) { statusClass = 'badge-pending'; statusText = 'Teklif Gönderildi'; }
+        else if (r.statusId === 6) { statusClass = 'badge-pending'; statusText = 'Teklif Onaylandı'; }
+        else if (r.statusId === 7) { statusClass = 'badge-progress'; statusText = 'İşleme Alındı'; }
+        else if (r.statusId === 8) { statusClass = 'badge-completed'; statusText = 'Tamamlandı'; }
+        else if (r.statusId === 9) { statusClass = 'badge-delivered'; statusText = 'Teslim Edildi'; }
+            
+        var deliverDisabled = (r.statusId === 9) ? 'disabled' : '';
+            
+        var row = `
+        <tr data-id="${r.id}" data-code="${r.trackingCode}" data-name="${r.productName}" data-status="${r.statusId}">
+        <td><strong>${r.trackingCode}</strong></td>
+        <td>${r.productName}</td>
+        <td>${r.productBrand || '-'} / ${r.productModel || '-'}</td>
+        <td>${new Date(r.receivedDate).toLocaleDateString()}</td>
+        <td><span class="${statusClass}">${statusText}</span></td>
+        <td class="action-column">
+        <div class="btn-group-custom">
+        <button class="btn-table-action btn-view" data-id="${r.id}">
+        <i class="fas fa-eye"></i> Detay
+        </button>
+        <button class="btn-table-action btn-deliver-action" data-id="${r.id}" data-code="${r.trackingCode}" data-name="${r.productName}" ${deliverDisabled}>
+        <i class="fas fa-truck"></i> Teslim Et
+        </button>
+        </div>
+        </td>
+        </tr>`;
+        tbody.append(row);
+        }
+        $('#repairTableWrapper').show();
+        } else {
+        tbody.html('<tr><td colspan="6" class="text-center">Teslim edilecek ürün bulunmamaktadır.</td></tr>');
+        $('#repairTableWrapper').show();
+        }
+        $('#deliveryForm').hide();
+        }
+
+
+        // Detay butonu
+        // $(document).on('click', '.btn-view', function() {
+        //     var id = $(this).data('id');
+        //     window.open('/Repair/Details/' + id, '_blank');
+        // });
+
+        // Detay butonu - Yeni delivery detay sayfasına yönlendir
+        $(document).on('click', '.btn-view', function() {
+            var id = $(this).data('id');
+            window.open('/Delivery/DeliveryRepairDetail/' + id, '_blank');
+        });
+        
+        // Teslim Et butonu
+        $(document).on('click', '.btn-deliver-action', function() {
+            var id = $(this).data('id');
+            var code = $(this).data('code');
+            var name = $(this).data('name');
+            var status = $(this).closest('tr').data('status');
+            
+            if (status === 9) {
+                Swal.fire('Uyarı', 'Bu ürün zaten teslim edilmiş!', 'warning');
+                return;
+            }
+            
+        $('#selectedRepairId').val(id);
+        $('#selectedRepairInfo').html(`
+        <div class="selected-repair-content">
+        <i class="fas fa-check-circle text-success"></i>
+        <strong>Seçilen Ürün:</strong><br>
+        <span>Takip Kodu: ${code}</span><br>
+        <span>Ürün Adı: ${name}</span>
+        </div>
+        `);
+        $('#deliveryForm').show();
+        $('html, body').animate({ scrollTop: $('#deliveryForm').offset().top }, 500);
+        });
+        
+        // Teslim etme işlemi
+        $('#btnDeliver').click(function() {
+            var repairId = $('#selectedRepairId').val();
+            if (!repairId) {
+                Swal.fire('Uyarı', 'Lütfen bir ürün seçiniz!', 'warning');
+                return;
+            }
+            
+            var deliveryType = $('input[name="deliveryType"]:checked').val();
+            var note = $('#note').val();
+            
+            var data = {
+                repairId: repairId,
+                deliveryType: deliveryType,
+                note: note
+            };
+            
+            if (deliveryType === 'Cargo') {
+                data.cargoCompany = $('#cargoCompany').val();
+                data.cargoTrackingNumber = $('#cargoTrackingNumber').val();
+                data.recipientName = $('#recipientName').val();
+                data.recipientPhone = $('#recipientPhone').val();
+                
+                if (!data.cargoCompany) {
+                    Swal.fire('Uyarı', 'Kargo firması zorunludur!', 'warning');
+                    return;
+                }
+                if (!data.recipientName) {
+                    Swal.fire('Uyarı', 'Alıcı adı zorunludur!', 'warning');
+                    return;
+                }
+            } else {
+                data.receiverName = $('#receiverName').val();
+                data.receiverPhone = $('#receiverPhone').val();
+                
+                if (!data.receiverName) {
+                    Swal.fire('Uyarı', 'Teslim alan kişi adı zorunludur!', 'warning');
+                    return;
+                }
+            }
+            
+            Swal.fire({
+                title: 'Teslim Onayı',
+                text: 'Ürünü teslim etmek istediğinize emin misiniz?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                confirmButtonText: 'Evet, Teslim Et',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'İşlem yapılıyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                    
+                    $.ajax({
+                        url: '/Delivery/Deliver',
+                        type: 'POST',
+                        data: data,
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Başarılı!', res.message, 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+        
+        // İptal
+        $('#btnCancel').click(function() {
+            $('#deliveryForm').hide();
+            $('#selectedRepairId').val('');
+            $('#selectedRepairInfo').html('');
+            $('#cargoCompany, #cargoTrackingNumber, #recipientName, #recipientPhone, #receiverName, #receiverPhone, #note').val('');
+        });
+        
+        // Enter tuşu ile arama
+        $('#customerNumber, #trackingCode').keypress(function(e) {
+            if (e.which === 13) {
+                if ($(this).attr('id') === 'customerNumber') {
+                    $('#btnSearchCustomer').click();
+                } else {
+                    $('#btnSearchTracking').click();
+                }
+            }
+        });
+    });
+</script>
+
+    <script>
+        // Telefon formatlama
+        function formatPhoneNumber(input) {
+        if (!input) return;
+        
+        input.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 11) {
+        value = value.slice(0, 11);
+        }
+            
+        let formatted = '';
+        if (value.length > 0) {
+        formatted = value.slice(0, 4);
+        if (value.length >= 4) {
+        formatted += ' ' + value.slice(4, 7);
+        }
+        if (value.length >= 7) {
+        formatted += ' ' + value.slice(7, 9);
+        }
+        if (value.length >= 9) {
+        formatted += ' ' + value.slice(9, 11);
+        }
+        e.target.value = formatted;
+        } else {
+        e.target.value = '';
+        }
+        });
+        }
+    
+        // İd ile format
+        formatPhoneNumber(document.getElementById('recipientPhone'));
+        formatPhoneNumber(document.getElementById('receiverPhone'));
+    </script>
+}

@@ -1,0 +1,287 @@
+﻿@{
+    ViewData["Title"] = "Tamir Takip";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tamir Takip - Teknik Servis</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .track-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 { font-size: 28px; color: #1e293b; margin-bottom: 10px; }
+        .btn-search { background-color: #0d6efd; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; width: 100%; }
+        .btn-search:hover { background-color: #0a58ca; }
+        .btn-outline-primary { background-color: transparent; border: 2px solid #0d6efd; color: #0d6efd; padding: 12px 24px; border-radius: 10px; font-weight: 600; width: 100%; margin-bottom: 10px; }
+        .btn-outline-primary:hover { background-color: #0d6efd; color: white; }
+        .form-control { border-radius: 10px; padding: 12px; border: 1px solid #ddd; }
+        .form-control:focus { border-color: #0d6efd; outline: none; box-shadow: 0 0 0 3px rgba(13,110,253,0.1); }
+        .qr-reader { width: 100%; margin-top: 20px; border: 2px dashed #ddd; border-radius: 10px; padding: 10px; background: #f8f9fa; }
+        .nav-links { margin-top: 20px; text-align: center; }
+        .nav-links a { color: #0d6efd; text-decoration: none; margin: 0 10px; }
+        .alert-danger { background-color: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 20px; }
+        .mt-2 { margin-top: 10px; }
+        .w-100 { width: 100%; }
+        .btn-secondary { background-color: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 8px; }
+        .text-center { text-align: center; }
+        .mt-3 { margin-top: 15px; }
+        .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #fff; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; }
+        @@keyframes spin { to { transform: rotate(360deg); } }
+        .camera-select { margin-top: 10px; }
+        .camera-select select { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class="track-card">
+        <div class="text-center">
+            <i class="fas fa-tools fa-3x text-primary mb-3"></i>
+            <h1>Tamir Takip Sistemi</h1>
+            <p class="text-muted">Takip kodunuzu girin veya karekodu okutun</p>
+            <hr />
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Manuel Takip Kodu Girişi -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Takip Kodu</label>
+            <input type="text" id="trackingCode" class="form-control" 
+                   placeholder="Örn: TAK-2026-0001" autofocus />
+        </div>
+        <button type="button" id="manualSearchBtn" class="btn-search">
+            <i class="fas fa-search"></i> Sorgula
+        </button>
+
+        <div class="text-center mt-3">
+            <p class="text-muted">veya</p>
+        </div>
+
+        <!-- Kamerayla Okut -->
+        <button type="button" id="scanQrBtn" class="btn-outline-primary">
+            <i class="fas fa-camera"></i> Kamerayı Aç ve Okut
+        </button>
+
+        <!-- Kamera Alanı -->
+        <div id="qr-reader-container" style="display:none;" class="mt-3">
+            <div id="qr-reader" class="qr-reader"></div>
+            <div class="camera-select">
+                <select id="cameraSelect" class="form-select">
+                    <option value="">Kamera seçiliyor...</option>
+                </select>
+            </div>
+            <button type="button" id="stopScanBtn" class="btn-secondary w-100 mt-2">Kamerayı Kapat</button>
+        </div>
+
+        <!-- Dosya Yükleyerek Okut -->
+        <div class="mt-2">
+            <input type="file" id="qr-image-input" accept="image/*" style="display:none;" />
+            <button type="button" id="uploadQrBtn" class="btn-outline-primary">
+                <i class="fas fa-upload"></i> Resim Yükleyerek Okut
+            </button>
+        </div>
+
+        <div id="upload-status" style="display:none;" class="alert-info mt-2 text-center p-2">QR kod okunuyor...</div>
+
+        <div class="nav-links">
+            <a href="/Home/Index">Ana Sayfa</a>
+            <a href="/Home/Contact">İletişim</a>
+        </div>
+    </div>
+
+    <script>
+        let html5QrCode = null;
+        let currentCameraId = null;
+        let isScanning = false;
+        
+        const scanBtn = document.getElementById('scanQrBtn');
+        const uploadBtn = document.getElementById('uploadQrBtn');
+        const fileInput = document.getElementById('qr-image-input');
+        const container = document.getElementById('qr-reader-container');
+        const stopBtn = document.getElementById('stopScanBtn');
+        const cameraSelect = document.getElementById('cameraSelect');
+        const uploadStatus = document.getElementById('upload-status');
+        const manualSearchBtn = document.getElementById('manualSearchBtn');
+        const trackingCodeInput = document.getElementById('trackingCode');
+        const alertContainer = document.getElementById('alert-container');
+
+        function showAlert(message, isError = true) {
+            alertContainer.innerHTML = `<div style="background-color:${isError ? '#fee2e2' : '#d1fae5'}; color:${isError ? '#991b1b' : '#065f46'}; padding:12px; border-radius:8px; margin-bottom:20px;">${message}</div>`;
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        // Manuel Sorgulama
+        manualSearchBtn.addEventListener('click', function() {
+            const code = trackingCodeInput.value.trim().toUpperCase();
+            if (!code) {
+                showAlert('Lütfen takip kodunuzu girin!');
+                return;
+            }
+            
+            $.ajax({
+                url: '/Track/CheckTrackingCode',
+                type: 'POST',
+                data: { trackingCode: code },
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href = response.redirectUrl;
+                    } else {
+                        showAlert(response.message);
+                    }
+                },
+                error: function() {
+                    showAlert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                }
+            });
+        });
+
+        // Enter tuşu ile sorgulama
+        trackingCodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                manualSearchBtn.click();
+            }
+        });
+
+        // Kamera listesini al
+        async function getCameras() {
+            try {
+                const devices = await Html5Qrcode.getCameras();
+                if (devices && devices.length) {
+                    cameraSelect.innerHTML = '';
+                    devices.forEach(device => {
+                        const option = document.createElement('option');
+                        option.value = device.id;
+                        option.text = device.label || `Kamera ${device.id.slice(0, 5)}`;
+                        cameraSelect.appendChild(option);
+                    });
+                    currentCameraId = devices[0].id;
+                    return devices;
+                }
+            } catch (err) {
+                console.log('Kamera bulunamadı:', err);
+                return [];
+            }
+        }
+
+        // Kamerayı Başlat
+        async function startCamera(cameraId) {
+            if (html5QrCode === null) {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            }
+            
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            
+            try {
+                if (isScanning) {
+                    await html5QrCode.stop();
+                    isScanning = false;
+                }
+                await html5QrCode.start(cameraId, config, (decodedText) => {
+                    html5QrCode.stop();
+                    isScanning = false;
+                    container.style.display = 'none';
+                    const code = decodedText.trim().toUpperCase();
+                    window.location.href = '/Track?trackingCode=' + encodeURIComponent(code);
+                }, (errorMessage) => {
+                    console.log(errorMessage);
+                });
+                isScanning = true;
+            } catch (err) {
+                console.log('Kamera başlatılamadı:', err);
+                showAlert('Kamera başlatılamadı. Lütfen kamera izni verin.');
+            }
+        }
+
+        // Kamerayı Aç
+        scanBtn.addEventListener('click', async function() {
+            container.style.display = 'block';
+            
+            const devices = await getCameras();
+            
+            if (devices.length === 0) {
+                showAlert('Kamera bulunamadı! Lütfen kamera izni verin veya farklı bir tarayıcı deneyin.');
+                container.style.display = 'none';
+                return;
+            }
+            
+            await startCamera(currentCameraId);
+        });
+
+        // Kamera değiştirme
+        cameraSelect.addEventListener('change', async function() {
+            if (isScanning) {
+                currentCameraId = cameraSelect.value;
+                await startCamera(currentCameraId);
+            }
+        });
+
+        // Kamerayı Kapat
+        stopBtn.addEventListener('click', async function() {
+            if (html5QrCode !== null && isScanning) {
+                await html5QrCode.stop();
+                isScanning = false;
+                container.style.display = 'none';
+            }
+        });
+
+        // Dosya seçme butonu
+        uploadBtn.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        // Dosya seçilince QR okut
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            uploadStatus.style.display = 'block';
+            uploadStatus.innerHTML = '<div class="spinner"></div> QR kod okunuyor...';
+            
+            const html5QrCodeScanner = new Html5Qrcode("qr-reader");
+            
+            html5QrCodeScanner.scanFile(file, true)
+                .then(decodedText => {
+                    uploadStatus.style.display = 'none';
+                    const code = decodedText.trim().toUpperCase();
+                    window.location.href = '/Track?trackingCode=' + encodeURIComponent(code);
+                })
+                .catch(err => {
+                    uploadStatus.style.display = 'block';
+                    uploadStatus.style.backgroundColor = '#fee2e2';
+                    uploadStatus.style.color = '#991b1b';
+                    uploadStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> QR kod okunamadı! Lütfen daha net bir fotoğraf yükleyin.';
+                    setTimeout(() => {
+                        uploadStatus.style.display = 'none';
+                        uploadStatus.style.backgroundColor = '';
+                        uploadStatus.style.color = '';
+                    }, 3000);
+                    console.log(err);
+                });
+        });
+    </script>
+</body>
+</html>

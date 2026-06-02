@@ -1,0 +1,215 @@
+﻿@using Entities.Concrete
+@model List<(string CustomerName, string CompanyName, string CustomerNumber, string ProductName, List<ExpertiseLine> Items)>
+
+@{
+    ViewData["Title"] = "Ekspertiz Havuzu";
+    var search = ViewBag.Search as string ?? "";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 0;
+    int pageSize = ViewBag.PageSize ?? 20;
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h4 class="mb-0"><i class="fas fa-boxes me-2"></i>Fiyatlandırma Bekleyen Ekspertiz Kalemleri</h4>
+            <span class="badge bg-light text-primary fw-bold fs-6">Toplam: @ViewBag.TotalCount Kayıt</span>
+        </div>
+        <div class="card-body">
+
+            <div class="mb-3">
+                <form method="get" asp-action="Index" class="row g-2">
+                    <div class="col-md-8">
+                        <input type="text" name="search" class="form-control" placeholder="Müşteri No, Firma Adı veya Ürün Adı ile ara..." value="@search" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Ara
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="/ExpertiseApproval/Index" class="btn btn-secondary w-100">
+                            <i class="fas fa-times"></i> Temizle
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="mb-3">
+                <button type="button" id="forwardToPricingBtn" class="btn btn-warning fw-bold text-dark shadow-sm">
+                    <i class="fas fa-calculator me-1"></i> Seçilenleri Fiyatlandırmaya Gönder
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle shadow-sm" id="expertiseTable">
+                    <thead class="table-light border-dark-subtle">
+                        <tr>
+                            <th width="4%" class="text-center"><input type="checkbox" id="selectAll" class="form-check-input" /></th>
+                            <th width="12%">Müşteri</th>
+                            <th width="12%">Firma Adı</th>
+                            <th width="10%">Müşteri No</th>
+                            <th width="12%">Ürün Adı</th>
+                            <th width="25%">Malzeme Adı</th>
+                            <th width="6%" class="text-center">Miktar</th>
+                            <th width="6%" class="text-center">Birim</th>
+                            <th width="8%">Teknisyen Notu</th>
+                            <th width="5%" class="text-center">Tarih</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Count > 0)
+                        {
+                            foreach (var group in Model)
+                            {
+                                var items = group.Items;
+                                var rowSpan = items.Count;
+
+                                for (int i = 0; i < items.Count; i++)
+                                {
+                                    var item = items[i];
+                                    <tr data-group-id="@group.CustomerNumber">
+                                        <td class="text-center">
+                                            <input type="checkbox" class="expertise-checkbox form-check-input" data-id="@item.Id" />
+                                        </td>
+
+                                        @if (i == 0)
+                                        {
+                                            <td rowspan="@rowSpan" class="fw-semibold bg-light-subtle">@group.CustomerName</td>
+                                            <td rowspan="@rowSpan" class="fw-semibold bg-light-subtle">@(string.IsNullOrEmpty(group.CompanyName) ? "-" : group.CompanyName)</td>
+                                            <td rowspan="@rowSpan" class="text-secondary bg-light-subtle">@group.CustomerNumber</td>
+                                            <td rowspan="@rowSpan" class="bg-light-subtle"><span class="badge bg-secondary">@group.ProductName</span></td>
+                                        }
+
+                                        <td class="fw-bold text-primary">@item.Description</td>
+                                        <td class="text-center fw-bold">@item.Quantity</td>
+                                        <td class="text-center text-muted">@item.Unit</td>
+                                        <td>@(string.IsNullOrEmpty(item.Note) ? "-" : item.Note)</td>
+                                        <td class="text-center small text-nowrap">@item.CreatedAt.ToString("dd.MM.yyyy")</td>
+                                    </tr>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="10" class="text-center py-5 text-muted">
+                                    <i class="fas fa-info-circle fa-3x mb-3 d-block text-secondary"></i>
+                                    Fiyatlandırılacak yeni bir ekspertiz kalemi bulunmamaktadır.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <div class="d-flex justify-content-between align-items-center flex-wrap pt-3 border-top mt-3">
+                    <div class="small text-muted mb-2 mb-md-0">
+                        Toplam <strong>@ViewBag.TotalCount</strong> benzersiz cihaz grubundan, <strong>@currentPage</strong>. sayfa listeleniyor.
+                    </div>
+                    <nav aria-label="Ekspertiz Sayfalaması">
+                        <ul class="pagination pagination-sm mb-0 shadow-sm">
+
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { search = search, page = 1, pageSize = pageSize })">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { search = search, page = currentPage - 1, pageSize = pageSize })">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                if (Math.Abs(i - currentPage) <= 2 || i == 1 || i == totalPages)
+                                {
+                                    <li class="page-item @(i == currentPage ? "active" : "")">
+                                        <a class="page-link" href="@Url.Action("Index", new { search = search, page = i, pageSize = pageSize })">@i</a>
+                                    </li>
+                                }
+                                else if (Math.Abs(i - currentPage) == 3)
+                                {
+                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                }
+                            }
+
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { search = search, page = currentPage + 1, pageSize = pageSize })">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { search = search, page = totalPages, pageSize = pageSize })">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </nav>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+        // Tümünü Seç / Kaldır
+        $('#selectAll').click(function() {
+        $('.expertise-checkbox').prop('checked', $(this).prop('checked'));
+        });
+
+        // Seçilenleri Fiyatlandırma Ekranına Gönder
+        $('#forwardToPricingBtn').click(function() {
+        var selectedIds = [];
+        $('.expertise-checkbox:checked').each(function() {
+        selectedIds.push($(this).data('id'));
+        });
+
+        if (selectedIds.length === 0) {
+        Swal.fire('Uyarı!', 'Lütfen fiyatlandırmak istediğiniz kalemleri seçin!', 'warning');
+        return;
+        }
+
+        Swal.fire({
+        title: 'Fiyatlandırma Ekranına Geçilsin mi?',
+        text: selectedIds.length + ' adet seçili kalem için fiyat, iskonto ve KDV giriş ekranına yönlendiriliyorsunuz.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Evet, Ekrana Git',
+        cancelButtonText: 'İptal'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        $.ajax({
+        url: '/ExpertiseApproval/ForwardToPricing',
+        type: 'POST',
+        data: JSON.stringify(selectedIds),
+        contentType: 'application/json; charset=utf-8',
+        success: function(res) {
+        if (res.success && res.redirectUrl) {
+        window.location.href = res.redirectUrl;
+        } else {
+        Swal.fire('Hata!', res.message, 'error');
+        }
+        },
+        error: function() {
+        Swal.fire('Hata!', 'İşlem sırasında bir sorun oluştu.', 'error');
+        }
+        });
+        }
+        });
+        });
+        });
+    </script>
+}

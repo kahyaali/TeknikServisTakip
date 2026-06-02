@@ -1,0 +1,69 @@
+﻿@{
+    ViewData["Title"] = "İletişim";
+    var contact = ViewBag.Contact as Entities.Concrete.PageContent;
+}
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold">@(contact?.Title ?? "İletişim")</h1>
+                <div class="divider mx-auto" style="width: 80px; height: 4px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 2px;"></div>
+            </div>
+
+            <div class="row g-4">
+                <!-- İletişim Bilgileri -->
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-map-marker-alt fa-3x text-danger"></i>
+                            </div>
+                            <h5 class="text-center mb-3">Adres</h5>
+                            <p class="text-muted text-center">@(contact?.Address ?? "Adres bilgisi henüz eklenmemiştir.")</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-phone-alt fa-3x text-success"></i>
+                            </div>
+                            <h5 class="text-center mb-3">Telefon</h5>
+                            <p class="text-muted text-center">@(contact?.Phone ?? "Telefon bilgisi henüz eklenmemiştir.")</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-envelope fa-3x text-primary"></i>
+                            </div>
+                            <h5 class="text-center mb-3">E-posta</h5>
+                            <p class="text-muted text-center">@(contact?.Email ?? "E-posta bilgisi henüz eklenmemiştir.")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Açıklama -->
+            <div class="card shadow-lg border-0 rounded-4 mt-4">
+                <div class="card-body p-4">
+                    <p class="lead" style="white-space: pre-line;">@(contact?.Content ?? "İletişim bilgileri henüz eklenmemiştir.")</p>
+                </div>
+            </div>
+
+            <!-- Harita -->
+            @if (!string.IsNullOrEmpty(contact?.MapUrl))
+            {
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden mt-4">
+                    <div class="ratio ratio-16x9">
+                        <iframe src="@contact.MapUrl" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

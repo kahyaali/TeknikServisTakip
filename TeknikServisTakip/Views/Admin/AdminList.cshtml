@@ -1,0 +1,122 @@
+﻿
+
+@using Entities.Concrete
+@model IEnumerable<AppUser>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<AppUser> _userManager
+
+@{
+    ViewData["Title"] = "Kullanıcı Listesi";
+}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Kullanıcı Listesi</h3>
+        </div>
+        <div class="card-body">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">@TempData["Success"]</div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger">@TempData["Error"]</div>
+            }
+
+            <div class="mb-3">
+                <a href="/Admin/AddAdmin" class="btn btn-primary">Yeni Kullanıcı Ekle</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="userTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Ad Soyad</th>
+                            <th>E-posta</th>
+                            <th>Kayıt Tarihi</th>
+                            <th>Roller</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- AJAX ile doldurulacak -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let userTable;
+
+        $(document).ready(function() {
+            initDataTable();
+        });
+
+        function initDataTable() {
+            if ($.fn.dataTable.isDataTable('#userTable')) {
+                $('#userTable').DataTable().destroy();
+            }
+
+            userTable = $('#userTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '/Admin/GetUsersJson',
+                    type: 'POST',
+                    data: function(d) {
+                        return {
+                            draw: d.draw,
+                            start: d.start,
+                            length: d.length,
+                            search: d.search?.value || ''
+                        };
+                    }
+                },
+                columns: [
+                    { data: 'fullName' },
+                    { data: 'email' },
+                    { data: 'createdAt' },
+                    { data: 'roleBadges' },
+                    { data: 'actionButtons' }
+                ],
+                pageLength: 10,
+                language: { url: '/datatables/tr.json' },
+                order: [[0, 'asc']]
+            });
+        }
+
+        function deleteAdmin(id, fullName) {
+            Swal.fire({
+                title: 'Silmek İstiyor musunuz?',
+                text: fullName + ' adlı kullanıcıyı silmek istediğinize emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/Admin/DeleteAdmin',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

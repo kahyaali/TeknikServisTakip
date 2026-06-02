@@ -1,0 +1,249 @@
+﻿@model Entities.Concrete.Delivery
+@{
+    Layout = null;  
+    ViewData["Title"] = "Teslimat Fişi";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Teslimat Fişi - @Model.RepairItem?.TrackingCode</title>
+    <style>
+            body {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                color: #333;
+            }
+        
+            .print-container {
+                max-width: 800px;
+                margin: 0 auto;
+                border: 1px solid #ddd;
+                padding: 20px;
+            }
+        
+            .header {
+                text-align: center;
+                border-bottom: 2px solid #0d6efd;
+                padding-bottom: 15px;
+                margin-bottom: 20px;
+            }
+        
+                .header h1 {
+                    color: #0d6efd;
+                    margin: 0;
+                }
+        
+                .header p {
+                    margin: 5px 0 0;
+                    font-size: 12px;
+                    color: #666;
+                }
+        
+            .section {
+                margin-bottom: 20px;
+                break-inside: avoid;
+            }
+        
+            .section-title {
+                background: #f0f0f0;
+                padding: 8px 12px;
+                margin-bottom: 12px;
+                font-weight: bold;
+                border-left: 4px solid #0d6efd;
+            }
+        
+            .info-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+        
+            .info-item {
+                padding: 5px 0;
+            }
+        
+            .info-label {
+                font-weight: bold;
+                font-size: 12px;
+                color: #666;
+            }
+        
+            .info-value {
+                font-size: 14px;
+                margin-top: 2px;
+            }
+        
+            .badge-cargo {
+                background: #ffc107;
+                color: #000;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+        
+            .badge-inperson {
+                background: #198754;
+                color: white;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+        
+            .footer {
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 15px;
+                border-top: 1px solid #ddd;
+                font-size: 10px;
+                color: #999;
+            }
+        
+            @@media print {
+                body {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .no-print {
+                    display: none;
+                }
+            }
+        
+            .no-print {
+                text-align: center;
+                margin-top: 20px;
+            }
+        
+            button {
+                background: #0d6efd;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+    </style>
+</head>
+<body>
+    <div class="print-container">
+        <div class="header">
+            <h1>TEKNİK SERVİS TESLİMAT FİŞİ</h1>
+            <p>Takip Kodu: @Model.RepairItem?.TrackingCode</p>
+            <p>Teslim Tarihi: @Model.DeliveryDate.ToString("dd.MM.yyyy HH:mm")</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">ÜRÜN BİLGİLERİ</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Ürün Adı</div>
+                    <div class="info-value">@Model.RepairItem?.ProductName</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Marka / Model</div>
+                    <div class="info-value">@Model.RepairItem?.ProductBrand @Model.RepairItem?.ProductModel</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Seri No</div>
+                    <div class="info-value">@(Model.RepairItem?.SerialNumber ?? "-")</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Arıza Açıklaması</div>
+                    <div class="info-value">@(Model.RepairItem?.ProblemDescription ?? "-")</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">MÜŞTERİ BİLGİLERİ</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Ad Soyad</div>
+                    <div class="info-value">@Model.Customer?.FullName</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Müşteri No</div>
+                    <div class="info-value">@Model.Customer?.CustomerNumber</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">TESLİMAT BİLGİLERİ</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Teslim Tipi</div>
+                    <div class="info-value">
+                        @if (Model.DeliveryType == "Cargo")
+                        {
+                            <span class="badge-cargo">📦 Kargo ile Gönderildi</span>
+                        }
+                        else
+                        {
+                            <span class="badge-inperson">🤝 Elden Teslim Edildi</span>
+                        }
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Teslim Eden</div>
+                    <div class="info-value">@Model.DeliveredBy</div>
+                </div>
+                
+                @if (Model.DeliveryType == "Cargo")
+                {
+                    <div class="info-item">
+                        <div class="info-label">Kargo Firması</div>
+                        <div class="info-value">@Model.CargoCompany</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Takip Numarası</div>
+                        <div class="info-value">@Model.CargoTrackingNumber</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Alıcı Ad Soyad</div>
+                        <div class="info-value">@Model.RecipientName</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="info-item">
+                        <div class="info-label">Teslim Alan</div>
+                        <div class="info-value">@Model.ReceiverName</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Teslim Alan Telefon</div>
+                        <div class="info-value">@Model.ReceiverPhone</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Note))
+        {
+            <div class="section">
+                <div class="section-title">NOT</div>
+                <div class="info-value">@Model.Note</div>
+            </div>
+        }
+
+        <div class="footer">
+            <p>Bu belge @DateTime.Now.ToString("dd.MM.yyyy HH:mm") tarihinde sistem tarafından oluşturulmuştur.</p>
+            <p>Teknik Servis Takip Sistemi</p>
+        </div>
+    </div>
+    
+    <div class="no-print">
+        <button onclick="window.print();">🖨️ Yazdır</button>
+        <button onclick="window.close();">✖️ Kapat</button>
+    </div>
+
+    <script>
+            // Sayfa yüklenince otomatik yazdırma penceresi aç
+            window.onload = function() {
+                window.print();
+            }
+    </script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+﻿@model Entities.Concrete.RepairItem
+@using Entities.Enum
+@using TeknikServisTakip.Helpers
+@{
+    ViewData["Title"] = "Tamir Detayı";
+    Layout = null;
+}
+@{
+    var statusEnum = (RepairStatusEnum)(Model.StatusId ?? 1);
+    var statusName = statusEnum.GetDisplayName();  
+}
+
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tamir Detayı - Teknik Servis</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+            body {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                font-family: 'Segoe UI', sans-serif;
+                padding: 20px;
+            }
+
+            .detail-card {
+                background: white;
+                border-radius: 20px;
+                padding: 30px;
+                max-width: 800px;
+                margin: 0 auto;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            }
+
+            .status-badge {
+                padding: 8px 16px;
+                border-radius: 30px;
+                font-size: 14px;
+                font-weight: 600;
+                display: inline-block;
+            }
+
+            h1 {
+                font-size: 24px;
+                color: #1e293b;
+            }
+
+            .info-row {
+                padding: 12px 0;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .info-label {
+                font-weight: 600;
+                color: #64748b;
+                width: 140px;
+                display: inline-block;
+            }
+
+            .info-value {
+                color: #1e293b;
+            }
+
+            .nav-links {
+                text-align: center;
+                margin-top: 20px;
+            }
+
+                .nav-links a {
+                    color: #0d6efd;
+                    text-decoration: none;
+                    margin: 0 10px;
+                }
+
+            /* Durum renkleri - data-status attribute'una göre */
+            .status-badge[data-status="1"] {
+                background-color: #6c757d;
+                color: white;
+            }
+
+            .status-badge[data-status="2"] {
+                background-color: #ffc107;
+                color: black;
+            }
+
+            .status-badge[data-status="3"] {
+                background-color: #20c997;
+                color: white;
+            }
+
+            .status-badge[data-status="4"] {
+                background-color: #0d6efd;
+                color: white;
+            }
+
+            .status-badge[data-status="5"] {
+                background-color: #6f42c1;
+                color: white;
+            }
+
+            .status-badge[data-status="6"] {
+                background-color: #fd7e14;
+                color: white;
+            }
+
+            .status-badge[data-status="7"] {
+                background-color: #0dcaf0;
+                color: black;
+            }
+
+            .status-badge[data-status="8"] {
+                background-color: #198754;
+                color: white;
+            }
+
+            .status-badge[data-status="9"] {
+                background-color: #343a40;
+                color: white;
+            }
+    </style>
+</head>
+<body>
+    <div class="detail-card">
+        <div class="text-center">
+            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+            <h1>Tamir Detayı</h1>
+            <p class="text-muted">Takip Kodunuz: <strong>@Model.TrackingCode</strong></p>
+            <hr />
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">Ürün Adı:</span>
+            <span class="info-value ms-3">@Model.ProductName</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Marka/Model:</span>
+            <span class="info-value ms-3">@Model.ProductBrand / @Model.ProductModel</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Arıza Açıklaması:</span>
+            <span class="info-value ms-3">@Model.ProblemDescription</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Müşteri Notu:</span>
+            <span class="info-value ms-3">@(Model.CustomerNote ?? "-")</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Geliş Tarihi:</span>
+            <span class="info-value ms-3">@Model.ReceivedDate.ToString("dd.MM.yyyy")</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Durum:</span>
+            <span class="info-value ms-3">
+                <span class="status-badge" data-status="@Model.StatusId">@statusName</span>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Personel Notu:</span>
+            <span class="info-value ms-3">@(Model.InternalNote ?? "-")</span>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.BeforeImagePath))
+        {
+            <div class="mt-3">
+                <label class="fw-bold">Tamir Öncesi Resim:</label>
+                <div class="mt-2">
+                    <a href="@Model.BeforeImagePath" target="_blank">
+                        <img src="@Model.BeforeImagePath" style="max-width: 100%; max-height: 200px; border-radius: 10px;" />
+                    </a>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.AfterImagePath))
+        {
+            <div class="mt-3">
+                <label class="fw-bold">Tamir Sonrası Resim:</label>
+                <div class="mt-2">
+                    <a href="@Model.AfterImagePath" target="_blank">
+                        <img src="@Model.AfterImagePath" style="max-width: 100%; max-height: 200px; border-radius: 10px;" />
+                    </a>
+                </div>
+            </div>
+        }
+
+        <div class="nav-links">
+            <a href="/Track">Yeni Sorgulama</a>
+            <a href="/Home/Index">Ana Sayfa</a>
+        </div>
+    </div>
+</body>
+</html>

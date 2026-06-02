@@ -1,0 +1,95 @@
+﻿@model IEnumerable<Entities.Concrete.MailLog>
+@{
+    ViewData["Title"] = "Mail Gönderim Logları";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-envelope"></i> Mail Gönderim Logları
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="mailLogTable" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Alıcı</th>
+                            <th>Konu</th>
+                            <th>Tip</th>
+                            <th>Durum</th>
+                            <th>Hata Mesajı</th>
+                            <th>Tarih</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model)
+                        {
+                            <tr>
+                                <td>@log.Id</td>
+                                <td>@log.ToEmail</td>
+                                <td>@log.Subject</td>
+                                <td>@log.MailType</td>
+                                <td>
+                                    @if (log.IsSent)
+                                    {
+                                        <span class="badge bg-success">✓ Gönderildi</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">✗ Başarısız</span>
+                                    }
+                                </td>
+                                <td>@(log.ErrorMessage ?? "-")</td>
+                                <td>@log.SentAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteLog(@log.Id)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('#mailLogTable').DataTable({
+            language: { url: '/datatables/tr.json' },
+            order: [[0, 'desc']],
+            pageLength: 25
+        });
+        
+        function deleteLog(id) {
+            Swal.fire({
+                title: 'Silmek istiyor musunuz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Evet, Sil!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/MailLog/DeleteMailLog',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

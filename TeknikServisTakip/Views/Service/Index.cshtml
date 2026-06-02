@@ -1,0 +1,131 @@
+﻿@model IEnumerable<Entities.Concrete.Service>
+@{
+    ViewData["Title"] = "Hizmetler";
+}
+
+
+
+<div class="container-fluid px-4">
+    <!-- HEADER -->
+    <div class="service-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1 class="display-5 fw-bold mb-2"><i class="fas fa-cogs me-3"></i> Hizmetler</h1>
+                <p class="lead mb-0 opacity-75">Sunduğumuz profesyonel hizmetleri yönetin</p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="/Service/Create" class="btn btn-add-service">
+                    <i class="fas fa-plus me-2"></i> Yeni Hizmet Ekle
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- HİZMET KARTLARI -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="service-card">
+                        @if (!string.IsNullOrEmpty(item.ImagePath))
+                        {
+                            <img src="@item.ImagePath" class="service-image" alt="@item.Title" />
+                        }
+                        else
+                        {
+                            <div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-cogs fa-4x text-white opacity-50"></i>
+                            </div>
+                        }
+                        
+                        <div class="service-icon">
+                            <i class="fas @(string.IsNullOrEmpty(item.ImagePath) ? "fa-cogs" : "fa-image")"></i>
+                        </div>
+                        
+                        <h3 class="service-title">@item.Title</h3>
+                        <p class="service-description">@item.Description</p>
+                        
+                        <div class="service-footer">
+                            <span class="service-order">
+                                <i class="fas fa-sort-numeric-down me-1"></i> Sıra: @item.Order
+                            </span>
+                            <span class="service-status @(item.IsActive ? "active" : "passive")">
+                                <i class="fas @(item.IsActive ? "fa-check-circle" : "fa-times-circle") me-1"></i>
+                                @(item.IsActive ? "Aktif" : "Pasif")
+                            </span>
+                            <div class="btn-actions">
+                                <a href="/Service/Edit/@item.Id" class="btn-edit" title="Düzenle">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="deleteService(@item.Id, '@item.Title')" class="btn-delete" title="Sil">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fas fa-cogs"></i>
+            <h3>Henüz Hizmet Eklenmemiş</h3>
+            <p>İlk hizmetinizi eklemek için "Yeni Hizmet Ekle" butonuna tıklayın.</p>
+            <a href="/Service/Create" class="btn btn-primary mt-3">
+                <i class="fas fa-plus me-2"></i> Hizmet Ekle
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function deleteService(id, title) {
+            Swal.fire({
+                title: 'Silmek istiyor musunuz?',
+                html: '<b>' + title + '</b> hizmetini silmek üzeresiniz!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Siliniyor...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                    
+                    $.ajax({
+                        url: '/Service/Delete',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

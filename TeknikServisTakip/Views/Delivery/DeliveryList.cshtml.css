@@ -1,0 +1,316 @@
+﻿
+
+/* ==================== GENEL DARK MOD DESTEKLİ CSS ==================== */
+
+* {
+    font-family: 'Poppins', sans-serif;
+}
+
+.container, .container-fluid {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+    margin: 0 !important;
+}
+
+main[role="main"] {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.content {
+    padding: 10px 15px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+
+[data-theme="light"] .content {
+    background-color: #f8fafc;
+}
+
+
+[data-theme="dark"] .content {
+    background-color: #0f172a;
+}
+
+
+.page-header {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-radius: 20px;
+    padding: 20px 25px;
+    margin-bottom: 20px;
+    color: white;
+}
+
+[data-theme="dark"] .page-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.page-header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 600;
+}
+
+.page-header p {
+    margin: 5px 0 0;
+    opacity: 0.9;
+    font-size: 13px;
+}
+
+
+.btn-ekle {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+    .btn-ekle:hover {
+        transform: translateY(-2px);
+        color: white;
+    }
+
+.btn-geri {
+    background: linear-gradient(135deg, #6c757d 0%, #5c636a 100%);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.3s;
+    margin-left: 10px;
+}
+
+    .btn-geri:hover {
+        transform: translateY(-2px);
+        color: white;
+    }
+
+
+.badge-cargo {
+    background-color: #3b82f6;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 11px;
+    display: inline-block;
+}
+
+.badge-inperson {
+    background-color: #10b981;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 11px;
+    display: inline-block;
+}
+
+[data-theme="dark"] .badge-cargo {
+    background-color: #2563eb;
+}
+
+[data-theme="dark"] .badge-inperson {
+    background-color: #059669;
+}
+
+
+.dataTables_wrapper {
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+[data-theme="light"] .dataTables_wrapper {
+    background: white;
+}
+
+[data-theme="dark"] .dataTables_wrapper {
+    background: #1e293b;
+}
+
+table.dataTable {
+    border-radius: 12px;
+    overflow: hidden;
+    width: 100% !important;
+}
+
+  
+    table.dataTable thead th {
+        background-color: #1e293b;
+        color: white;
+        font-weight: 600;
+        padding: 12px 8px;
+        border: none;
+        font-size: 13px;
+    }
+
+[data-theme="dark"] table.dataTable thead th {
+    background-color: #0f172a;
+    color: #f1f5f9;
+}
+
+
+[data-theme="light"] table.dataTable tbody td {
+    padding: 10px 8px;
+    vertical-align: middle;
+    font-size: 13px;
+    color: #1e293b;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+
+[data-theme="dark"] table.dataTable tbody td {
+    padding: 10px 8px;
+    vertical-align: middle;
+    font-size: 13px;
+    color: #e2e8f0;
+    border-bottom: 1px solid #334155;
+}
+
+
+[data-theme="light"] table.dataTable tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+
+[data-theme="dark"] table.dataTable tbody tr:hover {
+    background-color: #334155;
+}
+
+/* Tablo içindeki linkler */
+[data-theme="dark"] table.dataTable a:not(.btn) {
+    color: #60a5fa;
+}
+
+    [data-theme="dark"] table.dataTable a:not(.btn):hover {
+        color: #93c5fd;
+    }
+
+
+.btn-detail {
+    background: #8b5cf6;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s;
+    border: none;
+}
+
+    .btn-detail:hover {
+        transform: scale(1.05);
+        color: white;
+    }
+
+[data-theme="dark"] .btn-detail {
+    background: #6d28d9;
+}
+
+    [data-theme="dark"] .btn-detail:hover {
+        background: #5b21b6;
+    }
+
+
+.dt-buttons .btn {
+    border-radius: 8px !important;
+    margin: 0 3px !important;
+    padding: 6px 12px !important;
+}
+
+.buttons-excel {
+    background-color: #10b981 !important;
+    border: none !important;
+}
+
+.buttons-pdf {
+    background-color: #ef4444 !important;
+    border: none !important;
+}
+
+.buttons-print {
+    background-color: #3b82f6 !important;
+    border: none !important;
+}
+
+[data-theme="dark"] .buttons-excel {
+    background-color: #059669 !important;
+}
+
+[data-theme="dark"] .buttons-pdf {
+    background-color: #dc2626 !important;
+}
+
+[data-theme="dark"] .buttons-print {
+    background-color: #2563eb !important;
+}
+
+.id-column {
+    display: none;
+}
+
+[data-theme="dark"] .dataTables_wrapper .dataTables_filter input,
+[data-theme="dark"] .dataTables_wrapper .dataTables_length select {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    color: #e2e8f0;
+}
+
+    [data-theme="dark"] .dataTables_wrapper .dataTables_filter input:focus,
+    [data-theme="dark"] .dataTables_wrapper .dataTables_length select:focus {
+        border-color: #3b82f6;
+        outline: none;
+    }
+
+[data-theme="dark"] .dataTables_wrapper .dataTables_filter label,
+[data-theme="dark"] .dataTables_wrapper .dataTables_length label,
+[data-theme="dark"] .dataTables_wrapper .dataTables_info {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .dataTables_wrapper .paginate_button {
+    color: #e2e8f0 !important;
+}
+
+    [data-theme="dark"] .dataTables_wrapper .paginate_button.current {
+        background: #3b82f6 !important;
+        color: white !important;
+        border-color: #3b82f6 !important;
+    }
+
+    [data-theme="dark"] .dataTables_wrapper .paginate_button:hover {
+        background: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+@media (max-width: 768px) {
+    .content {
+        padding: 5px 10px;
+    }
+
+    .page-header h1 {
+        font-size: 20px;
+    }
+
+    .btn-detail {
+        padding: 3px 8px;
+        font-size: 10px;
+    }
+}

@@ -1,0 +1,337 @@
+﻿@model IEnumerable<Entities.Concrete.Product>
+@{
+    ViewData["Title"] = "Stok Yönetimi";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="fas fa-boxes"></i> Stok Yönetimi
+                <div class="float-end">
+                    <a href="/Stock/Create" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> Yeni Ürün
+                    </a>
+                    <a href="/Stock/ExportExcel" class="btn btn-info btn-sm">
+                        <i class="fas fa-file-excel"></i> Excel İndir
+                    </a>
+                    <a href="/Stock/ExportProductsPdf" class="btn btn-danger btn-sm">
+                        <i class="fas fa-file-pdf"></i> PDF İndir
+                    </a>
+                    <a href="/Stock/Alerts" class="btn btn-warning btn-sm">
+                        <i class="fas fa-bell"></i> Stok Uyarıları
+                    </a>
+                </div>
+            </h3>
+        </div>
+        <div class="card-body">
+            <table id="stockTable" class="table table-bordered table-striped w-100">
+                <thead>
+                    <tr>
+                        <th>Ürün Kodu</th>
+                        <th>Ürün Adı</th>
+                        <th>Kategori</th>
+                        <th>Marka</th>
+                        <th>Miktar</th>
+                        <th>Min Stok</th>
+                        <th>Max Stok</th>
+                        <th>Lokasyon</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Stok Giriş Modal -->
+<div class="modal fade" id="stockInModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-arrow-down"></i> Stok Girişi</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="stockInProductId" />
+                <div class="mb-3">
+                    <label>Ürün Adı</label>
+                    <input type="text" id="stockInProductName" class="form-control" disabled />
+                </div>
+                <div class="mb-3">
+                    <label>Miktar <span class="text-danger">*</span></label>
+                    <input type="number" id="stockInQuantity" class="form-control" placeholder="Miktar" />
+                </div>
+                <div class="mb-3">
+                    <label>Referans No</label>
+                    <input type="text" id="stockInReference" class="form-control" placeholder="Fatura No / Sipariş No" />
+                </div>
+                <div class="mb-3">
+                    <label>Açıklama</label>
+                    <textarea id="stockInDesc" class="form-control" rows="2" placeholder="Açıklama"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-success" onclick="saveStockIn()">Stok Girişi Yap</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stok Çıkış Modal -->
+<div class="modal fade" id="stockOutModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="fas fa-arrow-up"></i> Stok Çıkışı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="stockOutProductId" />
+                <div class="mb-3">
+                    <label>Ürün Adı</label>
+                    <input type="text" id="stockOutProductName" class="form-control" disabled />
+                </div>
+                <div class="mb-3">
+                    <label>Mevcut Stok</label>
+                    <input type="text" id="stockOutCurrentStock" class="form-control" disabled />
+                </div>
+                <div class="mb-3">
+                    <label>Çıkış Miktarı <span class="text-danger">*</span></label>
+                    <input type="number" id="stockOutQuantity" class="form-control" placeholder="Miktar" />
+                </div>
+                <div class="mb-3">
+                    <label>Referans No</label>
+                    <input type="text" id="stockOutReference" class="form-control" placeholder="Fatura No / Teslim No" />
+                </div>
+                <div class="mb-3">
+                    <label>Açıklama</label>
+                    <textarea id="stockOutDesc" class="form-control" rows="2" placeholder="Açıklama"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-warning" onclick="saveStockOut()">Stok Çıkışı Yap</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#stockTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '/Stock/GetProducts',
+                    type: 'POST',
+                    data: function(d) {
+                        return {
+                            draw: d.draw,
+                            start: d.start,
+                            length: d.length,
+                            search: d.search.value
+                        };
+                    }
+                },
+                       columns: [
+            { data: 'productCode' },
+            { data: 'productName' },
+            { data: 'category' },
+            { data: 'brand' },
+            {
+                data: 'quantity',
+                render: function(data, type, row) {
+                    const classMap = {
+                        'table-danger': 'bg-danger',
+                        'table-warning': 'bg-warning',
+                        'table-info': 'bg-info',
+                        'table-success': 'bg-success'
+                    };
+                    const badgeClass = classMap[row.statusClass] || 'bg-success';
+                    return `<span class="badge ${badgeClass}">${data}</span>`;
+                }
+            },
+            { data: 'minStockLevel' },
+            { data: 'maxStockLevel' },
+            { data: 'location' },
+            {
+                data: null,
+                orderable: false,
+                render: function(data, type, row) {
+                    return `
+                        <div class="btn-group" role="group" style="gap: 5px;">
+                            <button onclick="openStockInModal(${row.id}, '${row.productName.replace(/'/g, "\\'")}')" class="btn btn-success btn-sm" title="Stok Girişi">
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                            <button onclick="openStockOutModal(${row.id}, '${row.productName.replace(/'/g, "\\'")}', ${row.quantity})" class="btn btn-warning btn-sm" title="Stok Çıkışı">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <a href="/Stock/Details/${row.id}" class="btn btn-info btn-sm" title="Detay">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/Stock/Edit/${row.id}" class="btn btn-primary btn-sm" title="Düzenle">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button onclick="deleteProduct(${row.id}, '${row.productName.replace(/'/g, "\\'")}')" class="btn btn-danger btn-sm" title="Sil">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        ],
+                language: {
+                    url: '/datatables/tr.json'
+                },
+                order: [[1, 'asc']],
+                pageLength: 10,
+                responsive: true
+            });
+        });
+
+        function openStockInModal(id, name) {
+            $('#stockInProductId').val(id);
+            $('#stockInProductName').val(name);
+            $('#stockInQuantity').val('');
+            $('#stockInReference').val('');
+            $('#stockInDesc').val('');
+            $('#stockInModal').modal('show');
+        }
+
+        function saveStockIn() {
+            var productId = $('#stockInProductId').val();
+            var quantity = $('#stockInQuantity').val();
+            var reference = $('#stockInReference').val();
+            var description = $('#stockInDesc').val();
+
+            if (!quantity || quantity <= 0) {
+                Swal.fire('Hata!', 'Geçerli bir miktar giriniz!', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: '/Stock/StockIn',
+                type: 'POST',
+                data: {
+                    productId: productId,
+                    quantity: quantity,
+                    referenceNo: reference,
+                    description: description
+                },
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire('Başarılı!', res.message, 'success').then(() => {
+                            $('#stockInModal').modal('hide');
+                            $('#stockTable').DataTable().ajax.reload();
+                        });
+                    } else {
+                        Swal.fire('Hata!', res.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Hata!', 'Bir sorun oluştu!', 'error');
+                }
+            });
+        }
+
+        function openStockOutModal(id, name, currentStock) {
+            $('#stockOutProductId').val(id);
+            $('#stockOutProductName').val(name);
+            $('#stockOutCurrentStock').val(currentStock);
+            $('#stockOutQuantity').val('');
+            $('#stockOutReference').val('');
+            $('#stockOutDesc').val('');
+            $('#stockOutModal').modal('show');
+        }
+
+        function saveStockOut() {
+            var productId = $('#stockOutProductId').val();
+            var quantity = $('#stockOutQuantity').val();
+            var currentStock = parseInt($('#stockOutCurrentStock').val());
+            var reference = $('#stockOutReference').val();
+            var description = $('#stockOutDesc').val();
+
+            if (!quantity || quantity <= 0) {
+                Swal.fire('Hata!', 'Geçerli bir miktar giriniz!', 'error');
+                return;
+            }
+
+            if (quantity > currentStock) {
+                Swal.fire('Hata!', 'Yetersiz stok!', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: '/Stock/StockOut',
+                type: 'POST',
+                data: {
+                    productId: productId,
+                    quantity: quantity,
+                    referenceNo: reference,
+                    description: description
+                },
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire('Başarılı!', res.message, 'success').then(() => {
+                            $('#stockOutModal').modal('hide');
+                            $('#stockTable').DataTable().ajax.reload();
+                        });
+                    } else {
+                        Swal.fire('Hata!', res.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Hata!', 'Bir sorun oluştu!', 'error');
+                }
+            });
+        }
+
+        function deleteProduct(id, name) {
+            Swal.fire({
+                title: 'Silmek istiyor musunuz?',
+                html: `<b>${name}</b> ürününü silmek üzeresiniz!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'İşlem yapılıyor...',
+                        text: 'Lütfen bekleyin',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    $.ajax({
+                        url: '/Stock/Delete',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success').then(() => {
+                                    $('#stockTable').DataTable().ajax.reload();
+                                });
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            let errorMsg = xhr.responseJSON?.message || 'Bir sorun oluştu.';
+                            Swal.fire('Hata!', errorMsg, 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,179 @@
+﻿@model IEnumerable<Entities.Concrete.Delivery>
+@{
+    Layout = null;
+    ViewData["Title"] = "Teslim Edilen Ürünler Listesi";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Teslim Edilen Ürünler</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+        }
+        
+        .print-header {
+            text-align: center;
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .print-header h1 {
+            color: #0d6efd;
+            margin: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 10px;
+            text-align: left;
+        }
+        
+        th {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            font-size: 10px;
+            color: #999;
+        }
+        
+        @@media print {
+            body {
+                margin: 0;
+                padding: 15px;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+        
+        .no-print {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: #0d6efd;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        
+        .badge-cargo-print {
+            background: #ffc107;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        .badge-inperson-print {
+            background: #198754;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="print-header">
+        <h1>TEKNİK SERVİS - TESLİM EDİLEN ÜRÜNLER</h1>
+        <p>Rapor Tarihi: @DateTime.Now.ToString("dd.MM.yyyy HH:mm")</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Takip Kodu</th>
+                <th>Ürün Adı</th>
+                <th>Müşteri Adı</th>
+                <th>Müşteri No</th>
+                <th>Teslim Tipi</th>
+                <th>Alıcı/Teslim Alan</th>
+                <th>Telefon</th>
+                <th>Teslim Eden</th>
+                <th>Teslim Tarihi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int sayac = 1;
+            }
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@sayac</td>
+                    <td><strong>@item.RepairItem?.TrackingCode</strong></td>
+                    <td>@item.RepairItem?.ProductName</td>
+                    <td>@(item.Customer?.FullName ?? "-")</td>
+                    <td>@(item.Customer?.CustomerNumber ?? "-")</td>
+                    <td class="text-center">
+                        @if (item.DeliveryType == "Cargo")
+                        {
+                            <span class="badge-cargo-print">📦 Kargo</span>
+                        }
+                        else
+                        {
+                            <span class="badge-inperson-print">🤝 Elden</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.DeliveryType == "Cargo")
+                        {
+                            @item.RecipientName
+                        }
+                        else
+                        {
+                            @item.ReceiverName
+                        }
+                    </td>
+                    <td>
+                        @if (item.DeliveryType == "Cargo")
+                        {
+                            @item.RecipientPhone
+                        }
+                        else
+                        {
+                            @item.ReceiverPhone
+                        }
+                    </td>
+                    <td>@item.DeliveredBy</td>
+                    <td>@item.DeliveryDate.ToString("dd.MM.yyyy HH:mm")</td>
+                </tr>
+                sayac++;
+            }
+        </tbody>
+     </table>
+
+    <div class="footer">
+        <p>Bu belge @DateTime.Now.ToString("dd.MM.yyyy HH:mm") tarihinde sistem tarafından oluşturulmuştur.</p>
+        <p>Toplam @Model.Count() adet teslim edilmiş ürün bulunmaktadır.</p>
+    </div>
+
+    <div class="no-print">
+        <button onclick="window.print();"><i class="fas fa-print"></i> Yazdır</button>
+        <button onclick="window.close();"><i class="fas fa-times"></i> Kapat</button>
+    </div>
+</body>
+</html>

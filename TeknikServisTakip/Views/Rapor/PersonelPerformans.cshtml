@@ -1,0 +1,362 @@
+﻿@{
+    ViewData["Title"] = "Personel Performans Raporu";
+}
+
+<style>
+    /* ==================== LIGHT MODE ==================== */
+    :root, [data-theme="light"] {
+        --bg-card: #ffffff;
+        --bg-table-header: #f8fafc;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+        --gradient-start: #f8fafc;
+        --gradient-end: #f1f5f9;
+        --badge-high-bg: #d1fae5;
+        --badge-high-text: #059669;
+        --badge-medium-bg: #fef3c7;
+        --badge-medium-text: #d97706;
+        --badge-low-bg: #fee2e2;
+        --badge-low-text: #dc2626;
+        --progress-bg: #e5e7eb;
+    }
+
+    /* ==================== DARK MODE ==================== */
+    [data-theme="dark"] {
+        --bg-card: #1e1e2f;
+        --bg-table-header: #1a1a2e;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --border-color: #2c2c3a;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+        --gradient-start: #1a1a2e;
+        --gradient-end: #16213e;
+        --badge-high-bg: #1a3b2e;
+        --badge-high-text: #34d399;
+        --badge-medium-bg: #422b1a;
+        --badge-medium-text: #fbbf24;
+        --badge-low-bg: #3b1a1a;
+        --badge-low-text: #f87171;
+        --progress-bg: #2c2c3a;
+    }
+
+    .report-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s;
+    }
+
+    .stat-number {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-top: 5px;
+    }
+
+    .stat-box {
+        padding: 20px;
+        background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+        border-radius: 16px;
+        text-align: center;
+        transition: transform 0.2s;
+        height: 100%;
+    }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+        }
+
+    .filter-group {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .filter-item {
+        flex: 1;
+        min-width: 150px;
+    }
+
+        .filter-item label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+            color: var(--text-secondary);
+        }
+
+        .filter-item input, .filter-item select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .data-table th {
+            background: var(--bg-table-header);
+            font-weight: 600;
+        }
+
+    .text-end {
+        text-align: right;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .badge-perf {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .badge-high {
+        background: var(--badge-high-bg);
+        color: var(--badge-high-text);
+    }
+
+    .badge-medium {
+        background: var(--badge-medium-bg);
+        color: var(--badge-medium-text);
+    }
+
+    .badge-low {
+        background: var(--badge-low-bg);
+        color: var(--badge-low-text);
+    }
+
+    .progress-bar-container {
+        background: var(--progress-bg);
+        border-radius: 20px;
+        height: 8px;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        background: #10b981;
+        height: 100%;
+        border-radius: 20px;
+    }
+
+    .chart-container {
+        min-height: 400px;
+    }
+
+        .chart-container canvas {
+            max-height: 350px;
+        }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="fas fa-users me-2 text-primary"></i> Personel Performans Raporu</h2>
+            <p class="text-muted">Personel bazlı iş takibi ve performans analizi</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-2"></i> Yenile
+            </button>
+        </div>
+    </div>
+
+    <div class="report-card mb-4">
+        <div class="filter-group">
+            <div class="filter-item">
+                <label><i class="fas fa-calendar me-1"></i> Başlangıç Tarihi</label>
+                <input type="date" id="startDate" class="form-control" />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-calendar me-1"></i> Bitiş Tarihi</label>
+                <input type="date" id="endDate" class="form-control" />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-user-tie me-1"></i> Personel Seç</label>
+                <select id="personelSelect" class="form-control">
+                    <option value="">Tüm Personel</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <button class="btn btn-primary w-100" id="filterBtn">
+                    <i class="fas fa-search me-2"></i> Filtrele
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="stat-box">
+                <div class="stat-number" id="totalRepairs">0</div>
+                <div class="stat-label">Toplam Tamir</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stat-box">
+                <div class="stat-number" id="avgRepairTime">0</div>
+                <div class="stat-label">Ortalama Tamir Süresi (Gün)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="report-card mb-4">
+        <h5 class="mb-3"><i class="fas fa-chart-simple me-2 text-primary"></i> Personel Performans Detayları</h5>
+        <div class="table-responsive">
+            <table class="data-table" id="personelTable">
+                <thead>
+                    <tr>
+                        <th>Personel</th>
+                        <th class="text-center">Toplam</th>
+                        <th class="text-center">Bekleyen</th>
+                        <th class="text-center">İşlemde</th>
+                        <th class="text-center">Tamamlanan</th>
+                        <th class="text-end">Başarı Oranı</th>
+                        <th class="text-end">Ort. Tamir Süresi</th>
+                    </tr>
+                </thead>
+                <tbody id="personelTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-12">
+            <div class="report-card chart-container">
+                <h5 class="mb-3"><i class="fas fa-chart-bar me-2 text-primary"></i> Personel Bazında Tamir Sayıları</h5>
+                <canvas id="personelRepairChart" style="width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let repairChart;
+
+        $(document).ready(function() {
+        var today = new Date();
+        var oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(today.getMonth() - 1);
+
+        $('#startDate').val(oneMonthAgo.toISOString().split('T')[0]);
+        $('#endDate').val(today.toISOString().split('T')[0]);
+
+        loadPersonelList();
+        loadPersonelPerformans();
+
+        $('#filterBtn').click(function() {
+        loadPersonelPerformans();
+        });
+        });
+
+        function loadPersonelList() {
+        $.get('/Rapor/GetPersonelDropdownList', function(data) {
+        var select = $('#personelSelect');
+        select.empty().append('<option value="">Tüm Personel</option>');
+        if (data && data.length > 0) {
+        $.each(data, function(i, p) {
+        select.append(`<option value="${p.id}">${p.name}</option>`);
+        });
+        }
+        });
+        }
+
+        function loadPersonelPerformans() {
+        var personelId = $('#personelSelect').val();
+        var data = {
+        startDate: $('#startDate').val(),
+        endDate: $('#endDate').val(),
+        personelId: personelId ? parseInt(personelId) : null
+        };
+
+        $.get('/Rapor/GetPersonelPerformansRaporu', data, function(res) {
+        $('#totalRepairs').text(res.totalRepairs || 0);
+        $('#avgRepairTime').text((res.avgRepairTime || 0).toFixed(1));
+
+        var tbody = $('#personelTableBody');
+        tbody.empty();
+
+        if (!res.personelPerformance || res.personelPerformance.length === 0) {
+        tbody.html('运转<td colspan="7" class="text-center">Veri bulunamadı<\/td><\/tr>');
+        if (repairChart) repairChart.destroy();
+        return;
+        }
+
+        $.each(res.personelPerformance, function(i, p) {
+        var successRate = p.totalRepairs > 0 ? ((p.completedRepairs / p.totalRepairs) * 100).toFixed(1) : 0;
+        var badgeClass = successRate >= 70 ? 'badge-high' : (successRate >= 40 ? 'badge-medium' : 'badge-low');
+
+        tbody.append(`
+        <tr>
+        <td><strong>${p.personelName}</strong></td>
+        <td class="text-center">${p.totalRepairs}</td>
+        <td class="text-center">${p.pendingRepairs}</td>
+        <td class="text-center">${p.inProgressRepairs}</td>
+        <td class="text-center">${p.completedRepairs}</td>
+        <td class="text-end">
+        <div class="d-flex align-items-center gap-2 justify-content-end">
+        <span class="badge-perf ${badgeClass}">${successRate}%</span>
+        <div class="progress-bar-container" style="width: 60px;">
+        <div class="progress-bar-fill" style="width: ${successRate}%;"></div>
+        </div>
+        </div>
+        </td>
+        <td class="text-end">${p.avgRepairTime ? p.avgRepairTime.toFixed(1) : 0} gün<\/td>
+        </tr>
+        `);
+        });
+
+        var personelNames = res.personelPerformance.map(x => x.personelName);
+        var totalRepairsData = res.personelPerformance.map(x => x.totalRepairs);
+        var completedRepairsData = res.personelPerformance.map(x => x.completedRepairs);
+
+        if (repairChart) repairChart.destroy();
+        var ctx = document.getElementById('personelRepairChart').getContext('2d');
+        repairChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+        labels: personelNames,
+        datasets: [
+        { label: 'Toplam Tamir', data: totalRepairsData, backgroundColor: '#3b82f6', borderRadius: 8 },
+        { label: 'Tamamlanan', data: completedRepairsData, backgroundColor: '#10b981', borderRadius: 8 }
+        ]
+        },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
+        });
+        }).fail(function() {
+        console.log('Personel performans raporu yüklenemedi');
+        $('#totalRepairs').text('0');
+        $('#avgRepairTime').text('0');
+        });
+        }
+    </script>
+}

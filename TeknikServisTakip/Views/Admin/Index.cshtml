@@ -1,0 +1,264 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+
+
+<div class="content">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <h1><i class="fas fa-chalkboard-user me-2"></i> Hoş Geldiniz, Admin</h1>
+            <p class="welcome-text">Sistem özeti ve yönetim paneliniz</p>
+        </div>
+        <div>
+            <span class="badge bg-white text-dark p-2 shadow-sm">
+                <i class="fas fa-calendar-alt me-1 text-primary"></i> @DateTime.Now.ToString("dd MMMM yyyy")
+            </span>
+        </div>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="row">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card bg-primary-gradient">
+                <i class="fas fa-tools icon"></i>
+                <div class="title">Toplam Tamir</div>
+                <div class="value">@ViewBag.TotalRepairs</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card bg-warning-gradient">
+                <i class="fas fa-clock icon"></i>
+                <div class="title">Bekleyen</div>
+                <div class="value">@ViewBag.PendingRepairs</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card bg-info-gradient">
+                <i class="fas fa-cogs icon"></i>
+                <div class="title">İşlemde</div>
+                <div class="value">@ViewBag.InProgressRepairs</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card bg-success-gradient">
+                <i class="fas fa-check-circle icon"></i>
+                <div class="title">Tamamlanan</div>
+                <div class="value">@ViewBag.CompletedRepairs</div>
+            </div>
+        </div>
+    </div>
+
+
+    <!--  STOK İSTATİSTİK KARTLARI  -->
+    <div class="row mt-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card bg-warning-gradient">
+                <i class="fas fa-exclamation-triangle icon"></i>
+                <div class="title">Düşük Stok</div>
+                <div class="value" id="lowStockCount">-</div>
+                <div class="small">Min stok seviyesine düşen ürünler</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card bg-danger-gradient">
+                <i class="fas fa-times-circle icon"></i>
+                <div class="title">Kritik Stok</div>
+                <div class="value" id="criticalStockCount">-</div>
+                <div class="small">Stok tükenen ürünler</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card bg-info-gradient">
+                <i class="fas fa-boxes icon"></i>
+                <div class="title">Toplam Ürün</div>
+                <div class="value" id="totalProducts">-</div>
+                <div class="small">Aktif ürün sayısı</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card bg-primary-gradient">
+                <i class="fas fa-warehouse icon"></i>
+                <div class="title">Toplam Stok Adedi</div>
+                <div class="value" id="totalStockQuantity">-</div>
+                <div class="small">Tüm ürünlerin toplam stok miktarı</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menü Grid -->
+        <div class="menu-grid">
+            <a href="/Admin/AdminList" class="menu-item" permission="Admin.AdminList">
+                <i class="fas fa-user-shield menu-icon icon-purple"></i>
+                <div class="menu-title">Admin Yönetimi</div>
+                <div class="menu-desc">Admin ekle, düzenle, sil</div>
+            </a>
+
+            <a href="/Admin/UserRoles" class="menu-item" permission="Admin.UserRoles">
+                <i class="fas fa-user-tag menu-icon icon-cyan"></i>
+                <div class="menu-title">Kullanıcı Rolleri</div>
+                <div class="menu-desc">Kullanıcılara rol ata</div>
+            </a>
+   
+            <a href="/MailSetting" class="menu-item" permission="MailSetting">
+                <i class="fas fa-envelope menu-icon icon-red"></i>
+                <div class="menu-title">Mail Ayarları</div>
+                <div class="menu-desc">SMTP ayarları ve test maili</div>
+            </a>
+
+            <a href="/Rapor" class="menu-item" permission="Rapor">
+                <i class="fas fa-chart-bar menu-icon icon-purple"></i>
+                <div class="menu-title">Raporlar</div>
+                <div class="menu-desc">Excel raporları oluştur</div>
+            </a>
+
+            <a href="/Admin/Statistics" class="menu-item" permisssion="Admin.Statistics">
+                <i class="fas fa-chart-pie menu-icon icon-purple"></i>
+                <div class="menu-title">İstatistikler</div>
+                <div class="menu-desc">Grafikler ve sistem istatistikleri</div>
+            </a>
+
+            <a href="/Log" class="menu-item" permission="Log">
+                <i class="fas fa-history menu-icon icon-purple"></i>
+                <div class="menu-title">Log Listesi</div>
+                <div class="menu-desc">İşlem geçmişini görüntüle</div>
+            </a>
+        </div>
+
+        <!-- Sayfa Yönetimi -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <i class="fas fa-file-alt"></i> Sayfa Yönetimi
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="/PageContent/Index" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-info-circle"></i> Hakkımızda & İletişim
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="/PageContent/EditVisionMission" class="btn btn-outline-success w-100">
+                            <i class="fas fa-eye"></i> Vizyon & Misyon
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="/Service/Index" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-cogs"></i> Hizmetler
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="/Reference/Index" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-star"></i> Referanslar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+
+        <!-- Grafikler -->
+        @if (ViewBag.StatusLabels != null && ViewBag.StatusData != null)
+        {
+            <div class="row chart-row">
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <h5><i class="fas fa-chart-pie me-2 text-primary"></i> Tamir Durum Dağılımı</h5>
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <h5><i class="fas fa-chart-line me-2 text-success"></i> Aylık Tamir Trendi</h5>
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        }
+        </div>
+    
+
+@section Scripts {
+    <script>
+
+         //  Stok Dashboard Verilerini Çek
+        $(document).ready(function() {
+            $.ajax({
+                url: '/Stock/GetDashboardStats',
+                type: 'GET',
+                success: function(data) {
+                    $('#lowStockCount').text(data.lowStockCount);
+                    $('#criticalStockCount').text(data.criticalCount);
+                    $('#totalProducts').text(data.totalProducts);
+                    $('#totalStockQuantity').text(data.totalStockQuantity);
+                },
+                error: function() {
+                    $('#lowStockCount').text('0');
+                    $('#criticalStockCount').text('0');
+                    $('#totalProducts').text('0');
+                    $('#totalStockQuantity').text('0');
+                }
+            });
+        });
+
+
+        // Durum Grafiği (Pasta)
+        @if (ViewBag.StatusLabels != null && ViewBag.StatusData != null)
+        {
+            <text>
+            const ctx1 = document.getElementById('statusChart')?.getContext('2d');
+            if (ctx1) {
+                new Chart(ctx1, {
+                    type: 'doughnut',
+                    data: {
+                        labels: @Html.Raw(Json.Serialize(ViewBag.StatusLabels)),
+                        datasets: [{
+                            data: @Html.Raw(Json.Serialize(ViewBag.StatusData)),
+                            backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#6c757d'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            }
+            </text>
+        }
+
+        // Aylık Grafik (Çizgi)
+        @if (ViewBag.Months != null && ViewBag.Months.Length > 0 && ViewBag.MonthlyCounts != null)
+        {
+            <text>
+            const ctx2 = document.getElementById('monthlyChart')?.getContext('2d');
+            if (ctx2) {
+                new Chart(ctx2, {
+                    type: 'line',
+                    data: {
+                        labels: @Html.Raw(Json.Serialize(ViewBag.Months)),
+                        datasets: [{
+                            label: 'Tamir Sayısı',
+                            data: @Html.Raw(Json.Serialize(ViewBag.MonthlyCounts)),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'top' }
+                        }
+                    }
+                });
+            }
+            </text>
+        }
+    </script>
+}

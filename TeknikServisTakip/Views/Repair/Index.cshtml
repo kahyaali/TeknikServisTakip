@@ -1,0 +1,601 @@
+﻿@model IEnumerable<Entities.Concrete.RepairItem>
+@using Entities.Enum
+@using TeknikServisTakip.Helpers
+@{
+    ViewData["Title"] = "Tamir Listesi";
+}
+
+
+<div class="content">
+    <h1><i class="fas fa-tools"></i> Tamir Listesi</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="button-group">
+        <a href="/Repair/Create" class="btn-ekle">
+            <i class="fas fa-plus"></i> Yeni Tamir Ekle
+        </a>
+        <a href="/Repair/DeliveredRepairs" class="btn btn-info">
+            <i class="fas fa-archive"></i> Teslim Edilenler
+        </a>
+        <a href="/Repair/PrintAll" target="_blank" class="btn-print-all">
+            <i class="fas fa-print"></i> Tümünü Yazdır
+        </a>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="repairTable" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Müşteri No</th>
+                    <th>Ürün Adı</th>
+                    <th>Marka</th>
+                    <th>Model</th>
+                    <th>Seri No</th>
+                    <th>Arıza Açıklaması</th>
+                    <th>Geliş Tarihi</th>
+                    <th>Personel</th>
+                    <th>Durum</th>
+                    <th>Ücret</th>
+                    <th>Öncesi Resimler</th>
+                    <th>Sonrası Resimler</th>
+                    <th>Takip Kodu</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int sayac = 1;
+                }
+                @foreach (var item in Model)
+                {
+                    // Öncesi resimleri al
+                    var beforeImages = item.RepairImages != null && item.RepairImages.Any()
+                        ? item.RepairImages.Where(i => i.ImageType == "Before").OrderBy(i => i.Order).Select(i => i.ImagePath).Where(p => !string.IsNullOrEmpty(p)).ToList()
+                        : new List<string>();
+                    
+                    // Sonrası resimleri al
+                    var afterImages = item.RepairImages != null && item.RepairImages.Any()
+                        ? item.RepairImages.Where(i => i.ImageType == "After").OrderBy(i => i.Order).Select(i => i.ImagePath).Where(p => !string.IsNullOrEmpty(p)).ToList()
+                        : new List<string>();
+                    
+                    // Tüm resimler (detay modalı ve slayt için - önce öncesiler, sonra sonrasılar)
+                    var allImages = beforeImages.Concat(afterImages).ToList();
+                    var imagesJson = Newtonsoft.Json.JsonConvert.SerializeObject(allImages);
+                    
+                    var firstBeforeImage = beforeImages.FirstOrDefault();
+                    var firstAfterImage = afterImages.FirstOrDefault();
+                    var beforeCount = beforeImages.Count;
+                    var afterCount = afterImages.Count;
+                    
+                    <tr data-id="@item.Id"
+                        data-customernumber="@item.CustomerNumber"
+                        data-productname="@item.ProductName"
+                        data-productbrand="@item.ProductBrand"
+                        data-productmodel="@item.ProductModel"
+                        data-serialnumber="@item.SerialNumber"
+                        data-problemdescription="@item.ProblemDescription"
+                        data-receiveddate="@item.ReceivedDate.ToString("dd.MM.yyyy")"
+                        data-personel="@(item.Personel?.FullName ?? "Atanmamış")"
+                        data-status="@(((RepairStatusEnum)(item.StatusId ?? 1)).GetDisplayName())"
+                        data-price="@item.Price.ToString("C2")"
+                        data-currency="@(item.Currency ?? "TRY")"
+                        data-trackingcode="@item.TrackingCode"
+                        data-images='@Html.Raw(imagesJson)'>
+                        
+                        <td style="text-align: center;">@sayac</td>
+                        <td class="truncate-text detail-trigger">@item.CustomerNumber</td>
+                        <td class="truncate-text detail-trigger"><strong>@item.ProductName</strong></td>
+                        <td class="truncate-text detail-trigger">@(string.IsNullOrEmpty(item.ProductBrand) ? "-" : item.ProductBrand)</td>
+                        <td class="truncate-text detail-trigger">@(string.IsNullOrEmpty(item.ProductModel) ? "-" : item.ProductModel)</td>
+                        <td class="truncate-text detail-trigger">@(string.IsNullOrEmpty(item.SerialNumber) ? "-" : item.SerialNumber)</td>
+                        <td class="truncate-text detail-trigger" style="max-width:200px;">
+                            @(item.ProblemDescription?.Length > 50 ? item.ProblemDescription.Substring(0, 50) + "..." : item.ProblemDescription ?? "-")
+                        </td>
+                        <td style="text-align: center;">@item.ReceivedDate.ToString("dd.MM.yyyy")</td>
+                        <td class="truncate-text detail-trigger">@(item.Personel?.FullName ?? "Atanmamış")</td>
+
+                            <!-- Repair status -->
+                        <td style="text-align: center;">
+                            @{
+                                var statusEnum = (RepairStatusEnum)(item.StatusId ?? 1);
+                                var statusName = statusEnum.GetDisplayName();  
+                                var badgeClass = statusEnum switch
+                                {
+                                    RepairStatusEnum.TeslimEdildi => "badge-teslim",
+                                    RepairStatusEnum.Tamamlandi => "badge-tamamlandi",
+                                    RepairStatusEnum.IslemeAlindi => "badge-islemde",
+                                    RepairStatusEnum.TeklifOnaylandi => "badge-teklif-onay",
+                                    RepairStatusEnum.TeklifGonderildi => "badge-teklif-gonderildi",
+                                    RepairStatusEnum.TeklifHazirlaniyor => "badge-teklif-hazirlaniyor",
+                                    RepairStatusEnum.ExpertizeGonderildi => "badge-expertize-gonderildi",
+                                    RepairStatusEnum.ExpertizBekleniyor => "badge-expertiz-bekleniyor",
+                                    RepairStatusEnum.UrunKaydedildi => "badge-beklemede",
+                                    _ => "badge-beklemede"
+                                };
+                            }
+                            <span class="@badgeClass">@statusName</span>
+                        </td>
+
+               @*          <td class="text-success fw-bold" style="text-align: center;">@item.Price.ToString("C2")</td> *@
+
+                        <td class="text-success fw-bold" style="text-align: center;">
+                            @item.Price.ToString("N2") @(item.Currency ?? "TRY")
+                        </td>
+
+
+                        
+                        <!-- ÖNCESİ RESİMLER SÜTUNU -->
+                        <td style="text-align: center;">
+                            <div class="resim-group">
+                                @if (beforeCount > 0 && !string.IsNullOrEmpty(firstBeforeImage))
+                                {
+                                    <img src="@firstBeforeImage" class="resim-thumb"
+                                         onclick="openSlideshow(@item.Id, 0)"
+                                         title="@beforeCount öncesi resim"
+                                         onerror="this.src='/images/no-image.png';" />
+                                    
+                                    @if (beforeCount > 1)
+                                    {
+                                        <span class="resim-badge" onclick="openSlideshow(@item.Id, 0)"
+                                              title="@beforeCount öncesi resim var">
+                                            <i class="fas fa-images"></i> +@(beforeCount - 1)
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted" style="font-size: 11px;">
+                                        <i class="fas fa-image"></i> Yok
+                                    </span>
+                                }
+                            </div>
+                        </td>
+                        
+                        <!-- SONRASI RESİMLER SÜTUNU -->
+                        <td style="text-align: center;">
+                            <div class="resim-group">
+                                @if (afterCount > 0 && !string.IsNullOrEmpty(firstAfterImage))
+                                {
+                                    <img src="@firstAfterImage" class="resim-thumb"
+                                         onclick="openSlideshow(@item.Id, @beforeCount)"
+                                         title="@afterCount sonrası resim"
+                                         onerror="this.src='/images/no-image.png';" />
+                                    
+                                    @if (afterCount > 1)
+                                    {
+                                        <span class="resim-badge" onclick="openSlideshow(@item.Id, @beforeCount)"
+                                              title="@afterCount sonrası resim var">
+                                            <i class="fas fa-images"></i> +@(afterCount - 1)
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted" style="font-size: 11px;">
+                                        <i class="fas fa-image"></i> Yok
+                                    </span>
+                                }
+                            </div>
+                        </td>
+                        
+                        <td style="text-align: center;"><span class="badge bg-dark">@item.TrackingCode</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="/Repair/Details/@item.Id" class="action-btn btn-detay" title="Detay"><i class="fas fa-eye"></i><span> Detay</span></a>
+                                <a href="/Repair/Edit/@item.Id" class="action-btn btn-duzenle" title="Düzenle"><i class="fas fa-edit"></i><span> Düzenle</span></a>
+                                <button onclick="deleteRepair(@item.Id, '@item.ProductName.Replace("'", "\\'")')" class="action-btn btn-sil" title="Sil"><i class="fas fa-trash"></i><span> Sil</span></button>
+                            </div>
+                        </td>
+                    </tr>
+                    sayac++;
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade detail-modal" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-info-circle"></i> Tamir Detayı</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="slideshowModal" class="slideshow-modal">
+    <span class="close-slideshow" onclick="closeSlideshow()">&times;</span>
+    <button class="prev" onclick="changeSlide(-1)">&#10094;</button>
+    <button class="next" onclick="changeSlide(1)">&#10095;</button>
+    <div class="modal-content">
+        <img id="slideImage" class="slide-image" src="" alt="Tamir resmi" />
+    </div>
+    <span id="slideCounter" class="image-counter"></span>
+    <button id="slideDownloadBtn" class="download-btn"><i class="fas fa-download"></i> Resmi İndir</button>
+</div>
+
+
+
+
+@section Scripts {
+
+    <script>
+        var rowImages = {};
+        var currentSlideImages = [];
+        var currentSlideIndex = 0;
+        
+        $(document).ready(function() {
+            // DataTable başlat
+            $('#repairTable').DataTable({
+                language: {
+                    // url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/tr.json'
+                    url: '/datatables/tr.json'
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" +
+                     "<'row'<'col-sm-12'B>>",
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i> Excel',
+                        className: 'btn btn-success btn-sm',
+                        exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,12] }
+                    },
+
+                    {
+                extend: 'pdf',
+                text: '<i class="fas fa-file-pdf"></i> PDF İndir',
+                className: 'btn btn-danger btn-sm',
+                orientation: 'landscape',
+                pageSize: 'A4',
+                title: '',
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12]
+                },
+                customize: function(doc) {
+                    var tblBody = doc.content.find(function(item) {
+                        return item.table;
+                    });
+
+                    if (tblBody) {
+                        // 11 kolon için optimize edilmiş genişlikler (%)
+                        // Sırasıyla: #, Müşteri, Ürün, Marka, Model, Arıza, Geliş, Personel, Durum, Ücret, Takip
+                        tblBody.table.widths = ['3%', '7%', '10%', '8%', '8%', '18%', '9%', '10%', '9%', '8%', '10%'];
+                        
+                        tblBody.layout = {
+                            hLineWidth: function(i) { return .5; },
+                            vLineWidth: function(i) { return .5; },
+                            hLineColor: function(i) { return '#cbd5e1'; },
+                            vLineColor: function(i) { return '#cbd5e1'; },
+                            paddingLeft: function(i) { return 4; },
+                            paddingRight: function(i) { return 4; },
+                            paddingTop: function(i) { return 6; },
+                            paddingBottom: function(i) { return 6; }
+                        };
+                    }
+
+                    doc.pageMargins = [20, 60, 20, 40];
+
+                    // Üst Bilgi (Header)
+                    doc['header'] = (function() {
+                        return {
+                            columns: [
+                                {
+                                    alignment: 'left',
+                                    text: 'TEKNİK SERVİS TAMİR LİSTESİ',
+                                    fontSize: 14,
+                                    bold: true,
+                                    margin: [20, 20]
+                                },
+                                {
+                                    alignment: 'right',
+                                    text: 'Rapor Tarihi: ' + new Date().toLocaleString('tr-TR'),
+                                    fontSize: 9,
+                                    margin: [0, 25, 20, 0]
+                                }
+                            ]
+                        };
+                    });
+
+                    // Stil Tanımlamaları
+                    doc.styles.tableHeader = {
+                        bold: true,
+                        fontSize: 8,
+                        color: 'white',
+                        fillColor: '#1e293b',
+                        alignment: 'center'
+                    };
+
+                    doc.styles.tableBodyEven = { alignment: 'left', fontSize: 7 };
+                    doc.styles.tableBodyOdd = { fillColor: '#f8fafc', alignment: 'left', fontSize: 7 };
+
+                    // Alt Bilgi (Footer)
+                    doc['footer'] = (function(page, pages) {
+                        return {
+                            columns: [
+                                {
+                                    alignment: 'left',
+                                    text: 'Teknik Servis Takip Sistemi | Tamir Yönetim Modülü',
+                                    fontSize: 8,
+                                    margin: [20, 10]
+                                },
+                                {
+                                    alignment: 'right',
+                                    text: ['Sayfa ', { text: page.toString() }, ' / ', { text: pages.toString() }],
+                                    fontSize: 8,
+                                    margin: [0, 10, 20]
+                                }
+                            ]
+                        };
+                    });
+                }
+            }
+                    // ,{
+                    //     extend: 'print',
+                    //     text: '<i class="fas fa-print"></i> Yazdır',
+                    //     className: 'btn btn-secondary btn-sm',
+                    //     exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,12] }
+                    // }
+                ],
+                pageLength: 10,
+                responsive: true,
+                autoWidth: false,
+                order: [[6, 'desc']]
+            });
+            
+            // Her satırın resimlerini rowImages objesine kaydet
+            $('#repairTable tbody tr').each(function() {
+                var repairId = $(this).data('id');
+                var images = $(this).data('images');
+                
+                if (images && Array.isArray(images)) {
+                    rowImages[repairId] = images;
+                } else if (typeof images === 'string') {
+                    try {
+                        rowImages[repairId] = JSON.parse(images);
+                    } catch(e) {
+                        rowImages[repairId] = [];
+                    }
+                } else {
+                    rowImages[repairId] = [];
+                }
+            });
+            
+            // Detay modal tetikleyici
+            $(document).on('click', '.detail-trigger', function() {
+                var row = $(this).closest('tr');
+                var repairId = row.data('id');
+                var images = rowImages[repairId] || [];
+                
+                var imagesHtml = '';
+                if (images.length > 0) {
+                    imagesHtml = '<div class="detail-images">';
+                    for (var i = 0; i < images.length; i++) {
+                        imagesHtml += '<img src="' + images[i] + '" onclick="openSlideshow(' + repairId + ', ' + i + ')" onerror="this.src=\'/images/no-image.png\'" />';
+                    }
+                    imagesHtml += '</div>';
+                } else {
+                    imagesHtml = '<span class="text-muted"><i class="fas fa-ban"></i> Resim bulunmamaktadır.</span>';
+                }
+                
+                var modalBody = `
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-user"></i> Müşteri No</div>
+                        <div class="detail-value">${row.data('customernumber') || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-box"></i> Ürün Adı</div>
+                        <div class="detail-value">${row.data('productname') || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-trademark"></i> Marka</div>
+                        <div class="detail-value">${row.data('productbrand') || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-microchip"></i> Model</div>
+                        <div class="detail-value">${row.data('productmodel') || '-'}</div>
+                    </div>
+                        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-barcode"></i> Seri No</div>
+            <div class="detail-value">${row.data('serialnumber') || '-'}</div>
+        </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-exclamation-triangle"></i> Arıza Açıklaması</div>
+                        <div class="detail-value">${row.data('problemdescription') || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-calendar"></i> Geliş Tarihi</div>
+                        <div class="detail-value">${row.data('receiveddate') || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-user-cog"></i> Personel</div>
+                        <div class="detail-value">${row.data('personel') || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-chart-line"></i> Durum</div>
+                        <div class="detail-value">${row.data('status') || '-'}</div>
+                    </div>
+                          <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-money-bill"></i> Ücret</div>
+            <div class="detail-value">
+                ${parseFloat(row.data('price').replace(/[^0-9,.]/g, '')).toLocaleString('tr-TR', {minimumFractionDigits: 2})}
+                ${row.data('currency') || 'TRY'}
+            </div>
+        </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-qrcode"></i> Takip Kodu</div>
+                        <div class="detail-value"><strong>${row.data('trackingcode') || '-'}</strong></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-images"></i> Resimler (${images.length})</div>
+                        <div class="detail-value">${imagesHtml}</div>
+                    </div>
+                `;
+                
+                $('#detailModalBody').html(modalBody);
+                $('#detailModal').modal('show');
+            });
+        });
+        
+        function openSlideshow(repairId, index) {
+            var images = rowImages[repairId] || [];
+            
+            if (images.length === 0) {
+                Swal.fire('Bilgi', 'Bu kayıt için resim bulunamadı.', 'info');
+                return;
+            }
+            
+            currentSlideImages = images;
+            currentSlideIndex = index;
+            updateSlide();
+            document.getElementById('slideshowModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function updateSlide() {
+            if (currentSlideImages && currentSlideImages.length > 0 && currentSlideIndex >= 0 && currentSlideIndex < currentSlideImages.length) {
+                var imgPath = currentSlideImages[currentSlideIndex];
+                var imgElement = document.getElementById('slideImage');
+                imgElement.src = imgPath;
+                imgElement.onerror = function() {
+                    this.src = '/images/no-image.png';
+                };
+                document.getElementById('slideCounter').innerHTML = (currentSlideIndex + 1) + ' / ' + currentSlideImages.length;
+                document.getElementById('slideDownloadBtn').onclick = function() {
+                    downloadImage(imgPath);
+                };
+            }
+        }
+        
+        function changeSlide(direction) {
+            if (currentSlideImages && currentSlideImages.length > 0) {
+                currentSlideIndex += direction;
+                if (currentSlideIndex < 0) currentSlideIndex = currentSlideImages.length - 1;
+                if (currentSlideIndex >= currentSlideImages.length) currentSlideIndex = 0;
+                updateSlide();
+            }
+        }
+        
+        function closeSlideshow() {
+            document.getElementById('slideshowModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        function downloadImage(url) {
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const link = document.createElement('a');
+                    const objectURL = URL.createObjectURL(blob);
+                    link.href = objectURL;
+                    link.download = url.split('/').pop() || 'resim.jpg';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(objectURL);
+                    Swal.fire('Başarılı!', 'Resim indiriliyor...', 'success');
+                })
+                .catch(() => {
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = url.split('/').pop() || 'resim.jpg';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    Swal.fire('Başarılı!', 'Resim indiriliyor...', 'success');
+                });
+        }
+        
+        function deleteRepair(id, productName) {
+            Swal.fire({
+                title: 'Silmek İstiyor musunuz?',
+                html: '<b>' + productName + '</b> ürününe ait tamir kaydını silmek üzeresiniz!<br>Bu işlem <b>geri alınamaz</b>.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'İşlem yapılıyor...',
+                        text: 'Lütfen bekleyin',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                    
+                    $.ajax({
+                        url: '/Repair/Delete',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', 'Tamir kaydı başarıyla silindi.', 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            var errorMsg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Bir sorun oluştu.';
+                            Swal.fire('Hata!', errorMsg, 'error');
+                        }
+                    });
+                }
+            });
+        }
+        
+        // ESC ve ok tuşları
+        document.addEventListener('keydown', function(e) {
+            var modal = document.getElementById('slideshowModal');
+            if (modal.style.display === 'flex') {
+                if (e.key === 'Escape') {
+                    closeSlideshow();
+                }
+                if (e.key === 'ArrowLeft') {
+                    changeSlide(-1);
+                    e.preventDefault();
+                }
+                if (e.key === 'ArrowRight') {
+                    changeSlide(1);
+                    e.preventDefault();
+                }
+            }
+        });
+        
+        // Modal dışına tıklayınca kapat
+        document.getElementById('slideshowModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSlideshow();
+            }
+        });
+
+    </script>
+}
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,159 @@
+﻿@model Entities.Concrete.ArchiveRepair
+@{
+    ViewData["Title"] = "Arşiv Detayı";
+}
+
+<div class="container-fluid">
+    <div class="detail-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h4 class="mb-1"><i class="fas fa-archive me-2"></i> Arşiv Kaydı Detayı</h4>
+                <p class="mb-0 opacity-75">Teslim edilen tamir bilgileriniz</p>
+            </div>
+            <div class="mt-2 mt-md-0">
+                <a href="/CustomerDashboard/MyArchive" class="btn btn-light btn-sm">
+                    <i class="fas fa-arrow-left"></i> Arşive Dön
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="info-card">
+                <h5><i class="fas fa-info-circle text-primary me-2"></i> Ürün Bilgileri</h5>
+                <hr />
+                <div class="row mb-3">
+                    <div class="col-5 info-label">Takip Kodu</div>
+                    <div class="col-7 info-value"><strong>@Model.TrackingCode</strong> <span class="badge-delivered ms-2">Teslim Edildi</span></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-5 info-label">Ürün Adı</div>
+                    <div class="col-7 info-value">@Model.ProductName</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-5 info-label">Marka / Model</div>
+                    <div class="col-7 info-value">@Model.ProductBrand @Model.ProductModel</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-5 info-label">Seri No</div>
+                    <div class="col-7 info-value">@(string.IsNullOrEmpty(Model.SerialNumber) ? "-" : Model.SerialNumber)</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="info-card">
+                <h5><i class="fas fa-calendar-alt text-success me-2"></i> Tarih & Personel</h5>
+                <hr />
+                <div class="row mb-3">
+                    <div class="col-5 info-label">Geliş Tarihi</div>
+                    <div class="col-7 info-value">@Model.ReceivedDate.ToString("dd.MM.yyyy HH:mm")</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-5 info-label">Teslim Tarihi</div>
+                    <div class="col-7 info-value">@(Model.DeliveryDate?.ToString("dd.MM.yyyy HH:mm") ?? "-")</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-5 info-label">Tamir Eden Personel</div>
+                    <div class="col-7 info-value">@(Model.Personel?.FullName ?? "-")</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-5 info-label">Ücret</div>
+                    <div class="col-7 info-value"><span class="fw-bold text-success fs-5">@Model.Price.ToString("C2")</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTLAR -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="info-card">
+                <h5><i class="fas fa-edit text-secondary me-2"></i> Açıklamalar ve Notlar</h5>
+                <hr />
+                <div class="mb-3">
+                    <div class="fw-bold mb-2">
+                        <i class="fas fa-exclamation-triangle text-warning me-1"></i> Arıza Açıklaması
+                    </div>
+                    <div class="p-2 bg-light rounded">
+                        @(string.IsNullOrEmpty(Model.ProblemDescription) ? "-" : Model.ProblemDescription)
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="fw-bold mb-2">
+                        <i class="fas fa-user-cog text-info me-1"></i> Personel Notu
+                    </div>
+                    <div class="p-2 bg-light rounded">
+                        @(string.IsNullOrEmpty(Model.InternalNote) ? "-" : Model.InternalNote)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUTONLAR -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <div class="btn-group" role="group">
+                <a href="/CustomerDashboard/ExportArchiveToExcel/@Model.Id" class="btn btn-success" target="_blank">
+                    <i class="fas fa-file-excel me-1"></i> Excel İndir
+                </a>
+                <a href="/CustomerDashboard/ExportArchiveToPdf/@Model.Id" class="btn btn-danger" target="_blank">
+                    <i class="fas fa-file-pdf me-1"></i> PDF İndir
+                </a>
+                <a href="/CustomerDashboard/PrintArchiveDetail/@Model.Id" class="btn btn-secondary" target="_blank">
+                    <i class="fas fa-print me-1"></i> Yazdır
+                </a>
+            </div>
+        </div>
+    </div>
+
+<style>
+    .detail-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 25px 30px;
+        margin-bottom: 30px;
+        color: white;
+    }
+
+    .info-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        height: 100%;
+    }
+
+    .badge-delivered {
+        background: #10b981;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .info-value {
+        font-weight: 500;
+    }
+
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+
+    .rounded {
+        border-radius: 10px !important;
+    }
+
+    .btn-group .btn {
+        margin: 0 5px;
+        padding: 8px 20px;
+    }
+</style>

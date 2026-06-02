@@ -1,0 +1,15 @@
+﻿@{
+    ViewData["Title"] = "Sayfa Bulunamadı - 404";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="text-center mt-5 pt-5">
+    <div class="display-1 text-warning">
+        <i class="fas fa-exclamation-triangle"></i> 404
+    </div>
+    <h1 class="display-4">Sayfa Bulunamadı!</h1>
+    <p class="lead">Aradığınız sayfa mevcut değil veya taşınmış olabilir.</p>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">
+        <i class="fas fa-home"></i> Ana Sayfaya Dön
+    </a>
+</div>

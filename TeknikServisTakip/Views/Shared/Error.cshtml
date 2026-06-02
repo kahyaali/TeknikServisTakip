@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Hata";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="text-center mt-5 pt-5">
+    <div class="display-1 text-danger">
+        <i class="fas fa-bug"></i> Hata
+    </div>
+    <h1 class="display-4">Bir Hata Oluştu!</h1>
+    <p class="lead">Üzgünüz, işleminiz sırasında bir hata oluştu.</p>
+    <p>Lütfen daha sonra tekrar deneyin veya destek ekibiyle iletişime geçin.</p>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">
+        <i class="fas fa-home"></i> Ana Sayfaya Dön
+    </a>
+</div>

@@ -1,0 +1,102 @@
+﻿@{
+    ViewData["Title"] = "Müşteri Rolleri";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0"><i class="fas fa-user-tag me-2"></i> Müşteri Rolleri</h1>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Müşteri Listesi ve Rolleri</h3>
+        </div>
+        <div class="card-body">
+            <table id="customerRolesTable" class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Ad Soyad</th>
+                        <th>E-posta</th>
+                        <th>Rolleri</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- AJAX ile doldurulacak -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    #customerRolesTable {
+        visibility: hidden;
+        min-height: 400px;
+    }
+
+        #customerRolesTable.dataTable {
+            visibility: visible !important;
+        }
+</style>
+
+@section Scripts {
+    <script>
+        let customerRolesTable;
+
+        $(document).ready(function () {
+            initDataTable();
+        });
+
+        function initDataTable() {
+            if ($.fn.dataTable.isDataTable('#customerRolesTable')) {
+                $('#customerRolesTable').DataTable().destroy();
+            }
+
+            customerRolesTable = $('#customerRolesTable').DataTable({
+                processing: true,
+                serverSide: true,
+                deferRender: true,
+                ajax: {
+                    url: '/Admin/GetCustomerRolesJson',
+                    type: 'POST',
+                    data: function (d) {
+                        return {
+                            draw: d.draw,
+                            start: d.start,
+                            length: d.length,
+                            search: d.search?.value || ''
+                        };
+                    }
+                },
+                columns: [
+                    { data: 'fullName' },
+                    { data: 'email' },
+                    {
+                        data: 'roles',
+                        render: function (data) {
+                            if (!data || data.length === 0) {
+                                return '<span class="badge bg-secondary">Rol yok</span>';
+                            }
+                            return data.map(r => `<span class="badge bg-primary me-1">${r}</span>`).join('');
+                        }
+                    },
+                    {
+                        data: null,
+                        render: function (data) {
+                            return `<a href="/Admin/AssignRole?userId=${data.userId}"
+                                        class="btn btn-sm btn-primary">
+                                        <i class="fas fa-tag"></i> Rol Düzenle
+                                    </a>`;
+                        }
+                    }
+                ],
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                language: { url: '/datatables/tr.json' },
+                order: [[0, 'asc']],
+                responsive: true
+            });
+        }
+    </script>
+}

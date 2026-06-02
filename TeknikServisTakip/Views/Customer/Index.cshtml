@@ -1,0 +1,1060 @@
+﻿@* 
+
+@{
+    ViewData["Title"] = "Müşteri Yönetimi";
+}
+
+<div class="content" style="padding: 15px; max-width: 100%; width: 100%;">
+    <div class="page-header">
+        <h1><i class="fas fa-user-friends me-3"></i> Müşteri Yönetimi</h1>
+        <p>Sisteme kayıtlı tüm müşterileri görüntüleyin ve yönetin</p>
+    </div>
+
+    <!-- İstatistik Kartları - AJAX ile doldurulacak -->
+    <div class="stats-row" id="statsRow">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-value" id="totalCount">-</div>
+            <div class="stat-label">Toplam Müşteri</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+            <div class="stat-value" id="last30DaysCount">-</div>
+            <div class="stat-label">Son 30 Gün</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-value" id="growthRate">-</div>
+            <div class="stat-label">Büyüme Oranı</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+            <div class="stat-value" id="activeCount">-</div>
+            <div class="stat-label">Aktif Müşteri</div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mb-4"><i class="fas fa-check-circle me-2"></i> @TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger mb-4"><i class="fas fa-exclamation-triangle me-2"></i> @TempData["Error"]</div>
+    }
+
+    <div class="button-group">
+        <div class="btn-wrapper">
+            <a href="/Customer/Create" class="btn-create"><i class="fas fa-plus"></i> Yeni Müşteri Ekle</a>
+        </div>
+        <div class="btn-wrapper">
+            <a href="/Account/ExportCustomerTemplate" class="btn-template"><i class="fas fa-download"></i> Excel Şablonu İndir</a>
+        </div>
+        <div class="btn-wrapper">
+            <button type="button" class="btn-excel-import" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                <i class="fas fa-file-excel"></i> Excel'den Müşteri Ekle
+            </button>
+        </div>
+    </div>
+
+    <!-- Excel Import Modal -->
+    <div class="modal fade" id="importExcelModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-file-excel"></i> Excel'den Toplu Müşteri Ekle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Excel dosyası aşağıdaki sütunları içermelidir:
+                        <table class="table table-sm table-bordered mt-2">
+                            <thead>
+                                <tr class="table-light">
+                                    <th>Sütun</th>
+                                    <th>Alan</th>
+                                    <th>Zorunlu</th>
+                                    <th>Örnek</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>A</td><td>Ad Soyad</td><td class="text-danger">Evet</td><td>Ahmet Yılmaz</td></tr>
+                                <tr><td>B</td><td>E-posta</td><td class="text-danger">Evet</td><td>ahmet@example.com</td></tr>
+                                <tr><td>C</td><td>Telefon</td><td class="text-danger">Evet</td><td>05XX XXX XX XX</td></tr>
+                                <tr><td>D</td><td>Şifre</td><td class="text-danger">Evet</td><td>123456</td></tr>
+                                <tr><td>E</td><td>Adres</td><td class="text-danger">Evet</td><td>Örnek Mahallesi No:123</td></tr>
+                                <tr><td>F</td><td>Şehir</td><td class="text-danger">Evet</td><td>İstanbul</td></tr>
+                                <tr><td>G</td><td>İlçe</td><td class="text-danger">Evet</td><td>Kadıköy</td></tr>
+                                <tr><td>H</td><td class="text-success">Firma Adı</td><td>Hayır</td><td class="text-success">XYZ Teknoloji A.Ş.</td></tr>
+                                <tr><td>I</td><td class="text-success">Cari No</td><td>Hayır</td><td class="text-success">CR-2024-001</td></tr>
+                                <tr><td>H</td><td>Posta Kodu</td><td>Hayır</td><td>34700</td></tr>
+                                <tr><td>I</td><td>TC Kimlik No</td><td>Hayır</td><td>12345678901</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="mt-2 small text-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Önemli Notlar:</strong><br>
+                            - Cari No benzersiz olmalıdır ve boşluk içeremez. Boş bırakılabilir.<br>
+                            - Şifre boş bırakılırsa varsayılan "Abc123." kullanılır.<br>
+                            - Telefon formatı: 05XX XXX XX XX veya 532 XXX XX XX olmalıdır.<br>
+                            - E-posta, Telefon ve Cari No (doldurulduysa) daha önce kayıtlı olmamalıdır.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Excel Dosyası Seçin (.xlsx, .xls)</label>
+                        <input type="file" id="excelFileInput" class="form-control" accept=".xlsx, .xls" />
+                        <small class="text-muted">Sadece .xlsx veya .xls formatındaki dosyalar yüklenebilir.</small>
+                    </div>
+                    <div id="importProgress" style="display:none;" class="mt-3">
+                        <div class="alert alert-info">
+                            <i class="fas fa-spinner fa-spin"></i> <span id="progressText">Dosya işleniyor, lütfen bekleyin...</span>
+                        </div>
+                    </div>
+                    <div id="importResult" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" id="importBtn" class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> İçe Aktar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table id="customerTable" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th><i class="fas fa-id-card me-1"></i> Müşteri No</th>
+                <th><i class="fas fa-user me-1"></i> Ad Soyad</th>
+                <th><i class="fas fa-envelope me-1"></i> E-posta</th>
+                <th><i class="fas fa-phone me-1"></i> Telefon</th>
+                <th><i class="fas fa-map-marker-alt me-1"></i> Adres</th>
+                <th><i class="fas fa-circle me-1"></i> Durum</th>
+                <th><i class="fas fa-calendar me-1"></i> Kayıt Tarihi</th>
+                <th><i class="fas fa-cog me-1"></i> İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- AJAX ile doldurulacak -->
+        </tbody>
+    </table>
+</div>
+
+@Html.AntiForgeryToken()
+
+
+<style>
+    .button-group {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        margin: 20px 0 !important;
+        width: 100% !important;
+    }
+    
+    .btn-wrapper {
+        display: inline-block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .btn-create,
+    .btn-template,
+    .btn-excel-import {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        padding: 10px 24px !important;
+        height: 44px !important;
+        min-width: 180px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        text-decoration: none !important;
+        border: none !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        box-sizing: border-box !important;
+        vertical-align: middle !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+    }
+    
+    .btn-create {
+        background: linear-gradient(135deg, #0d6efd, #0b5ed7) !important;
+        color: white !important;
+    }
+    
+    .btn-template {
+        background: linear-gradient(135deg, #6c757d, #5a6268) !important;
+        color: white !important;
+    }
+    
+    .btn-excel-import {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        color: white !important;
+    }
+    
+        .btn-create:hover,
+        .btn-template:hover,
+        .btn-excel-import:hover {
+            transform: translateY(-2px) !important;
+            color: white !important;
+        }
+    
+    @@media (max-width: 768px) {
+        .button-group {
+            flex-direction: column !important;
+            align-items: stretch !important;
+        }
+        
+        .btn-create,
+        .btn-template,
+        .btn-excel-import {
+            width: 100% !important;
+            justify-content: center !important;
+            min-width: auto !important;
+            white-space: normal !important;
+        }
+        
+        .btn-wrapper {
+            display: block !important;
+            width: 100% !important;
+        }
+    }
+
+    #customerTable {
+        visibility: hidden;
+        min-height: 400px;
+    }
+
+        #customerTable.dataTable {
+            visibility: visible !important;
+        }
+
+    .badge-active {
+        background-color: #10b981;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    .badge-passive {
+        background-color: #ef4444;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    .btn-edit, .btn-toggle, .btn-sil {
+        margin: 2px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-edit {
+        background-color: #0d6efd;
+        color: white;
+    }
+    
+    .btn-toggle {
+        background-color: #f59e0b;
+        color: white;
+    }
+    
+    .btn-sil {
+        background-color: #ef4444;
+        color: white;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        let customerTable;
+
+        $(document).ready(function() {
+            loadStatistics();
+            initDataTable();
+        });
+
+        function loadStatistics() {
+            $.ajax({
+                url: '/Customer/GetStatistics',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        $('#totalCount').text(response.totalCount);
+                        $('#last30DaysCount').text(response.last30DaysCount);
+                        $('#growthRate').text(response.growthRate + '%');
+                        $('#activeCount').text(response.activeCount);
+                    }
+                }
+            });
+        }
+
+          function initDataTable() {
+            if ($.fn.dataTable.isDataTable('#customerTable')) {
+                $('#customerTable').DataTable().destroy();
+            }
+    
+            customerTable = $('#customerTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '/Customer/GetCustomersJson',
+                    type: 'POST',
+                    data: function(d) {
+                        return {
+                            draw: d.draw,
+                            start: d.start,
+                            length: d.length,
+                            search: d.search?.value || ''
+                        };
+                    }
+                },
+                columns: [
+                    {
+                        data: null,
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1 + meta.settings._iDisplayStart;
+                        }
+                    },
+                    { data: 'customerNumber' },
+                    {
+                        data: 'fullName',
+                        render: function(data, type, row) {
+                            return '<a href="/Customer/Details/' + row.id + '" class="text-primary fw-bold"><i class="fas fa-user-circle me-2"></i>' + data + '</a>';
+                        }
+                    },
+                    { data: 'email' },
+                    { data: 'phoneNumber' },
+                    { data: 'addressShort' },
+                    {
+                        data: 'isActive',
+                        render: function(data) {
+                            return data ? '<span class="badge-active">Aktif</span>' : '<span class="badge-passive">Pasif</span>';
+                        }
+                    },
+                    { data: 'createdAt' },
+                    {
+                        data: null,
+                        render: function(data) {
+                            return '<a href="/Customer/Edit/' + data.id + '" class="btn-edit">Düzenle</a>' +
+                                   '<button onclick="toggleStatus(\'' + data.id + '\', ' + data.isActive + ')" class="btn-toggle">' + (data.isActive ? 'Pasif Yap' : 'Aktif Yap') + '</button>' +
+                                   '<button onclick="deleteCustomer(\'' + data.id + '\', \'' + (data.fullName || '').replace(/'/g, "\\'") + '\')" class="btn-sil">Sil</button>';
+                        }
+                    }
+                ],
+                pageLength: 10,
+                language: { url: '/datatables/tr.json' },
+                order: [[1, 'asc']]       
+            });
+
+        }
+            
+       
+
+        // Excel Import
+        $('#importBtn').on('click', function() {
+            var fileInput = document.getElementById('excelFileInput');
+            var file = fileInput.files[0];
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            
+            if (!token) {
+                Swal.fire('Hata', 'Güvenlik tokenı bulunamadı!', 'error');
+                return;
+            }
+            
+            if (!file) {
+                Swal.fire('Uyarı', 'Lütfen bir Excel dosyası seçin!', 'warning');
+                return;
+            }
+            
+            var extension = file.name.split('.').pop().toLowerCase();
+            if (extension !== 'xlsx' && extension !== 'xls') {
+                Swal.fire('Hata', 'Sadece .xlsx veya .xls formatındaki dosyalar yüklenebilir!', 'error');
+                return;
+            }
+            
+            var formData = new FormData();
+            formData.append('excelFile', file);
+            formData.append('__RequestVerificationToken', token);
+            
+            var $btn = $(this);
+            var $progress = $('#importProgress');
+            var $result = $('#importResult');
+            
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> İşleniyor...');
+            $progress.show();
+            $result.hide().empty();
+            
+            $.ajax({
+                url: '/Account/ImportCustomers',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                headers: { 'RequestVerificationToken': token },
+                success: function(response) {
+                    $progress.hide();
+                    
+                    if (response.success) {
+                        Swal.fire({
+                            icon: response.hasErrors ? 'warning' : 'success',
+                            title: response.hasErrors ? 'Kısmen Tamamlandı' : 'Tamamlandı!',
+                            html: `<b>${response.message}</b><br>Başarılı: ${response.importedCount} / Toplam: ${response.totalRows}`,
+                            confirmButtonText: 'Tamam'
+                        }).then(() => {
+                            customerTable.ajax.reload();
+                            loadStatistics();
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Hata!', response.message, 'error');
+                        $btn.prop('disabled', false).html('<i class="fas fa-file-excel"></i> İçe Aktar');
+                    }
+                },
+                error: function(xhr) {
+                    $progress.hide();
+                    Swal.fire('Hata!', 'Bir sorun oluştu!', 'error');
+                    $btn.prop('disabled', false).html('<i class="fas fa-file-excel"></i> İçe Aktar');
+                }
+            });
+        });
+
+        function toggleStatus(id, isActive) {
+            var newStatus = isActive ? 'Pasif' : 'Aktif';
+            Swal.fire({
+                title: 'Durum Değiştir',
+                html: `<b>Müşteri durumunu "${newStatus}" yapmak istediğinize emin misiniz?</b>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#f59e0b',
+                confirmButtonText: 'Evet, Değiştir!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'İşlem yapılıyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                    $.ajax({
+                        url: '/Customer/ToggleCustomerStatus',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Başarılı!', res.message, 'success').then(() => {
+                                    customerTable.ajax.reload();
+                                    loadStatistics();
+                                });
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        function deleteCustomer(id, fullName) {
+            Swal.fire({
+                title: 'Müşteri Silinecek!',
+                html: `<div style="font-size:16px;"><b>${fullName}</b><br>adlı müşteriyi silmek üzeresiniz!</div><div class="mt-2 text-danger">Bu işlem <b>GERİ ALINAMAZ</b>!</div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'İşlem yapılıyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                    $.ajax({
+                        url: '/Customer/Delete',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success').then(() => {
+                                    customerTable.ajax.reload();
+                                    loadStatistics();
+                                });
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                        }
+                    });
+                }
+            });
+        }  
+
+    </script>
+
+
+} *@
+
+
+
+@{
+    ViewData["Title"] = "Müşteri Yönetimi";
+}
+
+<div class="content" style="padding: 15px; max-width: 100%; width: 100%;">
+    <div class="page-header">
+        <h1><i class="fas fa-user-friends me-3"></i> Müşteri Yönetimi</h1>
+        <p>Sisteme kayıtlı tüm müşterileri görüntüleyin ve yönetin</p>
+    </div>
+
+    <div class="stats-row" id="statsRow">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-value" id="totalCount">-</div>
+            <div class="stat-label">Toplam Müşteri</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+            <div class="stat-value" id="last30DaysCount">-</div>
+            <div class="stat-label">Son 30 Gün</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-value" id="growthRate">-</div>
+            <div class="stat-label">Büyüme Oranı</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+            <div class="stat-value" id="activeCount">-</div>
+            <div class="stat-label">Aktif Müşteri</div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mb-4"><i class="fas fa-check-circle me-2"></i> @TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger mb-4"><i class="fas fa-exclamation-triangle me-2"></i> @TempData["Error"]</div>
+    }
+
+    <div class="button-group">
+        <div class="btn-wrapper">
+            <a href="/Customer/Create" class="btn-create"><i class="fas fa-plus"></i> Yeni Müşteri Ekle</a>
+        </div>
+        <div class="btn-wrapper">
+            <a href="/Account/ExportCustomerTemplate" class="btn-template"><i class="fas fa-download"></i> Excel Şablonu İndir</a>
+        </div>
+        <div class="btn-wrapper">
+            <button type="button" class="btn-excel-import" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                <i class="fas fa-file-excel"></i> Excel'den Müşteri Ekle
+            </button>
+        </div>
+    </div>
+
+    <div class="modal fade" id="importExcelModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-file-excel"></i> Excel'den Toplu Müşteri Ekleme</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" id="modalCloseBtn"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalAlertInfo" class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Excel dosyası aşağıdaki sütunları içermelidir:
+                        <table class="table table-sm table-bordered mt-2">
+                            <thead>
+                                <tr class="table-light">
+                                    <th>Sütun</th>
+                                    <th>Alan</th>
+                                    <th>Zorunlu</th>
+                                    <th>Örnek</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>A</td><td>Ad Soyad</td><td class="text-danger">Evet</td><td>Ahmet Yılmaz</td></tr>
+                                <tr><td>B</td><td>E-posta</td><td class="text-danger">Evet</td><td>ahmet@example.com</td></tr>
+                                <tr><td>C</td><td>Telefon</td><td class="text-danger">Evet</td><td>05XX XXX XX XX</td></tr>
+                                <tr><td>D</td><td>Şifre</td><td class="text-danger">Evet</td><td>123456</td></tr>
+                                <tr><td>E</td><td>Adres</td><td class="text-danger">Evet</td><td>Örnek Mahallesi No:123</td></tr>
+                                <tr><td>F</td><td>Şehir</td><td class="text-danger">Evet</td><td>İstanbul</td></tr>
+                                <tr><td>G</td><td>İlçe</td><td class="text-danger">Evet</td><td>Kadıköy</td></tr>
+                                <tr><td>H</td><td class="text-success">Firma Adı</td><td>Hayır</td><td class="text-success">XYZ Teknoloji A.Ş.</td></tr>
+                                <tr><td>I</td><td class="text-success">Cari No</td><td>Hayır</td><td class="text-success">CR-2024-001</td></tr>
+                                <tr><td>J</td><td>Posta Kodu</td><td>Hayır</td><td>34700</td></tr>
+                                <tr><td>K</td><td>TC Kimlik No</td><td>Hayır</td><td>12345678901</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="mt-2 small text-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Önemli Notlar:</strong><br>
+                            - Cari No benzersiz olmalıdır ve boşluk içeremez. Boş bırakılabilir.<br>
+                            - Şifre boş bırakılırsa varsayılan "Abc123." kullanılır.<br>
+                            - Telefon formatı: 05XX XXX XX XX veya 532 XXX XX XX olmalıdır.<br>
+                            - E-posta, Telefon ve Cari No (doldurulduysa) daha önce kayıtlı olmamalıdır.
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="fileInputGroup">
+                        <label class="form-label">Excel Dosyası Seçin (.xlsx, .xls)</label>
+                        <input type="file" id="excelFileInput" class="form-control" accept=".xlsx, .xls" />
+                        <small class="text-muted">Sadece .xlsx veya .xls formatındaki dosyalar yüklenebilir.</small>
+                    </div>
+
+                    <div id="importProgress" style="display:none;" class="mt-3">
+                        <div class="d-flex justify-content-between mb-1 small fw-bold">
+                            <span id="progressText" class="text-primary"><i class="fas fa-spinner fa-spin me-2"></i>Dosya yükleniyor...</span>
+                            <span id="progressPercentText">0%</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div id="importResult" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="modalCancelBtn">İptal</button>
+                    <button type="button" id="importBtn" class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> İçe Aktar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table id="customerTable" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th><i class="fas fa-id-card me-1"></i> Müşteri No</th>
+                <th><i class="fas fa-user me-1"></i> Ad Soyad</th>
+                <th><i class="fas fa-envelope me-1"></i> E-posta</th>
+                <th><i class="fas fa-phone me-1"></i> Telefon</th>
+                <th><i class="fas fa-map-marker-alt me-1"></i> Adres</th>
+                <th><i class="fas fa-circle me-1"></i> Durum</th>
+                <th><i class="fas fa-calendar me-1"></i> Kayıt Tarihi</th>
+                <th><i class="fas fa-cog me-1"></i> İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+@Html.AntiForgeryToken()
+
+<style>
+    /* CSS Stilleri */
+    .button-group {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        margin: 20px 0 !important;
+        width: 100% !important;
+    }
+
+    .btn-wrapper {
+        display: inline-block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .btn-create, .btn-template, .btn-excel-import {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        padding: 10px 24px !important;
+        height: 44px !important;
+        min-width: 180px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        text-decoration: none !important;
+        border: none !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        box-sizing: border-box !important;
+        vertical-align: middle !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+    }
+
+    .btn-create {
+        background: linear-gradient(135deg, #0d6efd, #0b5ed7) !important;
+        color: white !important;
+    }
+
+    .btn-template {
+        background: linear-gradient(135deg, #6c757d, #5a6268) !important;
+        color: white !important;
+    }
+
+    .btn-excel-import {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        color: white !important;
+    }
+
+        .btn-create:hover, .btn-template:hover, .btn-excel-import:hover {
+            transform: translateY(-2px) !important;
+            color: white !important;
+        }
+
+    @@media (max-width: 768px) {
+        .button-group {
+            flex-direction: column !important;
+            align-items: stretch !important;
+        }
+
+        .btn-create, .btn-template, .btn-excel-import {
+            width: 100% !important;
+            justify-content: center !important;
+            min-width: auto !important;
+            white-space: normal !important;
+        }
+
+        .btn-wrapper {
+            display: block !important;
+            width: 100% !important;
+        }
+    }
+
+    #customerTable {
+        visibility: hidden;
+        min-height: 400px;
+    }
+
+        #customerTable.dataTable {
+            visibility: visible !important;
+        }
+
+    .badge-active {
+        background-color: #10b981;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    .badge-passive {
+        background-color: #ef4444;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    .btn-edit, .btn-toggle, .btn-sil {
+        margin: 2px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-edit {
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .btn-toggle {
+        background-color: #f59e0b;
+        color: white;
+    }
+
+    .btn-sil {
+        background-color: #ef4444;
+        color: white;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        let customerTable;
+        let signalRConnectionId = "";
+
+        // ========== LAYOUT'TAKİ SİGNALR NESNESİNE BAĞLANMA ==========
+        // Layout'ta tanımlı olan 'connection' nesnesini dinliyoruz.
+        if (typeof connection !== 'undefined') {
+
+            // Excel yükleme aşamalarını canlı dinle
+            connection.on("ReceiveProgress", function (percent, message) {
+                $('#importProgress').show();
+                $('#progressBar').css('width', percent + '%').attr('aria-valuenow', percent);
+                $('#progressPercentText').text(percent + '%');
+                $('#progressText').html(`<i class="fas fa-spinner fa-spin me-2"></i> ${message}`);
+            });
+
+            // Sayfa açıldığında bağlantı sağlandıysa ID'yi hemen kap
+            if (connection.state === "Connected" || connection.connectionId) {
+                signalRConnectionId = connection.connectionId;
+                console.log("Mevcut SignalR ID Alındı: " + signalRConnectionId);
+            }
+        }
+
+        $(document).ready(function() {
+            loadStatistics();
+            initDataTable();
+
+            // Eğer sayfa ilk açıldığında bağlantı ID'si henüz oluşmadıysa 1 saniye sonra tekrar dene
+            setTimeout(function() {
+                if(!signalRConnectionId && typeof connection !== 'undefined') {
+                    signalRConnectionId = connection.connectionId || "";
+                    console.log("Gecikmeli SignalR ID Kontrolü: " + signalRConnectionId);
+                }
+            }, 1000);
+        });
+
+        function loadStatistics() {
+            $.ajax({
+                url: '/Customer/GetStatistics',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        $('#totalCount').text(response.totalCount);
+                        $('#last30DaysCount').text(response.last30DaysCount);
+                        $('#growthRate').text(response.growthRate + '%');
+                        $('#activeCount').text(response.activeCount);
+                    }
+                }
+            });
+        }
+
+        function initDataTable() {
+            if ($.fn.dataTable.isDataTable('#customerTable')) {
+                $('#customerTable').DataTable().destroy();
+            }
+
+            customerTable = $('#customerTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '/Customer/GetCustomersJson',
+                    type: 'POST',
+                    data: function(d) {
+                        return {
+                            draw: d.draw,
+                            start: d.start,
+                            length: d.length,
+                            search: d.search?.value || ''
+                        };
+                    }
+                },
+                columns: [
+                    {
+                        data: null,
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1 + meta.settings._iDisplayStart;
+                        }
+                    },
+                    { data: 'customerNumber' },
+                    {
+                        data: 'fullName',
+                        render: function(data, type, row) {
+                            return '<a href="/Customer/Details/' + row.id + '" class="text-primary fw-bold"><i class="fas fa-user-circle me-2"></i>' + data + '</a>';
+                        }
+                    },
+                    { data: 'email' },
+                    { data: 'phoneNumber' },
+                    { data: 'addressShort' },
+                    {
+                        data: 'isActive',
+                        render: function(data) {
+                            return data ? '<span class="badge-active">Aktif</span>' : '<span class="badge-passive">Pasif</span>';
+                        }
+                    },
+                    { data: 'createdAt' },
+                    {
+                        data: null,
+                        render: function(data) {
+                            return '<a href="/Customer/Edit/' + data.id + '" class="btn-edit">Düzenle</a>' +
+                                   '<button onclick="toggleStatus(\'' + data.id + '\', ' + data.isActive + ')" class="btn-toggle">' + (data.isActive ? 'Pasif Yap' : 'Aktif Yap') + '</button>' +
+                                   '<button onclick="deleteCustomer(\'' + data.id + '\', \'' + (data.fullName || '').replace(/'/g, "\\'") + '\')" class="btn-sil">Sil</button>';
+                        }
+                    }
+                ],
+                pageLength: 10,
+                language: { url: '/datatables/tr.json' },
+                order: [[1, 'asc']]
+            });
+        }
+
+        // ========== EXCEL IMPORT ==========
+        $('#importBtn').on('click', function() {
+            var fileInput = document.getElementById('excelFileInput');
+            var file = fileInput.files[0];
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            if (!file) {
+                Swal.fire('Uyarı', 'Lütfen bir Excel dosyası seçin!', 'warning');
+                return;
+            }
+
+            var extension = file.name.split('.').pop().toLowerCase();
+            if (extension !== 'xlsx' && extension !== 'xls') {
+                Swal.fire('Hata', 'Sadece .xlsx veya .xls formatındaki dosyalar yüklenebilir!', 'error');
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('excelFile', file);
+            formData.append('__RequestVerificationToken', token);
+
+            // Eğer ID hala boşsa Layout nesnesinden son bir kez zorla çekiyoruz
+            if(!signalRConnectionId && typeof connection !== 'undefined') {
+                signalRConnectionId = connection.connectionId || "";
+            }
+
+            formData.append('signalRConnectionId', signalRConnectionId);
+
+            var $btn = $(this);
+            var $cancelBtn = $('#modalCancelBtn');
+            var $closeBtn = $('#modalCloseBtn');
+            var $progress = $('#importProgress');
+            var $fileGroup = $('#fileInputGroup');
+            var $alertInfo = $('#modalAlertInfo');
+
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Yükleniyor...');
+            $cancelBtn.prop('disabled', true);
+            $closeBtn.hide();
+            $fileGroup.hide();
+            $alertInfo.hide();
+            $progress.show();
+
+            $('#progressBar').css('width', '0%').attr('aria-valuenow', 0);
+            $('#progressPercentText').text('0%');
+            $('#progressText').html('<i class="fas fa-spinner fa-spin me-2"></i> Veriler analiz ediliyor...');
+
+            $.ajax({
+                url: '/Account/ImportCustomers',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                headers: { 'RequestVerificationToken': token },
+                success: function(response) {
+                    if (response.success) {
+                        $('#importExcelModal').modal('hide');
+
+                        Swal.fire({
+                            icon: response.hasErrors ? 'warning' : 'success',
+                            title: response.hasErrors ? 'Kısmen Tamamlandı' : 'Tamamlandı!',
+                            html: `<b>${response.message}</b><br>Başarılı: ${response.importedCount} / Toplam: ${response.totalRows}`,
+                            confirmButtonText: 'Tamam'
+                        }).then(() => {
+                            customerTable.ajax.reload();
+                            loadStatistics();
+                            resetModalState();
+                        });
+                    } else {
+                        Swal.fire('Hata!', response.message, 'error');
+                        resetModalState();
+                    }
+                },
+                error: function() {
+                    Swal.fire('Hata!', 'Beklenmedik bir hata oluştu veya bağlantı koptu.', 'error');
+                    resetModalState();
+                }
+            });
+        });
+
+        function resetModalState() {
+            $('#importBtn').prop('disabled', false).html('<i class="fas fa-file-excel"></i> İçe Aktar');
+            $('#modalCancelBtn').prop('disabled', false);
+            $('#modalCloseBtn').show();
+            $('#fileInputGroup').show();
+            $('#modalAlertInfo').show();
+            $('#importProgress').hide();
+            $('#excelFileInput').val('');
+            $('#progressBar').css('width', '0%');
+            $('#progressPercentText').text('0%');
+        }
+
+        function toggleStatus(id, isActive) {
+            var newStatus = isActive ? 'Pasif' : 'Aktif';
+            Swal.fire({
+                title: 'Durum Değiştir',
+                html: `<b>Müşteri durumunu "${newStatus}" yapmak istediğinize emin misiniz?</b>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#f59e0b',
+                confirmButtonText: 'Evet, Değiştir!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'İşlem yapılıyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                    $.ajax({
+                        url: '/Customer/ToggleCustomerStatus',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Başarılı!', res.message, 'success').then(() => {
+                                    customerTable.ajax.reload();
+                                    loadStatistics();
+                                });
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        function deleteCustomer(id, fullName) {
+            Swal.fire({
+                title: 'Müşteri Silinecek!',
+                html: `<div style="font-size:16px;"><b>${fullName}</b><br>adlı müşteriyi silmek üzeresiniz!</div><div class="mt-2 text-danger">Bu işlem <b>GERİ ALINAMAZ</b>!</div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'İşlem yapılıyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                    $.ajax({
+                        url: '/Customer/Delete',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success').then(() => {
+                                    customerTable.ajax.reload();
+                                    loadStatistics();
+                                });
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,773 @@
+﻿@* @model Entities.Concrete.RepairItem
+@using Entities.Enum
+@using TeknikServisTakip.Helpers
+@{
+    ViewData["Title"] = "Teslim Edilen Tamir Detayı";
+
+    // Para birimi
+    var currency = Model.Currency ?? "TRY";
+    var currencySymbol = CurrencyHelper.GetSymbol(currency);
+}
+
+<div class="content">
+    <div class="page-header">
+        <h1><i class="fas fa-archive me-2"></i> Teslim Edilen Tamir Detayı</h1>
+        <p>Teslim edilmiş tamir kaydının detay bilgileri</p>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Bu tamir kaydı <strong>@(Model.DeliveryDate?.ToString("dd.MM.yyyy HH:mm") ?? "belirtilmeyen bir tarihte")</strong> teslim edilmiştir.
+    </div>
+
+    <!-- 1. SATIR: Müşteri ve Ürün Bilgileri -->
+    <div class="row align-items-stretch">
+        <div class="col-md-6 d-flex">
+            <div class="card detail-card w-100">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-user"></i> Müşteri Bilgileri
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="detail-label" style="width: 40%">Takip Kodu:</td>
+                            <td class="detail-value"><strong>@Model.TrackingCode</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Müşteri No:</td>
+                            <td class="detail-value">@Model.CustomerNumber</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Cari No:</td>
+                            <td class="detail-value">
+                                @if (!string.IsNullOrEmpty(Model.AppUser?.CariNo))
+                                {
+                                    <span class="badge bg-info">@Model.AppUser.CariNo</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Firma Adı:</td>
+                            <td class="detail-value">
+                                @if (!string.IsNullOrEmpty(Model.AppUser?.CompanyName))
+                                {
+                                    <strong class="text-primary">@Model.AppUser.CompanyName</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Müşteri Adı:</td>
+                            <td class="detail-value">@(Model.AppUser?.FullName ?? "Belirtilmemiş")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">E-posta:</td>
+                            <td class="detail-value">@(Model.AppUser?.Email ?? "Belirtilmemiş")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Telefon:</td>
+                            <td class="detail-value">@(Model.AppUser?.PhoneNumber ?? "Belirtilmemiş")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 d-flex">
+            <div class="card detail-card w-100">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-laptop"></i> Ürün Bilgileri
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="detail-label" style="width: 40%">Ürün Adı:</td>
+                            <td class="detail-value">@Model.ProductName</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Marka:</td>
+                            <td class="detail-value">@(Model.ProductBrand ?? "-")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Model:</td>
+                            <td class="detail-value">@(Model.ProductModel ?? "-")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Seri No:</td>
+                            <td class="detail-value">@(Model.SerialNumber ?? "-")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. SATIR: Tamir Bilgileri ve Notlar -->
+    <div class="row align-items-stretch mt-3">
+        <div class="col-md-6 d-flex">
+            <div class="card detail-card w-100">
+                <div class="card-header bg-warning text-dark">
+                    <i class="fas fa-tools"></i> Tamir Bilgileri
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="detail-label" style="width: 40%">Personel:</td>
+                            <td class="detail-value">@(Model.Personel?.FullName ?? "Atanmamış")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Durum:</td>
+                            <td class="detail-value">
+                                @{
+                                    var statusEnum = (RepairStatusEnum)(Model.StatusId ?? 1);
+                                    var statusName = statusEnum.GetDisplayName();
+                                    var badgeClass = statusEnum == RepairStatusEnum.TeslimEdildi ? "badge-teslim" : "badge-beklemede";
+                                }
+                                <span class="@badgeClass">@statusName</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Ücret:</td>
+                            <td class="detail-value">
+                                @currencySymbol @Model.Price.ToString("N2")
+                                <small class="text-muted">(@currency)</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Geliş Tarihi:</td>
+                            <td class="detail-value">@Model.ReceivedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Teslim Tarihi:</td>
+                            <td class="detail-value"><strong class="text-success">@(Model.DeliveryDate?.ToString("dd.MM.yyyy HH:mm") ?? "-")</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 d-flex">
+            <div class="card detail-card w-100">
+                <div class="card-header bg-secondary text-white">
+                    <i class="fas fa-sticky-note"></i> Notlar
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="detail-label" style="width: 40%">Arıza Açıklaması:</td>
+                            <td class="detail-value">@Model.ProblemDescription</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Müşteri Notu:</td>
+                            <td class="detail-value">@(Model.CustomerNote ?? "-")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Personel Notu:</td>
+                            <td class="detail-value">@(Model.InternalNote ?? "-")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Çoklu Resim Galerisi -->
+    @{
+        var beforeImages = Model.RepairImages?.Where(i => i.ImageType == "Before").OrderBy(i => i.Order).ToList();
+        var afterImages = Model.RepairImages?.Where(i => i.ImageType == "After").OrderBy(i => i.Order).ToList();
+    }
+
+    <div class="row mt-3">
+        @if (beforeImages != null && beforeImages.Any())
+        {
+            <div class="col-md-6">
+                <div class="card detail-card">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-camera"></i> Tamir Öncesi Resimler (@beforeImages.Count)
+                    </div>
+                    <div class="card-body">
+                        <div class="image-gallery">
+                            @foreach (var img in beforeImages)
+                            {
+                                <img src="@img.ImagePath" class="resim-thumb"
+                                     onclick="openSlideshow('before', @beforeImages.IndexOf(img))"
+                                     title="Öncesi Resim - @(beforeImages.IndexOf(img) + 1)/@beforeImages.Count" />
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (afterImages != null && afterImages.Any())
+        {
+            <div class="col-md-6">
+                <div class="card detail-card">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-check-circle"></i> Tamir Sonrası Resimler (@afterImages.Count)
+                    </div>
+                    <div class="card-body">
+                        <div class="image-gallery">
+                            @foreach (var img in afterImages)
+                            {
+                                <img src="@img.ImagePath" class="resim-thumb"
+                                     onclick="openSlideshow('after', @afterImages.IndexOf(img))"
+                                     title="Sonrası Resim - @(afterImages.IndexOf(img) + 1)/@afterImages.Count" />
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if ((beforeImages == null || !beforeImages.Any()) && (afterImages == null || !afterImages.Any()))
+    {
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="card detail-card">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-image"></i> Resimler
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="text-muted"><i class="fas fa-ban"></i> Henüz resim eklenmemiştir.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="mt-4 text-center">
+        <a asp-action="DeliveredRepairs" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Teslim Edilenler Listesine Dön
+        </a>
+    </div>
+</div>
+
+<!-- Slayt Modal -->
+<div id="slideshowModal" class="slideshow-modal">
+    <span class="close-slideshow" onclick="closeSlideshow()">&times;</span>
+    <button class="prev" onclick="changeSlide(-1)">&#10094;</button>
+    <button class="next" onclick="changeSlide(1)">&#10095;</button>
+    <div class="modal-content">
+        <img id="slideImage" class="slide-image" src="" alt="Tamir resmi" />
+    </div>
+    <span id="slideCounter" class="image-counter"></span>
+    <button id="slideDownloadBtn" class="download-btn"><i class="fas fa-download"></i> Resmi İndir</button>
+</div>
+
+@section Scripts {
+    <script>
+        var currentImages = [];
+        var currentIndex = 0;
+        var currentType = '';
+
+        @{
+                var beforeImagesJson = beforeImages != null ? Newtonsoft.Json.JsonConvert.SerializeObject(beforeImages.Select(i => i.ImagePath)) : "[]";
+                var afterImagesJson = afterImages != null ? Newtonsoft.Json.JsonConvert.SerializeObject(afterImages.Select(i => i.ImagePath)) : "[]";
+        }
+
+        var beforeImagesList = @Html.Raw(beforeImagesJson);
+        var afterImagesList = @Html.Raw(afterImagesJson);
+
+        function openSlideshow(type, index) {
+            currentType = type;
+            if (type === 'before') {
+                currentImages = beforeImagesList;
+            } else {
+                currentImages = afterImagesList;
+            }
+            currentIndex = index;
+            updateSlide();
+            document.getElementById('slideshowModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function updateSlide() {
+            if (currentImages && currentImages.length > 0 && currentIndex >= 0 && currentIndex < currentImages.length) {
+                var imgPath = currentImages[currentIndex];
+                document.getElementById('slideImage').src = imgPath;
+                document.getElementById('slideCounter').innerHTML = (currentIndex + 1) + ' / ' + currentImages.length;
+                document.getElementById('slideDownloadBtn').onclick = function() {
+                    downloadImage(imgPath);
+                };
+            }
+        }
+
+        function changeSlide(direction) {
+            if (currentImages && currentImages.length > 0) {
+                currentIndex += direction;
+                if (currentIndex < 0) currentIndex = currentImages.length - 1;
+                if (currentIndex >= currentImages.length) currentIndex = 0;
+                updateSlide();
+            }
+        }
+
+        function closeSlideshow() {
+            document.getElementById('slideshowModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function downloadImage(url) {
+            fetch(url).then(response => response.blob()).then(blob => {
+                const link = document.createElement('a');
+                const objectURL = URL.createObjectURL(blob);
+                link.href = objectURL;
+                link.download = url.split('/').pop() || 'resim.jpg';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(objectURL);
+                Swal.fire('Başarılı!', 'Resim indiriliyor...', 'success');
+            }).catch(() => {
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = url.split('/').pop() || 'resim.jpg';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                Swal.fire('Başarılı!', 'Resim indiriliyor...', 'success');
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            var modal = document.getElementById('slideshowModal');
+            if (modal.style.display === 'flex') {
+                if (e.key === 'Escape') closeSlideshow();
+                if (e.key === 'ArrowLeft') changeSlide(-1);
+                if (e.key === 'ArrowRight') changeSlide(1);
+                e.preventDefault();
+            }
+        });
+
+        document.getElementById('slideshowModal').addEventListener('click', function(e) {
+            if (e.target === this) closeSlideshow();
+        });
+    </script>
+} *@
+
+
+
+
+@model Entities.Concrete.RepairItem
+@using Entities.Enum
+@using TeknikServisTakip.Helpers
+@{
+    ViewData["Title"] = "Teslim Edilen Tamir Detayı";
+
+    // Para birimi
+    var currency = Model.Currency ?? "TRY";
+    var currencySymbol = CurrencyHelper.GetSymbol(currency);
+}
+
+<div class="content">
+    <div class="page-header">
+        <h1><i class="fas fa-archive me-2"></i> Teslim Edilen Tamir Detayı</h1>
+        <p>Teslim edilmiş tamir kaydının detay bilgileri</p>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Bu tamir kaydı <strong>@(Model.DeliveryDate?.ToString("dd.MM.yyyy HH:mm") ?? "belirtilmeyen bir tarihte")</strong> teslim edilmiştir.
+    </div>
+
+    <!-- 1. SATIR: Müşteri ve Ürün Bilgileri -->
+    <div class="row align-items-stretch">
+        <div class="col-md-6 d-flex">
+            <div class="card detail-card w-100">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-user"></i> Müşteri Bilgileri
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="detail-label" style="width: 40%">Takip Kodu:</td>
+                            <td class="detail-value"><strong>@Model.TrackingCode</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Müşteri No:</td>
+                            <td class="detail-value">@Model.CustomerNumber</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Cari No:</td>
+                            <td class="detail-value">
+                                @if (!string.IsNullOrEmpty(Model.AppUser?.CariNo))
+                                {
+                                    <span class="badge bg-info">@Model.AppUser.CariNo</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Firma Adı:</td>
+                            <td class="detail-value">
+                                @if (!string.IsNullOrEmpty(Model.AppUser?.CompanyName))
+                                {
+                                    <strong class="text-primary">@Model.AppUser.CompanyName</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Müşteri Adı:</td>
+                            <td class="detail-value">@(Model.AppUser?.FullName ?? "Belirtilmemiş")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">E-posta:</td>
+                            <td class="detail-value">@(Model.AppUser?.Email ?? "Belirtilmemiş")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Telefon:</td>
+                            <td class="detail-value">@(Model.AppUser?.PhoneNumber ?? "Belirtilmemiş")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 d-flex">
+            <div class="card detail-card w-100">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-laptop"></i> Ürün Bilgileri
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="detail-label" style="width: 40%">Ürün Adı:</td>
+                            <td class="detail-value">@Model.ProductName</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Marka:</td>
+                            <td class="detail-value">@(Model.ProductBrand ?? "-")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Model:</td>
+                            <td class="detail-value">@(Model.ProductModel ?? "-")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Seri No:</td>
+                            <td class="detail-value">@(Model.SerialNumber ?? "-")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. SATIR: Tamir Bilgileri ve Notlar -->
+    <div class="row align-items-stretch mt-3">
+        <div class="col-md-6 d-flex">
+            <div class="card detail-card w-100">
+                <div class="card-header bg-warning text-dark">
+                    <i class="fas fa-tools"></i> Tamir Bilgileri
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="detail-label" style="width: 40%">Personel:</td>
+                            <td class="detail-value">@(Model.Personel?.FullName ?? "Atanmamış")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Durum:</td>
+                            <td class="detail-value">
+                                @{
+                                    var statusEnum = (RepairStatusEnum)(Model.StatusId ?? 1);
+                                    var statusName = statusEnum.GetDisplayName();
+                                    var badgeClass = statusEnum == RepairStatusEnum.TeslimEdildi ? "badge-teslim" : "badge-beklemede";
+                                }
+                                <span class="@badgeClass">@statusName</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Ücret:</td>
+                            <td class="detail-value">
+                                @currencySymbol @Model.Price.ToString("N2")
+                                <small class="text-muted">(@currency)</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Geliş Tarihi:</td>
+                            <td class="detail-value">@Model.ReceivedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Teslim Tarihi:</td>
+                            <td class="detail-value"><strong class="text-success">@(Model.DeliveryDate?.ToString("dd.MM.yyyy HH:mm") ?? "-")</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 d-flex">
+            <div class="card detail-card w-100">
+                <div class="card-header bg-secondary text-white">
+                    <i class="fas fa-sticky-note"></i> Notlar
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="detail-label" style="width: 40%">Arıza Açıklaması:</td>
+                            <td class="detail-value">@Model.ProblemDescription</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Müşteri Notu:</td>
+                            <td class="detail-value">@(Model.CustomerNote ?? "-")</td>
+                        </tr>
+                        <tr>
+                            <td class="detail-label">Personel Notu:</td>
+                            <td class="detail-value">@(Model.InternalNote ?? "-")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KULLANILAN MALZEMELER -->
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card detail-card">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-cubes"></i> Kullanılan Malzemeler</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Ürün Adı</th>
+                                    <th>Miktar</th>
+                                    <th>Açıklama</th>
+                                    <th>Kullanım Tarihi</th>
+                                    <th>Kullanan Personel</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materialsList">
+                                <tr><td colspan="5" class="text-center">Yükleniyor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Çoklu Resim Galerisi -->
+    @{
+        var beforeImages = Model.RepairImages?.Where(i => i.ImageType == "Before").OrderBy(i => i.Order).ToList();
+        var afterImages = Model.RepairImages?.Where(i => i.ImageType == "After").OrderBy(i => i.Order).ToList();
+    }
+
+    <div class="row mt-3">
+        @if (beforeImages != null && beforeImages.Any())
+        {
+            <div class="col-md-6">
+                <div class="card detail-card">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-camera"></i> Tamir Öncesi Resimler (@beforeImages.Count)
+                    </div>
+                    <div class="card-body">
+                        <div class="image-gallery">
+                            @foreach (var img in beforeImages)
+                            {
+                                <img src="@img.ImagePath" class="resim-thumb"
+                                     onclick="openSlideshow('before', @beforeImages.IndexOf(img))"
+                                     title="Öncesi Resim - @(beforeImages.IndexOf(img) + 1)/@beforeImages.Count" />
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (afterImages != null && afterImages.Any())
+        {
+            <div class="col-md-6">
+                <div class="card detail-card">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-check-circle"></i> Tamir Sonrası Resimler (@afterImages.Count)
+                    </div>
+                    <div class="card-body">
+                        <div class="image-gallery">
+                            @foreach (var img in afterImages)
+                            {
+                                <img src="@img.ImagePath" class="resim-thumb"
+                                     onclick="openSlideshow('after', @afterImages.IndexOf(img))"
+                                     title="Sonrası Resim - @(afterImages.IndexOf(img) + 1)/@afterImages.Count" />
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if ((beforeImages == null || !beforeImages.Any()) && (afterImages == null || !afterImages.Any()))
+    {
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="card detail-card">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-image"></i> Resimler
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="text-muted"><i class="fas fa-ban"></i> Henüz resim eklenmemiştir.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="mt-4 text-center">
+        <a asp-action="DeliveredRepairs" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Teslim Edilenler Listesine Dön
+        </a>
+    </div>
+</div>
+
+<!-- Slayt Modal -->
+<div id="slideshowModal" class="slideshow-modal">
+    <span class="close-slideshow" onclick="closeSlideshow()">&times;</span>
+    <button class="prev" onclick="changeSlide(-1)">&#10094;</button>
+    <button class="next" onclick="changeSlide(1)">&#10095;</button>
+    <div class="modal-content">
+        <img id="slideImage" class="slide-image" src="" alt="Tamir resmi" />
+    </div>
+    <span id="slideCounter" class="image-counter"></span>
+    <button id="slideDownloadBtn" class="download-btn"><i class="fas fa-download"></i> Resmi İndir</button>
+</div>
+
+@section Scripts {
+    <script>
+        var currentImages = [];
+        var currentIndex = 0;
+        var currentType = '';
+
+        @{
+                    var beforeImagesJson = beforeImages != null ? Newtonsoft.Json.JsonConvert.SerializeObject(beforeImages.Select(i => i.ImagePath)) : "[]";
+                    var afterImagesJson = afterImages != null ? Newtonsoft.Json.JsonConvert.SerializeObject(afterImages.Select(i => i.ImagePath)) : "[]";
+        }
+
+        var beforeImagesList = @Html.Raw(beforeImagesJson);
+        var afterImagesList = @Html.Raw(afterImagesJson);
+
+        function openSlideshow(type, index) {
+            currentType = type;
+            if (type === 'before') {
+                currentImages = beforeImagesList;
+            } else {
+                currentImages = afterImagesList;
+            }
+            currentIndex = index;
+            updateSlide();
+            document.getElementById('slideshowModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function updateSlide() {
+            if (currentImages && currentImages.length > 0 && currentIndex >= 0 && currentIndex < currentImages.length) {
+                var imgPath = currentImages[currentIndex];
+                document.getElementById('slideImage').src = imgPath;
+                document.getElementById('slideCounter').innerHTML = (currentIndex + 1) + ' / ' + currentImages.length;
+                document.getElementById('slideDownloadBtn').onclick = function() {
+                    downloadImage(imgPath);
+                };
+            }
+        }
+
+        function changeSlide(direction) {
+            if (currentImages && currentImages.length > 0) {
+                currentIndex += direction;
+                if (currentIndex < 0) currentIndex = currentImages.length - 1;
+                if (currentIndex >= currentImages.length) currentIndex = 0;
+                updateSlide();
+            }
+        }
+
+        function closeSlideshow() {
+            document.getElementById('slideshowModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function downloadImage(url) {
+            fetch(url).then(response => response.blob()).then(blob => {
+                const link = document.createElement('a');
+                const objectURL = URL.createObjectURL(blob);
+                link.href = objectURL;
+                link.download = url.split('/').pop() || 'resim.jpg';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(objectURL);
+                Swal.fire('Başarılı!', 'Resim indiriliyor...', 'success');
+            }).catch(() => {
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = url.split('/').pop() || 'resim.jpg';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                Swal.fire('Başarılı!', 'Resim indiriliyor...', 'success');
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            var modal = document.getElementById('slideshowModal');
+            if (modal.style.display === 'flex') {
+                if (e.key === 'Escape') closeSlideshow();
+                if (e.key === 'ArrowLeft') changeSlide(-1);
+                if (e.key === 'ArrowRight') changeSlide(1);
+                e.preventDefault();
+            }
+        });
+
+        document.getElementById('slideshowModal').addEventListener('click', function(e) {
+            if (e.target === this) closeSlideshow();
+        });
+
+        // ========== MALZEME YÖNETİMİ ==========
+        function loadMaterials(repairId) {
+            $.get('/Repair/GetMaterials?repairId=' + repairId, function(materials) {
+                var html = '';
+                if (materials.length === 0) {
+                    html = '<tr><td colspan="5" class="text-center text-muted">Henüz malzeme kullanılmamış.</td></tr>';
+                } else {
+                    for (var i = 0; i < materials.length; i++) {
+                        var m = materials[i];
+                        var materialDisplay = m.materialType === 'External' ?
+                            '<span class="badge bg-info">' + (m.externalProductName || m.productName) + '</span>' :
+                            m.productName;
+                        var typeBadge = m.materialType === 'External' ?
+                            '<span class="badge bg-secondary ms-1">Dışarıdan</span>' : '';
+
+                        html += '<tr>' +
+                            '<td>' + materialDisplay + ' ' + typeBadge + '</td>' +
+                            '<td>' + m.quantity + '</td>' +
+                            '<td>' + (m.description || '-') + '</td>' +
+                            '<td>' + m.usedAt + '</td>' +
+                            '<td>' + (m.usedBy || '-') + '</td>' +
+                            '</tr>';
+                    }
+                }
+                $('#materialsList').html(html);
+            }).fail(function() {
+                $('#materialsList').html('<tr><td colspan="5" class="text-center text-danger">Malzemeler yüklenirken hata oluştu.</td></tr>');
+            });
+        }
+
+        $(document).ready(function() {
+            loadMaterials(@Model.Id);
+        });
+    </script>
+}

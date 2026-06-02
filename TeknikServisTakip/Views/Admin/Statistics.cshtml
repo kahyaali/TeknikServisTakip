@@ -1,0 +1,211 @@
+﻿@using Entities.Concrete
+@using Entities.Enum
+@using TeknikServisTakip.Helpers
+
+@{
+    ViewData["Title"] = "Sistem İstatistikleri";
+}
+
+
+
+<div class="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-chart-line me-2"></i> Sistem İstatistikleri</h1>
+        <a href="/Admin/Index" class="btn-geri">
+            <i class="fas fa-arrow-left"></i> Dashboard'a Dön
+        </a>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="row">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card bg-primary-gradient">
+                <i class="fas fa-tools icon"></i>
+                <div class="title">Toplam Tamir</div>
+                <div class="value">@ViewBag.TotalRepairs</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card bg-warning-gradient">
+                <i class="fas fa-clock icon"></i>
+                <div class="title">Bekleyen</div>
+                <div class="value">@ViewBag.PendingRepairs</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card bg-info-gradient">
+                <i class="fas fa-cogs icon"></i>
+                <div class="title">İşlemde</div>
+                <div class="value">@ViewBag.InProgressRepairs</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card bg-success-gradient">
+                <i class="fas fa-check-circle icon"></i>
+                <div class="title">Tamamlanan</div>
+                <div class="value">@ViewBag.CompletedRepairs</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 col-sm-6">
+            <div class="stat-card bg-dark-gradient">
+                <i class="fas fa-users icon"></i>
+                <div class="title">Personel Sayısı</div>
+                <div class="value">@ViewBag.TotalPersonel</div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6">
+            <div class="stat-card bg-dark-gradient">
+                <i class="fas fa-user-friends icon"></i>
+                <div class="title">Müşteri Sayısı</div>
+                <div class="value">@ViewBag.TotalCustomers</div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6">
+            <div class="stat-card bg-dark-gradient">
+                <i class="fas fa-percent icon"></i>
+                <div class="title">Tamamlama Oranı</div>
+                <div class="value">
+                    @{
+                        var oran = ViewBag.TotalRepairs > 0 ? (ViewBag.CompletedRepairs * 100 / ViewBag.TotalRepairs) : 0;
+                    }
+                    %@oran
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grafikler - AYNI BOYUTTA -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="chart-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-2 text-primary"></i> Tamir Durum Dağılımı
+                </div>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-2 text-success"></i> Aylık Tamir Sayıları
+                </div>
+                <div class="chart-container">
+                    @if (ViewBag.Months != null && ViewBag.Months.Length > 0)
+                    {
+                        <canvas id="monthlyChart"></canvas>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info text-center mb-0 mt-4">
+                            <i class="fas fa-info-circle me-2"></i> Henüz aylık veri bulunmuyor.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Son Tamirler Tablosu -->
+    <div class="chart-card">
+        <div class="card-header">
+            <i class="fas fa-list me-2 text-info"></i> Son 5 Tamir Kaydı
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Takip Kodu</th>
+                        <th>Ürün Adı</th>
+                        <th>Müşteri</th>
+                        <th>Durum</th>
+                        <th>Geliş Tarihi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var sonTamirler = ((IEnumerable<RepairItem>)ViewBag.SonTamirler) ?? new List<RepairItem>();
+                    }
+                    @foreach (var item in sonTamirler.Take(5))
+                    {
+                        var statusEnum = (RepairStatusEnum)(item.StatusId ?? 1);
+                        var statusName = statusEnum.GetDisplayName();
+                        var badgeClass = statusEnum switch
+                        {
+                            RepairStatusEnum.Tamamlandi => "bg-success",
+                            RepairStatusEnum.IslemeAlindi => "bg-primary",
+                            RepairStatusEnum.TeslimEdildi => "bg-secondary",
+                            _ => "bg-warning"
+                        };
+
+                        <tr>
+                            <td><strong>@item.TrackingCode</strong></td>
+                            <td>@item.ProductName</td>
+                            <td>@item.AppUser?.FullName</td>
+                            <td><span class="badge @badgeClass">@statusName</span></td>
+                            <td>@item.ReceivedDate.ToString("dd.MM.yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Durum Grafiği (Pasta)
+        const ctx1 = document.getElementById('statusChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.StatusLabels)),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(ViewBag.StatusData)),
+                    backgroundColor: ['#f59e0b', '#3b82f6', '#10b981'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // Aylık Grafik (Çizgi)
+        @if (ViewBag.Months != null && ViewBag.Months.Length > 0)
+        {
+            <text>
+            const ctx2 = document.getElementById('monthlyChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(ViewBag.Months)),
+                    datasets: [{
+                        label: 'Tamir Sayısı',
+                        data: @Html.Raw(Json.Serialize(ViewBag.MonthlyCounts)),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+            </text>
+        }
+    </script>
+}

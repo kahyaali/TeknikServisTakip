@@ -1,0 +1,77 @@
+﻿
+.archive-header {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    color: white;
+}
+
+.archive-header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.archive-header p {
+    margin: 5px 0 0;
+    opacity: 0.9;
+}
+
+.table-archive {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+    .table-archive thead th {
+        background: #1e293b;
+        color: white;
+        padding: 14px;
+        font-weight: 600;
+    }
+
+    .table-archive tbody td {
+        padding: 12px;
+        vertical-align: middle;
+    }
+
+.badge-delivered {
+    background: #10b981;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.btn-detail {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 12px;
+    transition: all 0.3s;
+}
+
+    .btn-detail:hover {
+        transform: scale(1.05);
+        color: white;
+    }
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f8fafc;
+    border-radius: 20px;
+}
+
+    .empty-state i {
+        font-size: 70px;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+
+

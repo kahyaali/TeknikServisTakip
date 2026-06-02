@@ -1,0 +1,143 @@
+﻿@{
+    ViewData["Title"] = "Kayıt Ol";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0"><i class="fas fa-user-plus"></i> Kayıt Ol</h4>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(ViewBag.Error))
+                {
+                    <div class="alert alert-danger">@ViewBag.Error</div>
+                }
+                @if (!string.IsNullOrEmpty(ViewBag.Success))
+                {
+                    <div class="alert alert-success">@ViewBag.Success</div>
+                }
+
+                <form method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ad Soyad <span class="text-danger">*</span></label>
+                            <input type="text" name="fullName" class="form-control" required />
+                            <small class="text-muted">En az 3 karakter</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">E-posta <span class="text-danger">*</span></label>
+                            <input type="email" name="email" class="form-control" required />
+                            <small class="text-muted">Geçerli bir e-posta adresi</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Firma Adı</label>
+                        <input type="text" name="companyName" class="form-control" placeholder="Varsa firma adınızı giriniz" />
+                        <small class="text-muted">Opsiyonel - Kurumsal müşteriler için</small>
+                    </div>
+                    
+                    <div class="row">
+                                      
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Şifre <span class="text-danger">*</span></label>
+                            <input type="password" name="password" class="form-control" required />
+                            <small class="text-muted">En az 6 karakter</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Şifre Tekrar <span class="text-danger">*</span></label>
+                            <input type="password" name="confirmPassword" class="form-control" required />
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Telefon <span class="text-danger">*</span></label>
+                            <input type="tel" name="phoneNumber" 
+                                class="form-control" 
+                                placeholder="05XX XXX XX XX" 
+                                   value="@(Model?.PhoneNumber.FormatPhoneSafe())"
+                                   title="Lütfen 05XX XXX XX XX formatında giriniz"
+                                required />
+                            <small class="text-muted">Örnek: 05XX XXX XX XX</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">TC Kimlik No</label>
+                            <input type="text" name="identityNumber" class="form-control" placeholder="11 haneli" />
+                            <small class="text-muted">Opsiyonel</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Adres <span class="text-danger">*</span></label>
+                        <textarea name="address" class="form-control" rows="2" placeholder="Mahalle, Sokak, No" required></textarea>
+                        <small class="text-muted">En az 10 karakter</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Şehir <span class="text-danger">*</span></label>
+                            <input type="text" name="city" class="form-control" required />
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">İlçe <span class="text-danger">*</span></label>
+                            <input type="text" name="district" class="form-control" required />
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Posta Kodu</label>
+                            <input type="text" name="postalCode" class="form-control" placeholder="5 haneli" />
+                            <small class="text-muted">Opsiyonel</small>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Kayıt Ol</button>
+                </form>
+                
+                <hr />
+                <div class="text-center">
+                    <a asp-action="Login">Zaten hesabın var mı? Giriş Yap</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Telefon formatı için kontrol
+        document.querySelector('input[name="phoneNumber"]').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            // Maksimum 11 haneli olabilir
+            if (value.length > 11) {
+                value = value.slice(0, 11);
+            }
+            
+            // 4+3+2+2 formatı için
+            if (value.length >= 4) {
+                let match = value.match(/^(\d{4})(\d{3})(\d{2})(\d{2})$/);
+                if (match) {
+                    e.target.value = `${match[1]} ${match[2]} ${match[3]} ${match[4]}`;
+                } else if (value.length >= 7) {
+                    // Kısmi format
+                    let part1 = value.slice(0, 4);
+                    let part2 = value.slice(4, 7);
+                    let part3 = value.slice(7, 9);
+                    let part4 = value.slice(9, 11);
+                    e.target.value = [part1, part2, part3, part4].filter(p => p).join(' ').trim();
+                } else if (value.length >= 4) {
+                    e.target.value = value.slice(0, 4) + (value.length > 4 ? ' ' + value.slice(4) : '');
+                }
+            } else {
+                e.target.value = value;
+            }
+        });
+    </script>
+}

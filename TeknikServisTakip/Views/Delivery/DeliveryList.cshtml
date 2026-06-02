@@ -1,0 +1,414 @@
+﻿@model IEnumerable<Entities.Concrete.Delivery>
+@{
+    ViewData["Title"] = "Teslim Edilen Ürünler";
+    int sayac = 1;
+}
+
+
+<div class="content">
+    <div class="page-header">
+        <h1><i class="fas fa-check-circle me-2"></i> Teslim Edilen Ürünler</h1>
+        <p>Kargo veya elden teslim edilen tüm ürünlerin listesi</p>
+    </div>
+
+    <div class="mb-3">
+        <a href="/Delivery" class="btn-ekle"><i class="fas fa-truck"></i> Yeni Teslimat</a>
+    </div>
+
+    <table id="deliveryTable" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th class="id-column">ID</th>
+                <th class="sira-no">#</th>
+                <th>Takip Kodu</th>
+                <th>Ürün Adı</th>
+                <th>Müşteri Adı</th>
+                <th>Müşteri No</th>
+                <th>Teslim Tipi</th>
+                <th>Alıcı/Teslim Alan</th>
+                <th>Telefon</th>
+                <th>Teslim Eden</th>
+                <th>Teslim Tarihi</th>
+                <th class="action-column">İşlem</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr data-id="@item.Id"
+                    data-trackingcode="@item.RepairItem?.TrackingCode"
+                    data-productname="@item.RepairItem?.ProductName"
+                    data-customername="@item.Customer?.FullName"
+                    data-customernumber="@item.Customer?.CustomerNumber"
+                    data-deliverytype="@item.DeliveryType"
+                    data-cargocompany="@item.CargoCompany"
+                    data-cargotracking="@item.CargoTrackingNumber"
+                    data-recipientname="@item.RecipientName"
+                    data-recipientphone="@item.RecipientPhone"
+                    data-receivername="@item.ReceiverName"
+                    data-receiverphone="@item.ReceiverPhone"
+                    data-deliveredby="@item.DeliveredBy"
+                    data-deliverydate="@item.DeliveryDate.ToString("dd.MM.yyyy HH:mm")"
+                    data-note="@item.Note">
+                    <td class="id-column">@item.Id</td>
+                    <td class="text-center">@sayac</td>
+                    <td><strong>@item.RepairItem?.TrackingCode</strong></td>
+                    <td>@item.RepairItem?.ProductName</td>
+                    <td>@item.Customer?.FullName</td>
+                    <td>@item.Customer?.CustomerNumber</td>
+                    <td class="text-center">
+                        @if (item.DeliveryType == "Cargo")
+                        {
+                            <span class="badge-cargo"><i class="fas fa-truck"></i> Kargo</span>
+                        }
+                        else
+                        {
+                            <span class="badge-inperson"><i class="fas fa-handshake"></i> Elden</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.DeliveryType == "Cargo")
+                        {
+                            @item.RecipientName
+                        }
+                        else
+                        {
+                            @item.ReceiverName
+                        }
+                    </td>
+                    <td>
+                        @if (item.DeliveryType == "Cargo")
+                        {
+                            @item.RecipientPhone
+                        }
+                        else
+                        {
+                            @item.ReceiverPhone
+                        }
+                    </td>
+                    <td>@item.DeliveredBy</td>
+                    <td class="text-nowrap">@item.DeliveryDate.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td class="text-center">
+                        <a href="/Delivery/DeliveryDetail/@item.Id" class="btn-detail">
+                            <i class="fas fa-eye"></i> Detay
+                        </a>
+                         <button onclick="deleteDelivery(@item.Id, '@item.RepairItem?.TrackingCode')" class="btn-delete">
+                             <i class="fas fa-trash"></i> Sil
+                             </button>
+                    </td>
+                </tr>
+                sayac++;
+            }
+        </tbody>
+    </table>
+</div>
+<style>
+    /* ========== BUTON TASARIMLARI ========== */
+    .dt-buttons {
+        display: flex !important;
+        gap: 15px !important;
+        margin-bottom: 25px !important;
+        flex-wrap: wrap !important;
+    }
+
+    button.dt-button, 
+    .dt-buttons .btn {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        padding: 14px 28px !important;
+        min-width: 150px !important;
+        border-radius: 12px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        border: none !important;
+        cursor: pointer !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    button.dt-button:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25) !important;
+        filter: brightness(1.1);
+    }
+
+    .buttons-excel { background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: white !important; }
+    .buttons-pdf { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important; color: white !important; }
+    .buttons-print { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important; color: white !important; }
+
+
+    #deliveryTable th, 
+    #deliveryTable td {
+        padding: 16px 20px !important;
+        text-align: left !important;
+        vertical-align: middle !important;
+    }
+
+
+    .badge-cargo { background: #eff6ff; color: #1e40af; border: 1px solid #93c5fd; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; }
+    .badge-inperson { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; }
+
+
+    .btn-detail {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white !important;
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+    .btn-detail:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+
+
+    [data-theme="dark"] .buttons-excel { background: linear-gradient(135deg, #065f46 0%, #047857 100%) !important; }
+    [data-theme="dark"] .buttons-pdf { background: linear-gradient(135deg, #991b1b 0%, #b91c1c 100%) !important; }
+    [data-theme="dark"] .buttons-print { background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important; }
+
+
+    .btn-print-all {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    color: white !important;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    margin-left: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-print-all:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    color: white;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+}
+
+.btn-print-all i {
+    font-size: 14px;
+}
+
+@@media (max-width: 768px) {
+    .btn-print-all {
+        padding: 8px 16px;
+        font-size: 12px;
+        margin-left: 5px;
+        margin-top: 10px;
+    }
+    
+    .mb-3 {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+}
+
+[data-theme="dark"] .btn-print-all {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+}
+
+[data-theme="dark"] .btn-print-all:hover {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+}
+
+
+.btn-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+    margin-left: 8px;
+}
+
+.btn-delete:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+</style>
+
+
+@section Scripts {
+
+    <script>
+        $(document).ready(function() {
+            $('#deliveryTable').DataTable({
+                language: {
+                    // url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/tr.json'
+                    url: '/datatables/tr.json'
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" +
+                     "<'row'<'col-sm-12'B>>",
+               buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i> Excel Verisi',
+                        className: 'buttons-excel',
+                        exportOptions: { columns: [2, 3, 4, 5, 6, 7, 8, 9, 10] }
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i> PDF İndir',
+                        className: 'buttons-pdf',
+                        orientation: 'landscape',
+                        pageSize: 'A4',
+                        title: '',
+                        exportOptions: { columns: [2, 3, 4, 5, 6, 7, 8, 9, 10] },
+                        customize: function(doc) {
+                            var tblBody = doc.content.find(function(item) {
+                                return item.table;
+                            });
+
+                            if (tblBody) {
+                                // 9 kolon için optimize edilmiş genişlikler
+                                tblBody.table.widths = ['10%', '15%', '13%', '10%', '10%', '12%', '10%', '10%', '10%'];
+                                
+                                tblBody.layout = {
+                                    hLineWidth: function(i) { return .5; },
+                                    vLineWidth: function(i) { return .5; },
+                                    hLineColor: function(i) { return '#cbd5e1'; },
+                                    vLineColor: function(i) { return '#cbd5e1'; },
+                                    paddingLeft: function(i) { return 6; },
+                                    paddingRight: function(i) { return 6; },
+                                    paddingTop: function(i) { return 6; },
+                                    paddingBottom: function(i) { return 6; }
+                                };
+                            }
+
+                            doc.pageMargins = [20, 60, 20, 40];
+
+                            // Üst Bilgi
+                            doc['header'] = (function() {
+                                return {
+                                    columns: [
+                                        {
+                                            alignment: 'left',
+                                            text: 'TESLİM EDİLEN ÜRÜN RAPORU',
+                                            fontSize: 14,
+                                            bold: true,
+                                            margin: [20, 20]
+                                        },
+                                        {
+                                            alignment: 'right',
+                                            text: 'Rapor Tarihi: ' + new Date().toLocaleString('tr-TR'),
+                                            fontSize: 9,
+                                            margin: [0, 25, 20, 0]
+                                        }
+                                    ]
+                                };
+                            });
+
+                            // Stil Tanımlamaları
+                            doc.styles.tableHeader = {
+                                bold: true,
+                                fontSize: 9,
+                                color: 'white',
+                                fillColor: '#1e293b',
+                                alignment: 'center'
+                            };
+
+                            doc.styles.tableBodyEven = { alignment: 'left', fontSize: 8 };
+                            doc.styles.tableBodyOdd = { fillColor: '#f8fafc', alignment: 'left', fontSize: 8 };
+
+                            // Alt Bilgi
+                            doc['footer'] = (function(page, pages) {
+                                return {
+                                    columns: [
+                                        {
+                                            alignment: 'left',
+                                            text: 'Teknik Servis Takip Sistemi | Teslimat Modülü',
+                                            fontSize: 8,
+                                            margin: [20, 10]
+                                        },
+                                        {
+                                            alignment: 'right',
+                                            text: ['Sayfa ', { text: page.toString() }, ' / ', { text: pages.toString() }],
+                                            fontSize: 8,
+                                            margin: [0, 10, 20]
+                                        }
+                                    ]
+                                };
+                            });
+                        }
+                    },                 
+                     {  
+        text: '<i class="fas fa-print"></i> Tümünü Yazdır',
+        className: 'btn-print-all',
+        action: function(e, dt, node, config) {
+            window.open('/Delivery/PrintAll', '_blank');
+        }
+    }
+                ],
+                pageLength: 10,
+                responsive: true,
+                order: [[2, 'desc']],
+                columnDefs: [
+                    { targets: 'id-column', visible: false }, 
+                    { targets: 'sira-no', orderable: false, searchable: false } 
+                ]
+            });
+            });
+
+            function deleteDelivery(id, trackingCode) {
+    Swal.fire({
+        title: 'Silmek istiyor musunuz?',
+        html: '<b>' + trackingCode + '</b> takip kodlu teslimat kaydını silmek üzeresiniz!<br>Bu işlem <b>geri alınamaz</b>.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        confirmButtonText: 'Evet, Sil!',
+        cancelButtonText: 'İptal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'İşlem yapılıyor...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+            
+            $.ajax({
+                url: '/Delivery/DeleteDelivery',
+                type: 'POST',
+                data: { id: id },
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire('Silindi!', res.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Hata!', res.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                }
+            });
+        }
+    });
+}
+    </script>
+}

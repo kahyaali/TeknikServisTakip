@@ -1,0 +1,488 @@
+﻿@{
+    ViewData["Title"] = "Raporlar";
+}
+
+
+
+
+
+<div class="container-fluid" style="padding: 20px;">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1><i class="fas fa-chart-bar me-3"></i> Rapor Merkezi</h1>
+            <p>Gelişmiş raporlama araçları ile verilerinizi analiz edin</p>
+        </div>
+    </div>
+
+    <!-- ==================== FİRMA RAPORLARI ==================== -->
+    <div class="report-card">
+        <div class="report-header">
+            <div>
+                <span class="report-title"><i class="fas fa-building me-2 text-primary"></i> Firma Raporları</span>
+                <p class="text-muted mb-0 mt-1">Tüm tamir kayıtlarını kapsayan firma bazlı raporlar</p>
+            </div>
+            <div class="report-icon"><i class="fas fa-chart-line"></i></div>
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-item">
+                <label><i class="fas fa-calendar"></i> Başlangıç Tarihi</label>
+                <input type="text" id="firmaStartDate" class="datepicker" placeholder="Seçiniz" />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-calendar"></i> Bitiş Tarihi</label>
+                <input type="text" id="firmaEndDate" class="datepicker" placeholder="Seçiniz" />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-chart-pie"></i> Durum</label>
+                <select id="firmaStatus">
+                    <option value="">Tümü</option>
+                    <option value="1">Beklemede</option>
+                    <option value="2">İşlemde</option>
+                    <option value="3">Tamamlandı</option>
+                    <option value="4">Teslim Edildi</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-user-tie"></i> Personel</label>
+                <select id="firmaPersonel" class="form-control">
+                    <option value="">Tüm Personel</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="quick-buttons">
+            <button class="quick-btn" data-range="today">Bugün</button>
+            <button class="quick-btn" data-range="week">Bu Hafta</button>
+            <button class="quick-btn" data-range="month">Bu Ay</button>
+            <button class="quick-btn" data-range="lastMonth">Geçen Ay</button>
+            <button class="quick-btn" data-range="year">Bu Yıl</button>
+        </div>
+
+        <div class="stats-row" id="firmaStats">
+            <div class="stat-box" style="border-left-color: #3b82f6;">
+                <div class="number" id="totalRepair">0</div>
+                <div class="label">Toplam Tamir</div>
+            </div>
+            <div class="stat-box" style="border-left-color: #f59e0b;">
+                <div class="number" id="pendingCount">0</div>
+                <div class="label">Bekleyen</div>
+            </div>
+            <div class="stat-box" style="border-left-color: #3b82f6;">
+                <div class="number" id="inProgressCount">0</div>
+                <div class="label">İşlemde</div>
+            </div>
+            <div class="stat-box" style="border-left-color: #10b981;">
+                <div class="number" id="completedCount">0</div>
+                <div class="label">Tamamlanan</div>
+            </div>
+            <div class="stat-box" style="border-left-color: #6c757d;">
+                <div class="number" id="deliveredCount">0</div>
+                <div class="label">Teslim Edilen</div>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-box" style="border-left-color: #10b981;">
+                <div class="number" id="totalRevenue">₺0</div>
+                <div class="label">Toplam Gelir</div>
+            </div>
+            <div class="stat-box" style="border-left-color: #8b5cf6;">
+                <div class="number" id="averageRevenue">₺0</div>
+                <div class="label">Ortalama Gelir</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container" style="height: 380px;">
+                    <h5 class="mb-3"><i class="fas fa-chart-pie me-2"></i> Durum Dağılımı</h5>
+                    <canvas id="statusChart" style="height: 300px; width: 100%;"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container" style="height: 380px;">
+                    <h5 class="mb-3"><i class="fas fa-chart-line me-2"></i> Aylık Tamir Trendi</h5>
+                    <canvas id="monthlyTrendChart" style="height: 300px; width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h5 class="mb-3"><i class="fas fa-users me-2"></i> Personel Performansı</h5>
+            <div class="table-responsive">
+                <table class="data-table" id="personelTable">
+                    <thead><tr><th>Personel</th><th>Toplam Tamir</th><th>Tamamlanan</th><th>Başarı Oranı</th><th>Toplam Gelir</th><th>Ort. Tamir Süresi</th></tr></thead>
+                    <tbody id="personelTableBody"><tr><td colspan="6" class="text-center">Veri yükleniyor...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h5 class="mb-3"><i class="fas fa-box me-2"></i> En Çok Tamir Yapılan Ürünler</h5>
+            <div class="table-responsive">
+                <table class="data-table" id="topProductsTable">
+                    <thead><tr><th>Ürün Adı</th><th>Marka/Model</th><th>Tamir Sayısı</th><th>Toplam Gelir</th><th>Ortalama Ücret</th></tr></thead>
+                    <tbody id="topProductsBody"><tr><td colspan="5" class="text-center">Veri yükleniyor...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Aylık Gelir Tablosu -->
+        <div class="chart-container">
+            <h5 class="mb-3"><i class="fas fa-money-bill me-2"></i> Aylık Gelir Tablosu</h5>
+            <div class="table-responsive">
+                <table class="data-table" id="monthlyRevenueTable">
+                    <thead>
+                        <tr>
+                            <th>Ay</th>
+                            <th>Tamir Sayısı</th>
+                            <th>Toplam Gelir (₺)</th>
+                            <th>Ortalama Gelir (₺)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyRevenueBody">
+                        <tr><td colspan="4" class="text-center">Veri yükleniyor...</td>
+                            <tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap mt-3">
+                    <button class="btn-excel" id="firmaExcelBtn"><i class="fas fa-file-excel me-2"></i> Excel Rapor</button>
+                    <button class="btn-pdf" id="firmaPdfBtn"><i class="fas fa-file-pdf me-2"></i> PDF Rapor</button>
+                    <button class="btn-print" id="firmaPrintBtn"><i class="fas fa-print me-2"></i> Yazdır</button>
+                </div>
+            </div>
+
+            <!-- ==================== MÜŞTERİ RAPORLARI ==================== -->
+            <div class="report-card">
+                <div class="report-header">
+                    <div>
+                        <span class="report-title"><i class="fas fa-users me-2 text-success"></i> Müşteri Raporları</span>
+                        <p class="text-muted mb-0 mt-1">Müşteri bazlı detaylı tamir raporları</p>
+                    </div>
+                    <div class="report-icon"><i class="fas fa-user-friends"></i></div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-item">
+                        <label><i class="fas fa-user"></i> Müşteri Seçin</label>
+                        <select id="musteriSelect" class="form-control">
+                            <option value="">-- Müşteri Seçin --</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label><i class="fas fa-calendar"></i> Başlangıç Tarihi</label>
+                        <input type="text" id="musteriStartDate" class="datepicker" placeholder="Seçiniz" />
+                    </div>
+                    <div class="filter-item">
+                        <label><i class="fas fa-calendar"></i> Bitiş Tarihi</label>
+                        <input type="text" id="musteriEndDate" class="datepicker" placeholder="Seçiniz" />
+                    </div>
+                    <div class="filter-item">
+                        <label><i class="fas fa-chart-pie"></i> Durum</label>
+                        <select id="musteriStatus">
+                            <option value="">Tümü</option>
+                            <option value="1">Beklemede</option>
+                            <option value="2">İşlemde</option>
+                            <option value="3">Tamamlandı</option>
+                            <option value="4">Teslim Edildi</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="stats-row" id="musteriStats">
+                    <div class="stat-box" style="border-left-color: #3b82f6;"><div class="number" id="musteriTotal">0</div><div class="label">Toplam Tamir</div></div>
+                    <div class="stat-box" style="border-left-color: #f59e0b;"><div class="number" id="musteriPending">0</div><div class="label">Bekleyen</div></div>
+                    <div class="stat-box" style="border-left-color: #3b82f6;"><div class="number" id="musteriProgress">0</div><div class="label">İşlemde</div></div>
+                    <div class="stat-box" style="border-left-color: #10b981;"><div class="number" id="musteriCompleted">0</div><div class="label">Tamamlanan/Teslim</div></div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-box" style="border-left-color: #10b981;"><div class="number" id="musteriRevenue">₺0</div><div class="label">Toplam Harcama</div></div>
+                    <div class="stat-box" style="border-left-color: #8b5cf6;"><div class="number" id="musteriAvg">₺0</div><div class="label">Ortalama Harcama</div></div>
+                </div>
+
+                <div class="chart-container">
+                    <h5 class="mb-3"><i class="fas fa-history me-2"></i> Tamir Geçmişi</h5>
+                    <div class="table-responsive">
+                        <table class="data-table" id="customerHistoryTable">
+                            <thead><tr><th>Takip Kodu</th><th>Ürün Adı</th><th>Geliş Tarihi</th><th>Teslim Tarihi</th><th>Durum</th><th>Ücret</th><th>Personel</th></tr></thead>
+                            <tbody id="customerHistoryBody"><tr><td colspan="7" class="text-center">Müşteri seçiniz...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap mt-3">
+                    <button class="btn-excel" id="musteriExcelBtn"><i class="fas fa-file-excel me-2"></i> Müşteri Excel</button>
+                    <button class="btn-pdf" id="musteriPdfBtn"><i class="fas fa-file-pdf me-2"></i> Müşteri PDF</button>
+                    <button class="btn-print" id="musteriPrintBtn"><i class="fas fa-print me-2"></i> Müşteri Yazdır</button>
+                </div>
+            </div>
+        </div>
+
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/plugins/rangePlugin.js"></script>
+
+        @section Scripts {
+            <script>
+                let statusChart, monthlyTrendChart;
+
+                $(document).ready(function() {
+                flatpickr(".datepicker", { dateFormat: "Y-m-d" });
+        
+                loadPersonelList();
+                loadCustomerList();
+        
+                $('#firmaStartDate, #firmaEndDate, #firmaStatus, #firmaPersonel').on('change', loadAllData);
+                $('#musteriSelect, #musteriStartDate, #musteriEndDate, #musteriStatus').on('change', loadMusteriData);
+        
+                $('.quick-btn').click(function() {
+                var range = $(this).data('range');
+                var today = new Date();
+                var start = new Date();
+                var end = new Date();
+            
+                switch(range) {
+                case 'today': start = end = today; break;
+                case 'week': start = new Date(today.setDate(today.getDate() - today.getDay())); break;
+                case 'month': start = new Date(today.getFullYear(), today.getMonth(), 1); end = new Date(); break;
+                case 'lastMonth': start = new Date(today.getFullYear(), today.getMonth() - 1, 1); end = new Date(today.getFullYear(), today.getMonth(), 0); break;
+                case 'year': start = new Date(today.getFullYear(), 0, 1); end = new Date(); break;
+                }
+            
+                $('#firmaStartDate').val(formatDate(start));
+                $('#firmaEndDate').val(formatDate(end));
+                loadAllData();
+                });
+        
+                $('#firmaExcelBtn').click(() => submitRapor('excel', 'firma'));
+                $('#firmaPdfBtn').click(() => submitRapor('pdf', 'firma'));
+                $('#firmaPrintBtn').click(() => submitRapor('print', 'firma'));
+                $('#musteriExcelBtn').click(() => submitRapor('excel', 'musteri'));
+                $('#musteriPdfBtn').click(() => submitRapor('pdf', 'musteri'));
+                $('#musteriPrintBtn').click(() => submitRapor('print', 'musteri'));
+        
+                loadAllData();
+                });
+    
+                function formatDate(date) {
+                var d = new Date(date);
+                return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                }
+    
+                function loadPersonelList() {
+                $.get('/Rapor/GetPersonelList', function(data) {
+                var select = $('#firmaPersonel');
+                select.empty().append('<option value="">Tüm Personel</option>');
+                $.each(data, function(i, p) { select.append(`<option value="${p.id}">${p.name}</option>`); });
+                });
+                }
+    
+                function loadCustomerList() {
+                $.get('/Rapor/GetCustomerList', function(data) {
+                var select = $('#musteriSelect');
+                select.empty().append('<option value="">-- Müşteri Seçin --</option>');
+                $.each(data, function(i, c) { select.append(`<option value="${c.id}">${c.name} - ${c.customerNumber || 'No yok'}</option>`); });
+                });
+                }
+    
+                function loadAllData() {
+                loadFirmaStats();
+                loadStatusDistribution();
+                loadMonthlyTrend();
+                loadPersonelPerformance();
+                loadTopProducts();
+                loadMonthlyRevenue();
+                }
+    
+               function loadFirmaStats() {
+                 var data = {
+                     startDate: $('#firmaStartDate').val(),
+                     endDate: $('#firmaEndDate').val(),
+                     statusId: $('#firmaStatus').val(),
+                     personelId: $('#firmaPersonel').val()
+                 };
+               
+                 $.post('/Rapor/GetFirmaStats', data, function(res) {
+                     if (res.success) {
+                         $('#totalRepair').text(res.total);
+                         $('#pendingCount').text(res.bekleyen);
+                         $('#inProgressCount').text(res.islemde);
+                         $('#completedCount').text(res.tamamlanan);
+                         $('#deliveredCount').text(res.teslim);
+                         $('#totalRevenue').text('₺' + (res.totalRevenue || 0).toFixed(2));
+                         $('#averageRevenue').text('₺' + (res.averageRevenue || 0).toFixed(2));
+                     }
+                 });
+               }              
+    
+                function loadStatusDistribution() {
+                var data = {
+                startDate: $('#firmaStartDate').val(),
+                endDate: $('#firmaEndDate').val()
+                };
+    
+                $.get('/Rapor/GetStatusDistribution', data, function(res) {
+                if (statusChart) statusChart.destroy();
+                var ctx = document.getElementById('statusChart').getContext('2d');
+                statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                labels: res.labels,
+                datasets: [{
+                data: res.data,
+                backgroundColor: res.colors,
+                borderWidth: 0
+                }]
+                },
+                options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                legend: {
+                position: 'bottom',
+                labels: { boxWidth: 12, font: { size: 11 } }
+                }
+                },
+                layout: {
+                padding: { bottom: 20 }
+                }
+                }
+                });
+                });
+                }
+    
+                function loadMonthlyTrend() {
+                $.get('/Rapor/GetMonthlyTrend', function(res) {
+                if (monthlyTrendChart) monthlyTrendChart.destroy();
+                var ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+                monthlyTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                labels: res.data.map(x => x.monthName),
+                datasets: [{ label: 'Tamir Sayısı', data: res.data.map(x => x.count), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true }]
+                },
+                options: { responsive: true, maintainAspectRatio: true }
+                });
+                });
+                }
+    
+                function loadPersonelPerformance() {
+                var data = { startDate: $('#firmaStartDate').val(), endDate: $('#firmaEndDate').val() };
+                $.get('/Rapor/GetPersonelPerformance', data, function(res) {
+                var tbody = $('#personelTableBody');
+                tbody.empty();
+                if (!res || res.length === 0) { tbody.html('<tr><td colspan="6" class="text-center">Veri bulunamadı</td></tr>'); return; }
+                $.each(res, function(i, p) {
+                var successRate = p.totalRepairs > 0 ? ((p.completedRepairs / p.totalRepairs) * 100).toFixed(1) : 0;
+                tbody.append(`
+                <tr>
+                <td><strong>${p.personelName}</strong></td>
+                <td>${p.totalRepairs}</td>
+                <td>${p.completedRepairs}</td>
+                <td>${successRate}%</td>
+                <td>₺${(p.totalRevenue || 0).toFixed(2)}</td>
+                <td>${p.avgRepairTime ? p.avgRepairTime.toFixed(1) : 0} gün</td>
+                </tr>`);
+                });
+                });
+                }
+    
+                function loadTopProducts() {
+                var data = { top: 10, startDate: $('#firmaStartDate').val(), endDate: $('#firmaEndDate').val() };
+                $.get('/Rapor/GetTopProducts', data, function(res) {
+                var tbody = $('#topProductsBody');
+                tbody.empty();
+                if (!res || res.length === 0) { tbody.html('<tr><td colspan="5" class="text-center">Veri bulunamadı</td></tr>'); return; }
+                $.each(res, function(i, p) {
+                tbody.append(`<tr><td>${p.productName}</td><td>${p.brand}/${p.model}</td><td>${p.count}</td><td>₺${(p.totalRevenue || 0).toFixed(2)}</td><td>₺${(p.avgPrice || 0).toFixed(2)}</td></tr>`);
+                });
+                });
+                }
+    
+                function loadMonthlyRevenue() {
+                $.get('/Rapor/GetMonthlyRevenue', function(res) {
+                var tbody = $('#monthlyRevenueBody');
+                tbody.empty();
+                if (!res.data || res.data.length === 0) {
+                tbody.html('<tr><td colspan="4" class="text-center">Veri bulunamadı</td></tr>');
+                return;
+                }
+                $.each(res.data, function(i, m) {
+                tbody.append(`
+                <tr>
+                <td>${m.monthName}</td>
+                <td>${m.count}</td>
+                <td>₺${(m.revenue || 0).toFixed(2)}</td>
+                <td>₺${(m.avgRevenue || 0).toFixed(2)}</td>
+                </tr>
+                `);
+                });
+                });    
+                }
+    
+                function loadMusteriData() {
+                var customerId = $('#musteriSelect').val();
+                if (!customerId) { $('#customerHistoryBody').html('<tr><td colspan="7" class="text-center">Müşteri seçiniz...</td></tr>'); return; }
+        
+                var data = {
+                customerId: customerId,
+                startDate: $('#musteriStartDate').val(),
+                endDate: $('#musteriEndDate').val(),
+                statusId: $('#musteriStatus').val()
+                };
+        
+                $.post('/Rapor/GetMusteriStats', data, function(res) {
+                if (res.success) {
+                $('#musteriTotal').text(res.total);
+                $('#musteriPending').text(res.pending);
+                $('#musteriProgress').text(res.progress);
+                $('#musteriCompleted').text(res.completed);
+                $('#musteriRevenue').text('₺' + (res.totalRevenue || 0).toFixed(2));
+                $('#musteriAvg').text(res.total > 0 ? '₺' + ((res.totalRevenue / res.total).toFixed(2)) : '₺0');
+                }
+                });
+        
+                $.get('/Rapor/GetCustomerRepairHistory', { customerId: customerId }, function(res) {
+                var tbody = $('#customerHistoryBody');
+                tbody.empty();
+                if (!res || res.length === 0) { tbody.html('<tr><td colspan="7" class="text-center">Tamir kaydı bulunamadı</td></tr>'); return; }
+                $.each(res, function(i, r) {
+                var statusClass = r.status === 'Beklemede' ? 'badge-pending' : (r.status === 'İşlemde' ? 'badge-progress' : (r.status === 'Tamamlandı' ? 'badge-completed' : 'badge-delivered'));
+                tbody.append(`<tr><td>${r.trackingCode}</td><td>${r.productName}</td><td>${new Date(r.receivedDate).toLocaleDateString()}</td><td>${r.deliveryDate ? new Date(r.deliveryDate).toLocaleDateString() : '-'}</td><td><span class="${statusClass}">${r.status}</span></td><td>₺${(r.price || 0).toFixed(2)}</td><td>${r.personel}</td></tr>`);
+                });
+                });
+                }
+    
+                function submitRapor(format, type) {
+                var data = {};
+                if (type === 'firma') {
+                data = { startDate: $('#firmaStartDate').val(), endDate: $('#firmaEndDate').val(), statusId: $('#firmaStatus').val(), personelId: $('#firmaPersonel').val(), type: type, format: format };
+                } else {
+                var customerId = $('#musteriSelect').val();
+                if (!customerId) { Swal.fire('Uyarı', 'Lütfen bir müşteri seçin!', 'warning'); return; }
+                data = { customerId: customerId, startDate: $('#musteriStartDate').val(), endDate: $('#musteriEndDate').val(), statusId: $('#musteriStatus').val(), type: type, format: format };
+                }
+        
+                Swal.fire({ title: 'Rapor hazırlanıyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        
+                $.ajax({
+                url: '/Rapor/GenerateReport', type: 'POST', data: data, xhrFields: { responseType: 'blob' },
+                success: function(blob, textStatus, request) {
+                var disposition = request.getResponseHeader('Content-Disposition');
+                var filename = disposition ? disposition.split('filename=')[1].replace(/"/g, '') : 'rapor.pdf';
+                var url = window.URL.createObjectURL(blob);
+                var a = document.createElement('a'); a.href = url; a.download = filename;
+                document.body.appendChild(a); a.click(); a.remove();
+                window.URL.revokeObjectURL(url);
+                Swal.close(); Swal.fire('Başarılı!', 'Rapor indiriliyor...', 'success');
+                },
+                error: function(xhr) { Swal.close(); Swal.fire('Hata!', 'Rapor oluşturulurken bir hata oluştu.', 'error'); }
+                });
+                }
+            </script>
+        }

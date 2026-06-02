@@ -1,0 +1,284 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Entities.Concrete
+@inject UserManager<AppUser> UserManager
+
+<!DOCTYPE html>
+<html lang="tr" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="@Html.AntiForgeryToken().ToString()">
+    <title>@ViewData["Title"] - Yönetim Paneli</title>
+    
+
+
+
+    <!-- 1. Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css" />
+    
+    <!-- 2. Kendi CSS'lerimiz -->
+    <link rel="stylesheet" href="~/css/adminlayout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/TeknikServisTakip.styles.css" asp-append-version="true" />
+    
+    <!-- 3. Harici Kütüphaneler -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    
+    <!-- 4. Google Font (SADECE Inter - Poppins kaldırıldı) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 5. DataTables CSS (Bootstrap'tan sonra) -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css" />
+
+   
+
+
+
+    
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="admin-wrapper">
+        @await Html.PartialAsync("_Sidebar")
+
+        <div class="main-content">
+            <div class="topbar">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="ms-auto d-flex align-items-center gap-3">
+
+                    <!-- Logo Yönetimi Butonu (Küçük) -->
+                    <a href="/Logo/Index" class="btn btn-sm btn-outline-primary" title="Logo Yönetimi">
+                        <i class="fas fa-image"></i>
+                    </a>
+
+                    <div id="themeToggle" style="cursor:pointer;">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </div>
+                    <span class="fw-bold user-name">@(User.Identity?.Name?.Split('@')[0] ?? "Kullanıcı")</span>
+                    <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Çıkış</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="content-inner">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!-- JavaScript Kütüphaneleri -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery Validation (YENİ EKLENDİ) -->
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- DataTables Buttons -->
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <!-- Diğer Kütüphaneler -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+    <script>
+ 
+
+        $(document).ready(function() {
+        const sidebar = $('#sidebar');
+        const themeIcon = $('#themeIcon');
+
+        // Tema yükleme
+        var theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'dark') themeIcon.removeClass('fa-moon').addClass('fa-sun');
+
+        // Sidebar durumu yükleme
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+        sidebar.addClass('collapsed');
+        }
+
+        // Dropdown durumlarını geri yükle
+        $('.menu-dropdown').each(function() {
+        var dropdownId = $(this).data('dropdown-id');
+        if (localStorage.getItem('dropdown_open_' + dropdownId) === 'true') {
+        $(this).find('.menu-dropdown-content').show();
+        $(this).find('.dropdown-icon').addClass('fa-rotate-180');
+        }
+        });
+
+        // Sidebar Aç/Kapa
+        $('#sidebarToggle').on('click', function(e) {
+        e.preventDefault();
+        sidebar.toggleClass('collapsed');
+        localStorage.setItem('sidebarCollapsed', sidebar.hasClass('collapsed'));
+        });
+
+        // Tema Değiştir
+        $('#themeToggle').on('click', function() {
+        let currentTheme = document.documentElement.getAttribute('data-theme');
+        let newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+                
+        if (newTheme === 'dark') {
+        themeIcon.removeClass('fa-moon').addClass('fa-sun');
+        } else {
+        themeIcon.removeClass('fa-sun').addClass('fa-moon');
+        }
+        });
+
+        // Aktif Link
+        var currentPath = window.location.pathname.toLowerCase();
+        $('.sidebar-menu a').each(function() {
+        var href = $(this).attr('href');
+        if (href && currentPath === href.toLowerCase()) {
+        $(this).addClass('active');
+        $(this).closest('.menu-dropdown-content').show();
+        $(this).closest('.menu-dropdown').find('.dropdown-icon').addClass('fa-rotate-180');
+        }
+        });
+        });
+
+        // Dropdown Toggle
+        function toggleDropdown(btn) {
+        var content = $(btn).next('.menu-dropdown-content');
+        var dropdown = $(btn).closest('.menu-dropdown');
+        var dropdownId = dropdown.data('dropdown-id');
+            
+        content.slideToggle(100);
+        $(btn).find('.dropdown-icon').toggleClass('fa-rotate-180');
+            
+        var isOpen = content.is(':visible');
+        localStorage.setItem('dropdown_open_' + dropdownId, isOpen);
+        }
+
+        toastr.options = {
+        "closeButton": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "timeOut": "3000"
+        };
+
+        $(document).ajaxSend(function(e, xhr, options) {
+        // Önce input'tan dene (daha güvenli)
+        var token = $('input[name="__RequestVerificationToken"]').val();
+        // Yoksa meta'dan al
+        if (!token) {
+        token = $('meta[name="csrf-token"]').attr('content');
+        }
+        if (token && !options.headers?.['RequestVerificationToken']) {
+        xhr.setRequestHeader('RequestVerificationToken', token);
+        }
+        });
+
+        const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/notificationHub", {
+        withCredentials: true
+        })
+        .withAutomaticReconnect([0, 2000, 10000, 30000])
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+      
+        connection.onreconnecting(() => {
+        console.log("Bağlantı kopuyor...");
+        });
+
+        connection.onreconnected(() => {
+        console.log("Bağlantı tekrar kuruldu");
+        });
+
+        connection.onclose(() => {
+        console.log("Bağlantı tamamen kapandı");
+        });
+
+       
+        function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(text));
+        return div.innerHTML;
+        }
+
+        connection.on("ReceiveMessage", function(message, type) {
+        var safeMessage = escapeHtml(message);
+        if (type === "error") {
+        toastr.error(safeMessage);
+        } else if (type === "warning") {
+        toastr.warning(safeMessage);
+        } else if (type === "info") {
+        toastr.info(safeMessage);
+        } else {
+        toastr.success(safeMessage);
+        }
+        });
+
+        connection.start().then(function() {
+        console.log("SignalR bağlantısı kuruldu.");
+        }).catch(function(err) {
+        console.error("SignalR bağlantı hatası: " + err.toString());
+        });
+
+    </script>
+
+    <!-- Sidebar Stok Uyarı Script -->
+    <script>
+        $(document).ready(function() {
+        function loadStockAlertCount() {
+        // Sadece stok menüsü varsa ve kullanıcı yetkiliyse çalıştır
+        if ($('#criticalStockCount').length > 0 || $('#stockAlertBadge').length > 0) {
+        $.ajax({
+        url: '/Stock/GetAlertCount',
+        type: 'GET',
+        success: function(data) {
+        if (data.criticalCount > 0) {
+        $('#criticalStockCount').text(data.criticalCount).show();
+        } else {
+        $('#criticalStockCount').hide();
+        }
+                            
+        if (data.lowStockCount > 0) {
+        $('#stockAlertBadge').text(data.lowStockCount).show();
+        } else {
+        $('#stockAlertBadge').hide();
+        }
+        },
+        error: function(xhr) {
+        console.log('Stok uyarıları alınamadı');
+        }
+        });
+        }
+        }
+            
+        loadStockAlertCount();
+        setInterval(loadStockAlertCount, 60000); // 1 dakikada bir yenile
+        });
+    </script>
+
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,84 @@
+﻿@model IEnumerable<Entities.Concrete.StockMovement>
+@{
+    ViewData["Title"] = "Stok Hareketleri";
+    var product = ViewBag.Product as Entities.Concrete.Product;
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-exchange-alt"></i> Stok Hareketleri
+                @if (product != null)
+                {
+                    <span>- @product.ProductName (@product.ProductCode)</span>
+                }
+                <a href="/Stock/Index" class="btn btn-light btn-sm float-end">Geri Dön</a>
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="movementsTable" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>İşlem Tipi</th>
+                            <th>Miktar</th>
+                            <th>Önceki Stok</th>
+                            <th>Yeni Stok</th>
+                            <th>Referans No</th>
+                            <th>Açıklama</th>
+                            <th>İşlemi Yapan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>
+                                    @{
+                                        var badgeClass = item.MovementType switch
+                                        {
+                                            "IN" or "ADJUST_IN" => "bg-success",
+                                            "OUT" or "ADJUST_OUT" => "bg-danger",
+                                            _ => "bg-secondary"
+                                        };
+                                        var movementName = item.MovementType switch
+                                        {
+                                            "IN" => "Giriş",
+                                            "OUT" => "Çıkış",
+                                            "ADJUST_IN" => "Düzeltme (+)",
+                                            "ADJUST_OUT" => "Düzeltme (-)",
+                                            _ => item.MovementType
+                                        };
+                                    }
+                                    <span class="badge @badgeClass">@movementName</span>
+                                </td>
+                                <td>@item.Quantity</td>
+                                <td>@item.PreviousStock</td>
+                                <td>@item.NewStock</td>
+                                <td>@(item.ReferenceNo ?? "-")</td>
+                                <td>@(item.Description ?? "-")</td>
+                                <td>@(item.CreatedBy ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#movementsTable').DataTable({
+                language: { url: '/datatables/tr.json' },
+                order: [[0, 'desc']],
+                pageLength: 25,
+                responsive: true
+            });
+        });
+    </script>
+}

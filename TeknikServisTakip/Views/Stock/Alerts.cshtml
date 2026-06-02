@@ -1,0 +1,288 @@
+﻿@{
+    ViewData["Title"] = "Stok Uyarıları";
+    var lowStock = ViewBag.LowStock as List<Entities.Concrete.Product> ?? new List<Entities.Concrete.Product>();
+    var criticalStock = ViewBag.CriticalStock as List<Entities.Concrete.Product> ?? new List<Entities.Concrete.Product>();
+}
+
+<style>
+    /* Dark Mode Text Düzeltmeleri */
+    [data-theme="dark"] .card,
+    [data-theme="dark"] .card-body,
+    [data-theme="dark"] .table,
+    [data-theme="dark"] .table-bordered,
+    [data-theme="dark"] .alert {
+        background-color: #1e293b !important;
+        color: #e2e8f0 !important;
+    }
+    
+        [data-theme="dark"] .table td,
+        [data-theme="dark"] .table th {
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+    
+        [data-theme="dark"] .table thead th {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+    
+    [data-theme="dark"] .text-muted {
+        color: #94a3b8 !important;
+    }
+    
+    [data-theme="dark"] .alert-success {
+        background-color: #0f3d28 !important;
+        color: #86efac !important;
+        border-color: #166534 !important;
+    }
+    
+    [data-theme="dark"] .alert-danger {
+        background-color: #3b1e1e !important;
+        color: #fca5a5 !important;
+        border-color: #991b1b !important;
+    }
+    
+    [data-theme="dark"] .btn-light {
+        background-color: #334155;
+        border-color: #475569;
+        color: #e2e8f0;
+    }
+    
+        [data-theme="dark"] .btn-light:hover {
+            background-color: #475569;
+            color: white;
+        }
+    
+    /* Tablo renkleri dark modda korunsun */
+    [data-theme="dark"] .table-danger {
+        background-color: rgba(220, 38, 38, 0.2) !important;
+    }
+    
+    [data-theme="dark"] .table-warning {
+        background-color: rgba(245, 158, 11, 0.15) !important;
+    }
+    
+    [data-theme="dark"] .table-danger td,
+    [data-theme="dark"] .table-danger th {
+        background-color: transparent !important;
+    }
+    
+    [data-theme="dark"] .table-warning td,
+    [data-theme="dark"] .table-warning th {
+        background-color: transparent !important;
+    }
+    
+    .fw-bold {
+        font-weight: 600;
+    }
+</style>
+
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-bell"></i> Stok Uyarıları
+                        <div class="float-end">
+                            <button type="button" class="btn btn-light btn-sm" onclick="sendAlerts()">
+                                <i class="fas fa-envelope"></i> Mail Gönder
+                            </button>
+                        </div>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Kritik Stok (Kırmızı) -->
+                    <div class="mb-4">
+                        <h5 class="text-danger">
+                            <i class="fas fa-exclamation-triangle"></i> Kritik Stok (Tükenen Ürünler)
+                        </h5>
+                        @if (criticalStock.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-danger">
+                                    <thead>
+                                        <tr>
+                                            <th>Ürün Kodu</th>
+                                            <th>Ürün Adı</th>
+                                            <th>Stok</th>
+                                            <th>Min Stok</th>
+                                            <th>Lokasyon</th>
+                                            <th>İşlem</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var product in criticalStock)
+                                        {
+                                            <tr>
+                                                <td>@product.ProductCode</td>
+                                                <td>@product.ProductName</td>
+                                                <td class="fw-bold">@product.Quantity</td>
+                                                <td>@product.MinStockLevel</td>
+                                                <td>@(product.Location ?? "-")</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-success" onclick="openStockInModal(@product.Id, '@product.ProductName')">
+                                                        <i class="fas fa-arrow-down"></i> Stok Girişi
+                                                    </button>
+                                                 </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-success">Kritik stokta ürün bulunmamaktadır.</div>
+                        }
+                    </div>
+
+                    <!-- Düşük Stok (Sarı) -->
+                    <div class="mb-4">
+                        <h5 class="text-warning">
+                            <i class="fas fa-exclamation-circle"></i> Düşük Stok (Limit Altı)
+                        </h5>
+                        @if (lowStock.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-warning">
+                                    <thead>
+                                        <tr>
+                                            <th>Ürün Kodu</th>
+                                            <th>Ürün Adı</th>
+                                            <th>Stok</th>
+                                            <th>Min Stok</th>
+                                            <th>Lokasyon</th>
+                                            <th>İşlem</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var product in lowStock)
+                                        {
+                                            <tr>
+                                                <td>@product.ProductCode</td>
+                                                <td>@product.ProductName</td>
+                                                <td class="fw-bold">@product.Quantity</td>
+                                                <td>@product.MinStockLevel</td>
+                                                <td>@(product.Location ?? "-")</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-success" onclick="openStockInModal(@product.Id, '@product.ProductName')">
+                                                        <i class="fas fa-arrow-down"></i> Stok Girişi
+                                                    </button>
+                                                 </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-success">Düşük stokta ürün bulunmamaktadır.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function sendAlerts() {
+            Swal.fire({
+                title: 'Stok Uyarı Maili Gönder',
+                text: 'Tüm admin ve depo yetkililerine uyarı maili gönderilsin mi?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Evet, Gönder!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/Stock/SendAlerts',
+                        type: 'POST',
+                        success: function(res) {
+                            Swal.fire('Başarılı!', 'Stok uyarı maili gönderildi.', 'success');
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Mail gönderilemedi.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        function openStockInModal(id, name) {
+            Swal.fire({
+                title: `${name} - Stok Girişi`,
+                html: `
+                    <div class="text-start">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Miktar <span class="text-danger">*</span></label>
+                            <input type="number" id="quantity" class="form-control" placeholder="Miktar">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Referans No</label>
+                            <input type="text" id="reference" class="form-control" placeholder="Fatura No / Sipariş No">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Açıklama</label>
+                            <textarea id="description" class="form-control" rows="2" placeholder="Açıklama"></textarea>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-save me-1"></i> Stok Girişi Yap',
+                cancelButtonText: 'İptal',
+                confirmButtonColor: '#28a745',
+                preConfirm: () => {
+                    const quantity = document.getElementById('quantity').value;
+                    if (!quantity || quantity <= 0) {
+                        Swal.showValidationMessage('Geçerli bir miktar giriniz!');
+                        return false;
+                    }
+                    return {
+                        quantity: quantity,
+                        reference: document.getElementById('reference').value || null,
+                        description: document.getElementById('description').value || null
+                    };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'İşlem Yapılıyor...',
+                        text: 'Stok girişi gerçekleştiriliyor',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                    
+                    $.ajax({
+                        url: '/Stock/StockIn',
+                        type: 'POST',
+                        data: {
+                            productId: id,
+                            quantity: result.value.quantity,
+                            referenceNo: result.value.reference,
+                            description: result.value.description
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Başarılı!', res.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            let errorMsg = xhr.responseJSON?.message || 'Bir sorun oluştu!';
+                            Swal.fire('Hata!', errorMsg, 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

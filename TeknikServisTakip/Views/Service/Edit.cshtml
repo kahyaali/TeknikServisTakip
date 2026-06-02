@@ -1,0 +1,70 @@
+﻿@model Entities.Concrete.Service
+@{
+    ViewData["Title"] = "Hizmet Düzenle";
+}
+
+
+
+
+<div class="content-wrapper">
+    <h1><i class="fas fa-edit"></i> Hizmet Düzenle</h1>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <!-- MODELSTATE HATALARINI GÖSTER -->
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+
+    <form method="post" asp-action="Edit" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Başlık</label>
+                    <input type="text" asp-for="Title" class="form-control" required />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Açıklama</label>
+                    <textarea asp-for="Description" class="form-control" rows="3" required></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Hizmet Resmi</label>
+                    <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                    <small class="text-muted">Önerilen boyut: 300x200 px</small>
+                    @if (!string.IsNullOrEmpty(Model.ImagePath))
+                    {
+                        <div class="mt-2">
+                            <img src="@Model.ImagePath" style="width: 150px; height: 100px; object-fit: cover; border-radius: 8px;" />
+                            <br />
+                            <small class="text-muted">Mevcut resim. Yeni resim seçerseniz değişir.</small>
+                        </div>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Sıra</label>
+                    <input type="number" asp-for="Order" class="form-control" value="0" />
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" asp-for="IsActive" class="form-check-input" />
+                    <label class="form-check-label">Aktif</label>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Kaydet</button>
+            <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Geri</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

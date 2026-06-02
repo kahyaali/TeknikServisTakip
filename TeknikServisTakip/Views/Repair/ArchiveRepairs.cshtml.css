@@ -1,0 +1,181 @@
+﻿
+.archive-header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    color: white;
+}
+
+.table-archive {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    width: 100%;
+}
+
+    .table-archive thead th {
+        background: #1e293b;
+        color: white;
+        padding: 14px 12px;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .table-archive tbody td {
+        padding: 12px;
+        vertical-align: middle;
+        font-size: 13px;
+    }
+
+.badge-delivered {
+    background: #10b981;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-block;
+    margin-left: 8px;
+}
+
+.btn-detail {
+    background: #8b5cf6;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+    .btn-detail:hover {
+        background: #7c3aed;
+        color: white;
+    }
+
+.btn-delete {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+    .btn-delete:hover {
+        background: #dc2626;
+    }
+
+.price-cell {
+    font-weight: 700;
+    color: #10b981;
+    white-space: nowrap;
+}
+
+.action-cell {
+    white-space: nowrap;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 20px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f8fafc;
+    border-radius: 20px;
+}
+
+
+
+
+
+/* ==================== ARŞİV SAYFASI DARK MOD ==================== */
+
+
+[data-theme="light"] .archive-header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+
+[data-theme="dark"] .archive-header {
+    background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+}
+
+
+[data-theme="light"] .table-archive {
+    background: white;
+}
+
+
+[data-theme="dark"] .table-archive {
+    background: #1e293b;
+}
+
+
+    [data-theme="dark"] .table-archive tbody td {
+        color: #e2e8f0;
+        border-bottom-color: #334155;
+    }
+
+  
+    [data-theme="dark"] .table-archive thead th {
+        background: #0f172a;
+        color: #f1f5f9;
+    }
+
+  
+    [data-theme="dark"] .table-archive tbody tr:hover {
+        background-color: #334155;
+    }
+
+[data-theme="light"] .table-archive tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+
+[data-theme="dark"] .empty-state {
+    background: #1e293b;
+}
+
+    [data-theme="dark"] .empty-state h3 {
+        color: #f1f5f9;
+    }
+
+    [data-theme="dark"] .empty-state p {
+        color: #94a3b8;
+    }
+
+
+[data-theme="dark"] .price-cell {
+    color: #34d399;
+}
+
+
+[data-theme="dark"] .badge-delivered {
+    background: #059669;
+}
+
+[data-theme="dark"] .btn-detail {
+    background: #6d28d9;
+}
+
+    [data-theme="dark"] .btn-detail:hover {
+        background: #5b21b6;
+    }
+
+[data-theme="dark"] .btn-delete {
+    background: #dc2626;
+}
+
+    [data-theme="dark"] .btn-delete:hover {
+        background: #b91c1c;
+    }

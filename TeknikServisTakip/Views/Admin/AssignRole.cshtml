@@ -1,0 +1,182 @@
+﻿@model TeknikServisTakip.Models.ViewModels.AssignRoleViewModel
+@{
+    ViewData["Title"] = "Rol Ata";
+}
+
+
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h3 class="mb-0">@Model.FullName - Rol Ata</h3>
+        <small>@Model.Email</small>
+    </div>
+    <div class="card-body">
+        
+        @{
+            bool isProtected = ViewBag.IsProtected ?? false;
+        }
+        
+        @if (isProtected)
+        {
+            <div class="embedded-user">
+                <i class="fas fa-crown me-2"></i>
+                <strong>⚠️ SİSTEM SÜPER ADMIN'İ</strong><br />
+                <small>Bu kullanıcının rolleri DEĞİŞTİRİLEMEZ ve SİLİNEMEZ!</small>
+            </div>
+        }
+
+        <div class="warning-box">
+            <strong><i class="fas fa-info-circle me-2"></i> Rol Kuralları:</strong>
+            <div class="mt-2">
+                <div class="rule-item"><i class="fas fa-ban text-danger"></i> <strong>SuperAdmin</strong> seçilirse <span class="text-danger">TEK BAŞINA</span> olmalıdır</div>
+                <div class="rule-item"><i class="fas fa-ban text-danger"></i> <strong>Personel</strong> seçilirse <span class="text-danger">BAŞKA ROL SEÇİLEMEZ</span></div>
+                <div class="rule-item"><i class="fas fa-ban text-danger"></i> <strong>Customer</strong> seçilirse <span class="text-danger">BAŞKA ROL SEÇİLEMEZ</span></div>
+            </div>
+        </div>
+
+        <form method="post" id="roleForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="UserId" />
+
+            <div class="row">
+                @for (int i = 0; i < Model.Roles.Count; i++)
+                {
+                    <div class="col-md-4 mb-2">
+                        <div class="role-card">
+                            <div class="form-check">
+                                @if (isProtected)
+                                {
+                                    <input type="checkbox" class="form-check-input" 
+                                           asp-for="@Model.Roles[i].IsSelected"
+                                           disabled />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" class="form-check-input role-checkbox" 
+                                           asp-for="@Model.Roles[i].IsSelected"
+                                           data-role="@Model.Roles[i].RoleName" />
+                                }
+                                <label class="form-check-label" asp-for="@Model.Roles[i].IsSelected">
+                                    <strong>@Model.Roles[i].RoleName</strong>
+                                </label>
+                                <input type="hidden" asp-for="@Model.Roles[i].RoleId" />
+                                <input type="hidden" asp-for="@Model.Roles[i].RoleName" />
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div id="warningMessage" class="alert alert-warning mt-3" style="display:none;">
+                <i class="fas fa-exclamation-triangle me-2"></i> <span id="warningText"></span>
+            </div>
+
+            <div class="mt-3">
+                @if (!isProtected)
+                {
+                    <button type="submit" id="submitBtn" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i> Kaydet
+                    </button>
+                }
+                <a href="/Admin/UserRoles" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i> Geri
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            @if (!(ViewBag.IsProtected ?? false))
+            {
+                <text>
+                const roleCheckboxes = $('.role-checkbox');
+                
+                function validateRoles() {
+                    let selectedRoles = [];
+                    roleCheckboxes.each(function() {
+                        if ($(this).is(':checked')) {
+                            selectedRoles.push($(this).data('role'));
+                        }
+                    });
+                    
+                    let isValid = true;
+                    let warning = '';
+                    
+                    if (selectedRoles.includes('SuperAdmin') && selectedRoles.length > 1) {
+                        isValid = false;
+                        warning = '❌ SuperAdmin rolü TEK BAŞINA olmalıdır! Başka rol seçilemez.';
+                    }
+                    else if (selectedRoles.includes('Personel') && selectedRoles.length > 1) {
+                        isValid = false;
+                        warning = '❌ Personel rolü seçildiğinde BAŞKA ROL SEÇİLEMEZ!';
+                    }
+                    else if (selectedRoles.includes('Customer') && selectedRoles.length > 1) {
+                        isValid = false;
+                        warning = '❌ Customer rolü seçildiğinde BAŞKA ROL SEÇİLEMEZ!';
+                    }
+                    
+                    if (!isValid) {
+                        $('#warningMessage').show();
+                        $('#warningText').text(warning);
+                        $('#submitBtn').prop('disabled', true);
+                    } else {
+                        $('#warningMessage').hide();
+                        $('#submitBtn').prop('disabled', false);
+                    }
+                    
+                    return isValid;
+                }
+                
+                roleCheckboxes.on('change', function() {
+                    const currentRole = $(this).data('role');
+                    const isChecked = $(this).is(':checked');
+                    
+                    if (currentRole === 'SuperAdmin' && isChecked) {
+                        roleCheckboxes.each(function() {
+                            if ($(this).data('role') !== 'SuperAdmin') {
+                                $(this).prop('checked', false);
+                            }
+                        });
+                    }
+                    
+                    if (currentRole === 'Personel' && isChecked) {
+                        roleCheckboxes.each(function() {
+                            if ($(this).data('role') !== 'Personel') {
+                                $(this).prop('checked', false);
+                            }
+                        });
+                    }
+                    
+                    if (currentRole === 'Customer' && isChecked) {
+                        roleCheckboxes.each(function() {
+                            if ($(this).data('role') !== 'Customer') {
+                                $(this).prop('checked', false);
+                            }
+                        });
+                    }
+                    
+                    validateRoles();
+                });
+                
+                $('#roleForm').on('submit', function(e) {
+                    if (!validateRoles()) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Hata!',
+                            text: $('#warningText').text(),
+                            confirmButtonColor: '#3085d6'
+                        });
+                        return false;
+                    }
+                });
+                
+                validateRoles();
+                </text>
+            }
+        });
+    </script>
+}

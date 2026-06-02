@@ -1,0 +1,168 @@
+﻿
+/* ========== DARK MODE DÜZELTMELERİ ========== */
+[data-theme="dark"] .card {
+    background-color: #1e1e2f !important;
+    border-color: #2c2c3a !important;
+}
+
+[data-theme="dark"] .card-header {
+    background-color: #16213e !important;
+    border-bottom-color: #2c2c3a !important;
+}
+
+/* Bekleyenler tablosu */
+[data-theme="dark"] .table {
+    color: #eeeeee !important;
+}
+
+    [data-theme="dark"] .table thead tr,
+    [data-theme="dark"] .table-secondary,
+    [data-theme="dark"] .table-secondary th {
+        background-color: #0f3460 !important;
+        color: #ffffff !important;
+    }
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: #16213e !important;
+    color: #eeeeee !important;
+}
+
+[data-theme="dark"] .table-hover > tbody > tr:hover > * {
+    background-color: #2c2c3a !important;
+}
+
+[data-theme="dark"] .table td,
+[data-theme="dark"] .table th {
+    border-color: #2c2c3a !important;
+}
+
+/* ========== ONAYLANANLAR / ARŞİV TABLOSU GARANTİSİ ========== */
+[data-theme="dark"] .table-dark-mode,
+[data-theme="dark"] .table-dark-mode tbody,
+[data-theme="dark"] .table-dark-mode tr,
+[data-theme="dark"] .table-dark-mode td,
+[data-theme="dark"] .table-dark-mode th {
+    background-color: #1e1e2f !important;
+    color: #eeeeee !important;
+    border-color: #2c2c3a !important;
+}
+
+    [data-theme="dark"] .table-dark-mode tbody tr:nth-of-type(odd) td {
+        background-color: #16213e !important;
+    }
+
+    [data-theme="dark"] .table-dark-mode tbody tr:hover td {
+        background-color: #2c2c3a !important;
+    }
+
+    [data-theme="dark"] .table-dark-mode .text-muted,
+    [data-theme="dark"] .table-dark-mode .text-secondary {
+        color: #b0b0bc !important;
+    }
+
+    [data-theme="dark"] .table-dark-mode .fw-bold.text-muted,
+    [data-theme="dark"] .table-dark-mode .fw-bold.text-secondary {
+        color: #e0e0e0 !important;
+    }
+
+    [data-theme="dark"] .table-dark-mode .badge.bg-light {
+        background-color: #2c2c3a !important;
+        color: #eeeeee !important;
+        border: 1px solid #4a4a5a !important;
+    }
+
+/* ========== GENEL DÜZELTMELER ========== */
+[data-theme="dark"] .badge.bg-light {
+    background-color: #2c2c3a !important;
+    color: #eeeeee !important;
+    border-color: #4a4a5a !important;
+}
+
+[data-theme="dark"] .text-muted {
+    color: #a0a0a0 !important;
+}
+
+[data-theme="dark"] .text-dark {
+    color: #eeeeee !important;
+}
+
+[data-theme="dark"] .text-secondary {
+    color: #a0a0a0 !important;
+}
+
+[data-theme="dark"] .badge.bg-secondary {
+    background-color: #4a4a5a !important;
+    color: #eeeeee !important;
+}
+
+[data-theme="dark"] .badge.bg-success {
+    background-color: #0f6e3f !important;
+}
+
+[data-theme="dark"] .badge.bg-danger {
+    background-color: #9e2a2a !important;
+}
+
+[data-theme="dark"] .badge.bg-info {
+    background-color: #0f5c6e !important;
+    color: #eeeeee !important;
+}
+
+[data-theme="dark"] .btn-outline-secondary,
+[data-theme="dark"] .btn-outline-danger,
+[data-theme="dark"] .btn-outline-warning,
+[data-theme="dark"] .btn-outline-primary {
+    border-color: #4a4a5a !important;
+    color: #eeeeee !important;
+}
+
+    [data-theme="dark"] .btn-outline-secondary:hover {
+        background-color: #4a4a5a !important;
+        color: #ffffff !important;
+    }
+
+    [data-theme="dark"] .btn-outline-danger:hover {
+        background-color: #9e2a2a !important;
+        border-color: #9e2a2a !important;
+        color: #ffffff !important;
+    }
+
+    [data-theme="dark"] .btn-outline-warning:hover {
+        background-color: #b8860b !important;
+        color: #ffffff !important;
+    }
+
+    [data-theme="dark"] .btn-outline-primary:hover {
+        background-color: #0f3460 !important;
+        color: #ffffff !important;
+    }
+
+[data-theme="dark"] .bg-secondary.text-white {
+    background-color: #2c2c3a !important;
+}
+
+[data-theme="dark"] .nav-tabs .nav-link {
+    background-color: #1e1e2f !important;
+    border-color: #2c2c3a !important;
+    color: #a0a0a0 !important;
+}
+
+    [data-theme="dark"] .nav-tabs .nav-link.active {
+        background-color: #0f3460 !important;
+        color: #ffffff !important;
+        border-color: #2c2c3a !important;
+    }
+
+[data-theme="dark"] .bg-light {
+    background-color: #16213e !important;
+}
+
+[data-theme="dark"] .bg-white {
+    background-color: #1e1e2f !important;
+}
+
+[data-theme="dark"] .btn-close {
+    filter: invert(1);
+}
+
+

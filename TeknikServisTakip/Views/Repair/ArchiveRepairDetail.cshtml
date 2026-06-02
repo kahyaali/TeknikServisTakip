@@ -1,0 +1,280 @@
+﻿@using TeknikServisTakip.Helpers
+@model Entities.Concrete.ArchiveRepair
+@{
+    ViewData["Title"] = "Arşiv Detay";
+
+    var currency = Model.Currency ?? "TRY";
+    var currencySymbol = CurrencyHelper.GetSymbol(currency);
+}
+
+
+<style>
+    /* Dark/Light Mode Uyumlu Tablo Stilleri */
+    .table-bordered {
+        border-color: var(--bs-border-color);
+    }
+
+        .table-bordered th,
+        .table-bordered td {
+            border-color: var(--bs-border-color);
+        }
+
+    [data-theme="light"] .table-bordered th {
+        background-color: #f8f9fa;
+        color: #212529;
+    }
+
+    [data-theme="dark"] .table-bordered th {
+        background-color: #1e293b;
+        color: #e2e8f0;
+    }
+
+    [data-theme="light"] .table-bordered td {
+        background-color: white;
+        color: #212529;
+    }
+
+    [data-theme="dark"] .table-bordered td {
+        background-color: #0f172a;
+        color: #e2e8f0;
+    }
+
+    /* Card stilleri */
+    [data-theme="light"] .card {
+        background-color: white;
+        border-color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .card {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+
+    [data-theme="light"] .card-header {
+        background-color: #f8f9fa;
+        border-bottom-color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .card-header {
+        background-color: #0f172a;
+        border-bottom-color: #334155;
+    }
+
+    /* Badge stilleri */
+    .badge.bg-success {
+        background-color: #10b981 !important;
+    }
+
+    [data-theme="dark"] .badge.bg-success {
+        background-color: #059669 !important;
+    }
+
+    .text-success {
+        color: #10b981 !important;
+    }
+
+    [data-theme="dark"] .text-success {
+        color: #34d399 !important;
+    }
+
+    .text-muted {
+        color: #6c757d !important;
+    }
+
+    [data-theme="dark"] .text-muted {
+        color: #94a3b8 !important;
+    }
+
+    /* Tablo hover efekti */
+    .table-bordered tbody tr:hover td {
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    /* Badge stilleri (External için) */
+    .badge.bg-info {
+        background-color: #0ea5e9 !important;
+    }
+
+    [data-theme="dark"] .badge.bg-info {
+        background-color: #0284c7 !important;
+    }
+
+    .badge.bg-secondary {
+        background-color: #64748b !important;
+    }
+
+    [data-theme="dark"] .badge.bg-secondary {
+        background-color: #475569 !important;
+    }
+
+    /* Buton stilleri */
+    .btn-secondary {
+        background-color: #64748b !important;
+        border-color: #64748b !important;
+    }
+
+    [data-theme="dark"] .btn-secondary {
+        background-color: #475569 !important;
+        border-color: #475569 !important;
+    }
+
+    .btn-secondary:hover {
+        background-color: #475569 !important;
+    }
+
+    [data-theme="dark"] .btn-secondary:hover {
+        background-color: #334155 !important;
+    }
+</style>
+
+
+<div class="container-fluid py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-archive me-2"></i> Arşiv Kaydı Detayı</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th style="width:40%">Takip Kodu</th>
+                                <td><strong>@Model.TrackingCode</strong> <span class="badge bg-success">Teslim Edildi</span></td>
+                            </tr>
+                            <tr>
+                                <th>Müşteri No</th>
+                                <td>@Model.CustomerNumber</td>
+                            </tr>
+                            <tr>
+                                <th>Müşteri Adı</th>
+                                <td>@(Model.CustomerName ?? "-")</td>
+                            </tr>
+
+                            <tr>
+                                <th>Firma</th>
+                                <td>@(Model.CompanyName ?? "-")</td>
+                            </tr>
+
+                            <tr>
+                                <th>Ürün Adı</th>
+                                <td>@Model.ProductName</td>
+                            </tr>
+                            <tr>
+                                <th>Marka</th>
+                                <td>@Model.ProductBrand</td>
+                            </tr>
+                            <tr>
+                                <th>Model</th>
+                                <td>@Model.ProductModel</td>
+                            </tr>
+                            <tr>
+                                <th>Seri No</th>
+                                <td>@Model.SerialNumber</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th style="width:40%">Arıza Açıklaması</th>
+                                <td>@Model.ProblemDescription</td>
+                            </tr>
+                            <tr>
+                                <th>Personel Notu</th>
+                                <td>@(Model.InternalNote ?? "-")</td>
+                            </tr>
+                            <tr>
+                                <th>Geliş Tarihi</th>
+                                <td>@Model.ReceivedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            </tr>
+                            <tr>
+                                <th>Teslim Tarihi</th>
+                                <td>@(Model.DeliveryDate?.ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
+                            </tr>
+                            <tr>
+                                <th>Personel</th>
+                                <td>@(Model.Personel?.FullName ?? "-")</td>
+                            </tr>
+                            <tr>
+                                <th>Ücret</th>
+                                <td class="text-success fw-bold">
+                                    @currencySymbol @Model.Price.ToString("N2")
+                                    <small class="text-muted">(@currency)</small>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- KULLANILAN MALZEMELER -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-cubes me-2"></i> Kullanılan Malzemeler</h5>
+                        </div>
+                        <div class="card-body">
+                            @{
+                                var materials = ViewBag.Materials as List<Entities.Concrete.RepairMaterial>;
+                            }
+                            @if (materials != null && materials.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr class="table-light">
+                                                <th>Ürün Adı</th>
+                                                <th>Miktar</th>
+                                                <th>Açıklama</th>
+                                                <th>Kullanım Tarihi</th>
+                                                <th>Kullanan Personel</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var material in materials)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        @if (material.MaterialType == "External")
+                                                        {
+                                                            <span class="badge bg-info">@material.ExternalProductName</span>
+                                                            <span class="badge bg-secondary ms-1">Dışarıdan</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            @(material.Product?.ProductName ?? "-")
+                                                        }
+                                                    </td>
+                                                    <td>@material.Quantity</td>
+                                                    <td>@(material.Description ?? "-")</td>
+                                                    <td>@material.UsedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                                    <td>@(material.UsedBy ?? "-")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center text-muted py-3">
+                                    <i class="fas fa-box-open fa-2x mb-2 d-block"></i>
+                                    <span>Bu tamirde kullanılan malzeme bulunmamaktadır.</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <a href="/Repair/ArchiveRepairs" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Arşive Dön
+            </a>
+        </div>
+    </div>
+</div>

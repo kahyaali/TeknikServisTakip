@@ -1,0 +1,213 @@
+﻿@model IEnumerable<Entities.Concrete.Position>
+@{
+    ViewData["Title"] = "Pozisyon Yönetimi";
+}
+
+
+<div class="content">
+    <!-- Başlık Alanı -->
+    <div class="page-header">
+        <h1><i class="fas fa-briefcase me-3"></i> Pozisyon Yönetimi</h1>
+        <p>Pozisyon ekleyin, düzenleyin ve yönetin</p>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert-success">
+            <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+        </div>
+    }
+
+    <div class="mb-3">
+        <a href="/Positions/Create" class="btn-ekle">
+            <i class="fas fa-plus"></i> Yeni Pozisyon Ekle
+        </a>
+    </div>
+
+    <table id="positionTable" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th><i class="fas fa-hashtag"></i> ID</th>
+                <th><i class="fas fa-briefcase"></i> Pozisyon Adı</th>
+                <th><i class="fas fa-align-left"></i> Açıklama</th>
+                <th><i class="fas fa-circle"></i> Durum</th>
+                <th><i class="fas fa-cog"></i> İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @if (Model != null && Model.Any())
+             {
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td><strong>@item.Name</strong></td>
+                    <td>@(item.Description ?? "-")</td>
+                    <td>
+                        @if (item.IsActive)
+                        {
+                            <span class="badge-active"><i class="fas fa-check"></i> Aktif</span>
+                        }
+                        else
+                        {
+                            <span class="badge-passive"><i class="fas fa-times"></i> Pasif</span>
+                        }
+                    </td>
+                    <td>
+                        <a href="/Positions/Edit/@item.Id" class="btn-duzenle">
+                            <i class="fas fa-edit"></i> Düzenle
+                        </a>
+                        <button onclick="deletePosition(@item.Id, '@item.Name')" class="btn-sil">
+                            <i class="fas fa-trash"></i> Sil
+                        </button>
+                    </td>
+                </tr>
+            }
+            }
+           @*  else
+            {
+                 <tr>
+                    <td colspan="5" class="text-center">Henüz pozisyon kaydı bulunmamaktadır.</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            } *@
+
+           
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+
+    <script>
+        $(document).ready(function() {
+            $('#positionTable').DataTable({
+                language: {
+                    // url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/tr.json',
+                    url: '/datatables/tr.json',
+                    emptyTable: "Henüz pozisyon kaydı bulunmamaktadır"
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" +
+                     "<'row'<'col-sm-12'B>>",
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i> Excel Verisi',
+                        className: 'btn btn-success btn-sm',
+                        exportOptions: { columns: [1, 2, 3] }
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i> PDF İndir',
+                        className: 'btn btn-danger btn-sm',
+                        orientation: 'portrait',         
+                        pageSize: 'A4',
+                        title: '',
+                        exportOptions: { columns: [1, 2, 3] },
+                        customize: function(doc) {
+                            var tblBody = doc.content.find(function(item) {
+                                return item.table;
+                            });
+
+                            if (tblBody) {
+                                tblBody.table.widths = ['10%', '30%', '45%', '15%'];
+                                tblBody.layout = {
+                                    hLineWidth: function(i) { return .5; },
+                                    vLineWidth: function(i) { return .5; },
+                                    hLineColor: function(i) { return '#cbd5e1'; },
+                                    vLineColor: function(i) { return '#cbd5e1'; },
+                                    paddingLeft: function(i) { return 10; },
+                                    paddingRight: function(i) { return 10; },
+                                    paddingTop: function(i) { return 10; },
+                                    paddingBottom: function(i) { return 10; }
+                                };
+                            }
+
+                            doc.pageMargins = [30, 60, 30, 40];
+
+                            doc['header'] = (function() {
+                                return {
+                                    columns: [
+                                        {
+                                            alignment: 'left',
+                                            text: 'POZİSYON LİSTESİ RAPORU',
+                                            fontSize: 14,
+                                            bold: true,
+                                            margin: [30, 20]
+                                        },
+                                        {
+                                            alignment: 'right',
+                                            text: 'Tarih: ' + new Date().toLocaleDateString('tr-TR'),
+                                            fontSize: 9,
+                                            margin: [0, 25, 30, 0]
+                                        }
+                                    ]
+                                };
+                            });
+
+                            doc.styles.tableHeader = {
+                                bold: true, fontSize: 10, color: 'white', fillColor: '#1e293b', alignment: 'center'
+                            };
+                            doc.defaultStyle.fontSize = 9;
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i> Yazdır',
+                        className: 'btn btn-secondary btn-sm',
+                        exportOptions: { columns: [1, 2, 3] }
+                    }
+                ],
+                pageLength: 10,
+                responsive: true,
+                order: [[0, 'desc']]
+            });
+        });
+
+        function deletePosition(id, name) {
+            Swal.fire({
+                title: 'Pozisyon Silinecek!',
+                html: `<div style="font-size:16px;"><b>${name}</b><br>pozisyonunu silmek üzeresiniz!</div><div class="mt-2 text-danger">Bu işlem <b>GERİ ALINAMAZ</b>!</div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-trash"></i> Evet, Sil!',
+                cancelButtonText: '<i class="fas fa-times"></i> İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'İşlem yapılıyor...',
+                        text: 'Lütfen bekleyin',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    $.ajax({
+                        url: '/Positions/Delete',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

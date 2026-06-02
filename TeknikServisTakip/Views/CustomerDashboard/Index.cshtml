@@ -1,0 +1,304 @@
+﻿@model IEnumerable<Entities.Concrete.RepairItem>
+@{
+    ViewData["Title"] = "Müşteri Panelim";
+}
+
+
+<div class="customer-container">
+    <div class="page-header">
+        <h1><i class="fas fa-user-circle me-3"></i> Müşteri Panelim</h1>
+        <p>Tamir süreçlerinizi takip edin, profil bilgilerinizi yönetin</p>
+    </div>
+
+    <!-- İstatistik Kartları - 5 kart -->
+    <div class="stats-row">
+        <div class="stat-card total">
+            <div class="stat-icon"><i class="fas fa-tools"></i></div>
+            <div class="stat-value">@ViewBag.TotalRepairs</div>
+            <div class="stat-label">Toplam Tamir</div>
+        </div>
+        <div class="stat-card pending">
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-value">@ViewBag.PendingRepairs</div>
+            <div class="stat-label">Bekleyen</div>
+        </div>
+        <div class="stat-card inprogress">
+            <div class="stat-icon"><i class="fas fa-cogs"></i></div>
+            <div class="stat-value">@ViewBag.InProgressRepairs</div>
+            <div class="stat-label">İşlemde</div>
+        </div>
+        <div class="stat-card completed">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-value">@ViewBag.CompletedRepairs</div>
+            <div class="stat-label">Tamamlanan</div>
+        </div>
+        <div class="stat-card delivered">
+            <div class="stat-icon"><i class="fas fa-truck"></i></div>
+            <div class="stat-value">@ViewBag.DeliveredRepairs</div>
+            <div class="stat-label">Teslim Edilen</div>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+    <a href="/CustomerDashboard/Edit" class="btn-action btn-profile">
+        <i class="fas fa-user-edit"></i> Profil Düzenle
+    </a>
+    <a href="/Password/ChangePassword" class="btn-action btn-password">
+        <i class="fas fa-key"></i> Şifre Değiştir
+    </a>
+    <a href="/CustomerDashboard/Reports" class="btn-action btn-profile">
+        <i class="fas fa-chart-bar"></i> Raporlarım
+    </a>
+     <a href="/CustomerDashboard/MyArchive" class="btn-action btn-profile" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">
+        <i class="fas fa-archive"></i> Tamir Arşivim
+    </a>
+   </div>
+
+    <div class="table-wrapper">
+        <table id="repairTable" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-qrcode me-1"></i> Takip Kodu</th>
+                    <th><i class="fas fa-box me-1"></i> Ürün Adı</th>
+                    <th><i class="fas fa-exclamation-triangle me-1"></i> Arıza Açıklaması</th>
+                    <th><i class="fas fa-calendar me-1"></i> Geliş Tarihi</th>
+                    <th><i class="fas fa-chart-line me-1"></i> Durum</th>
+                    <th><i class="fas fa-money-bill me-1"></i> Ücret</th>
+                    <th><i class="fas fa-cog me-1"></i> İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="text-center"><strong>@item.TrackingCode</strong></td>
+                        <td><i class="fas fa-laptop text-primary me-2"></i>@item.ProductName</td>
+                       @*  <td>@(item.ProblemDescription?.Length > 50 ? item.ProblemDescription.Substring(0,50)+"..." : item.ProblemDescription ?? "-")</td> *@
+                        <td class="problem-desc" data-full="@item.ProblemDescription" style="max-width:250px; white-space:normal; word-wrap:break-word;">
+                            @item.ProblemDescription
+                        </td>
+                        <td class="text-center">@item.ReceivedDate.ToString("dd.MM.yyyy")</td>
+                        <td class="text-center">
+                            @if (item.StatusId == 4)
+                            {
+                                <span class="badge-delivered"><i class="fas fa-check-circle me-1"></i> Teslim Edildi</span>
+                            }
+                            else if (item.StatusId == 3)
+                            {
+                                <span class="badge-completed"><i class="fas fa-check me-1"></i> Tamamlandı</span>
+                            }
+                            else if (item.StatusId == 2)
+                            {
+                                <span class="badge-progress"><i class="fas fa-spinner me-1"></i> İşlemde</span>
+                            }
+                            else
+                            {
+                                <span class="badge-pending"><i class="fas fa-clock me-1"></i> Beklemede</span>
+                            }
+                        </td>
+                        <td class="text-end fw-bold text-success">@item.Price.ToString("C2")</td>
+                        <td class="text-center">
+                            <a href="/CustomerDashboard/Details/@item.Id" class="btn-detail">
+                                <i class="fas fa-eye"></i> Detay
+                            </a>
+                         </td>
+                     </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center mt-4">
+            <i class="fas fa-info-circle me-2"></i> Henüz hiç tamir kaydınız bulunmamaktadır.
+        </div>
+    }
+</div>
+
+
+@section Scripts {
+  
+    <script>
+                     $(document).ready(function() {
+            $('#repairTable').DataTable({
+                language: {
+                    url: '/datatables/tr.json'
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" +
+                     "<'row'<'col-sm-12'B>>",
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel me-1"></i> Excel Aktar',
+                        className: 'btn btn-success btn-sm',
+                        filename: 'Musteri_Tamir_Listesi_' + new Date().toLocaleDateString('tr-TR'),
+                        title: 'MÜŞTERİ TAMİR LİSTESİ',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5],
+                            format: {
+                                header: function(data, columnIdx) {
+                                    var titles = ['Takip Kodu', 'Ürün Adı', 'Arıza Açıklaması', 'Geliş Tarihi', 'Durum', 'Ücret'];
+                                    return titles[columnIdx];
+                                },
+                                body: function(data, row, column, node) {
+                                    if (column === 2) {
+                                        var $cell = $(node).closest('td');
+                                        var fullText = $cell.data('full');
+                                        if (fullText) {
+                                            return fullText;
+                                        }
+                                    }
+                                    return data.replace(/<[^>]*>/g, '');
+                                }
+                            }
+                        },
+                        customize: function(xlsx) {
+                            var sheet = xlsx.xl.worksheets['sheet1.xml'];
+                            $('row:first c', sheet).attr('s', '2');
+                        }
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf me-1"></i> PDF İndir',
+                        className: 'btn btn-danger btn-sm',
+                        orientation: 'landscape',
+                        pageSize: 'A4',
+                        filename: 'Musteri_Tamir_Listesi_' + new Date().toLocaleDateString('tr-TR'),
+                        title: 'MÜŞTERİ TAMİR LİSTESİ',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5],
+                            format: {
+                                body: function(data, row, column, node) {
+                                    if (column === 2) {
+                                        var $cell = $(node).closest('td');
+                                        var fullText = $cell.data('full');
+                                        if (fullText) {
+                                            return fullText;
+                                        }
+                                    }
+                                    return data.replace(/<[^>]*>/g, '');
+                                }
+                            }
+                        },
+                        customize: function(doc) {
+                            doc.pageMargins = [30, 80, 30, 40];
+                            doc['header'] = function() {
+                                return {
+                                    columns: [
+                                        { alignment: 'left', text: 'TEKNİK SERVİS TAKİP SİSTEMI', fontSize: 12, bold: true, color: '#0d6efd' },
+                                        { alignment: 'right', text: 'Rapor No: ' + new Date().getTime(), fontSize: 8, color: '#6c757d' }
+                                    ],
+                                    margin: [30, 20, 30, 0]
+                                };
+                            };
+                            doc.content.splice(0, 0, {
+                                text: 'MÜŞTERİ TAMİR LİSTESİ',
+                                fontSize: 16,
+                                bold: true,
+                                alignment: 'center',
+                                margin: [0, 0, 0, 10]
+                            });
+                            doc.content.splice(1, 0, {
+                                text: 'Rapor Tarihi: ' + new Date().toLocaleString('tr-TR'),
+                                fontSize: 9,
+                                alignment: 'center',
+                                color: '#6c757d',
+                                margin: [0, 0, 0, 20]
+                            });
+                            var tableIndex = doc.content.findIndex(function(item) { return item.table; });
+                            if (tableIndex !== -1) {
+                                doc.content[tableIndex].table.widths = ['15%', '20%', '25%', '12%', '14%', '14%'];
+                                doc.content[tableIndex].table.body[0].forEach(function(cell) {
+                                    cell.fillColor = '#0d6efd';
+                                    cell.color = 'white';
+                                    cell.alignment = 'center';
+                                    cell.bold = true;
+                                    cell.fontSize = 10;
+                                });
+                                for (var i = 1; i < doc.content[tableIndex].table.body.length; i++) {
+                                    var row = doc.content[tableIndex].table.body[i];
+                                    for (var j = 0; j < row.length; j++) {
+                                        if (j === 3 || j === 5) {
+                                            row[j].alignment = 'center';
+                                        } else {
+                                            row[j].alignment = 'left';
+                                        }
+                                        row[j].fontSize = 9;
+                                    }
+                                    if (i % 2 === 0) {
+                                        row.forEach(function(cell) {
+                                            cell.fillColor = '#f8f9fa';
+                                        });
+                                    }
+                                }
+                            }
+                            if (tableIndex !== -1) {
+                                doc.content[tableIndex].layout = {
+                                    hLineWidth: function(i) { return 0.5; },
+                                    vLineWidth: function(i) { return 0.5; },
+                                    hLineColor: function(i) { return '#dee2e6'; },
+                                    vLineColor: function(i) { return '#dee2e6'; },
+                                    paddingLeft: function(i) { return 6; },
+                                    paddingRight: function(i) { return 6; },
+                                    paddingTop: function(i) { return 8; },
+                                    paddingBottom: function(i) { return 8; }
+                                };
+                            }
+                            doc['footer'] = function(page, pages) {
+                                return {
+                                    columns: [
+                                        { text: 'Teknik Servis Takip Sistemi', alignment: 'left', fontSize: 8, color: '#6c757d' },
+                                        { text: 'Sayfa ' + page + ' / ' + pages, alignment: 'right', fontSize: 8, color: '#6c757d' }
+                                    ],
+                                    margin: [30, 0, 30, 20]
+                                };
+                            };
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print me-1"></i> Yazdır',
+                        className: 'btn btn-secondary btn-sm',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5],
+                            format: {
+                                body: function(data, row, column, node) {
+                                    if (column === 2) {
+                                        var $cell = $(node).closest('td');
+                                        var fullText = $cell.data('full');
+                                        if (fullText) {
+                                            return fullText;
+                                        }
+                                    }
+                                    return data.replace(/<[^>]*>/g, '');
+                                }
+                            }
+                        },
+                        title: 'Müşteri Tamir Listesi',
+                        customize: function(win) {
+                            $(win.document.body).find('table').addClass('table table-bordered');
+                            $(win.document.body).find('caption').css('font-size', '16px').css('font-weight', 'bold');
+                        }
+                    }
+                ],
+                pageLength: 10,
+                responsive: true,
+                order: [[3, 'desc']],
+                columnDefs: [
+                    {
+                        targets: 2,
+                        render: function(data, type, row, meta) {
+                            if (type === 'display' && data && data.length > 50) {
+                                return data.substring(0, 50) + '...';
+                            }
+                            return data;
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+}

@@ -1,0 +1,412 @@
+﻿@{
+    ViewData["Title"] = "Teklif Raporu";
+}
+
+<style>
+    /* ==================== LIGHT MODE ==================== */
+    :root,
+    [data-theme="light"] {
+        --bg-card: #ffffff;
+        --bg-table-header: #f8fafc;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+        --gradient-start: #f8fafc;
+        --gradient-end: #f1f5f9;
+    }
+
+    /* ==================== DARK MODE ==================== */
+    [data-theme="dark"] {
+        --bg-card: #1e1e2f;
+        --bg-table-header: #1a1a2e;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --border-color: #2c2c3a;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+        --gradient-start: #1a1a2e;
+        --gradient-end: #16213e;
+    }
+
+    .report-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s;
+    }
+
+    .stat-number {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-top: 5px;
+    }
+
+    .stat-box {
+        padding: 20px;
+        background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+        border-radius: 16px;
+        text-align: center;
+        transition: transform 0.2s;
+        height: 100%;
+    }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+        }
+
+    .filter-group {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .filter-item {
+        flex: 1;
+        min-width: 150px;
+    }
+
+        .filter-item label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+            color: var(--text-secondary);
+        }
+
+        .filter-item input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .data-table th {
+            background: var(--bg-table-header);
+            font-weight: 600;
+        }
+
+    .text-end {
+        text-align: right;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .chart-container {
+        min-height: 350px;
+    }
+
+        .chart-container canvas {
+            max-height: 280px;
+        }
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Başlık -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="fas fa-file-invoice-dollar me-2 text-primary"></i> Teklif Raporu</h2>
+            <p class="text-muted">Teklif istatistikleri ve başarı oranları</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-2"></i> Yenile
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtreler -->
+    <div class="report-card mb-4">
+        <div class="filter-group">
+            <div class="filter-item">
+                <label><i class="fas fa-calendar me-1"></i> Başlangıç Tarihi</label>
+                <input type="date" id="startDate" class="form-control" />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-calendar me-1"></i> Bitiş Tarihi</label>
+                <input type="date" id="endDate" class="form-control" />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-user me-1"></i> Müşteri Adı</label>
+                <input type="text" id="customerNameFilter" class="form-control" placeholder="Müşteri adı ara..." />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-id-card me-1"></i> Müşteri No</label>
+                <input type="text" id="customerNumberFilter" class="form-control" placeholder="Müşteri No ara..." />
+            </div>
+            <div class="filter-item">
+                <button class="btn btn-primary w-100" id="filterBtn">
+                    <i class="fas fa-search me-2"></i> Filtrele
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number" id="totalOffers">0</div>
+                <div class="stat-label">Toplam Teklif</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number" id="activeOffers">0</div>
+                <div class="stat-label">Aktif Teklif</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number" id="approvedOffers">0</div>
+                <div class="stat-label">Onaylanan Teklif</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number" id="approvalRate">0</div>
+                <div class="stat-label">Başarı Oranı</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="stat-box" id="revenueCard">
+                <div id="revenueContainer">
+                    <div class="stat-number" id="totalRevenue">₺0</div>
+                    <div class="stat-label">Toplam Teklif Tutarı</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stat-box">
+                <div class="stat-number" id="avgOfferAmount">₺0</div>
+                <div class="stat-label">Ortalama Teklif Tutarı</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Versiyon Bazlı İstatistikler -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="report-card chart-container">
+                <h5 class="mb-3"><i class="fas fa-chart-pie me-2 text-primary"></i> Teklif Durumu Dağılımı</h5>
+                <canvas id="statusChart" style="width: 100%;"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="report-card chart-container">
+                <h5 class="mb-3"><i class="fas fa-chart-bar me-2 text-primary"></i> Versiyon Bazında Teklif Sayıları</h5>
+                <canvas id="versionChart" style="width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aylık Teklif Trendi -->
+    <div class="report-card chart-container">
+        <h5 class="mb-3"><i class="fas fa-chart-line me-2 text-primary"></i> Aylık Teklif Trendi</h5>
+        <canvas id="trendChart" style="width: 100%;"></canvas>
+    </div>
+
+    <!-- Müşteri Bazında Teklif İstatistikleri -->
+    <div class="report-card">
+        <h5 class="mb-3"><i class="fas fa-users me-2 text-primary"></i> Müşteri Bazında Teklif İstatistikleri (Top 10)</h5>
+        <div class="table-responsive">
+            <table class="data-table" id="customerTable">
+                <thead>
+                    <tr>
+                        <th>Müşteri Adı</th>
+                        <th>Müşteri No</th>
+                        <th class="text-center">Toplam Teklif</th>
+                        <th class="text-center">Aktif</th>
+                        <th class="text-center">Onaylanan</th>
+                        <th class="text-end">Toplam Tutar</th>
+                        <th class="text-end">Ortalama Tutar</th>
+                        <th class="text-center">Son Teklif</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let statusChart, versionChart, trendChart;
+        const currencySymbols = { 'TRY': '₺', 'USD': '$', 'EUR': '€', 'GBP': '£' };
+
+        function formatCurrency(amount, currency = 'TRY') {
+        const symbol = currencySymbols[currency] || '₺';
+        return symbol + amount.toFixed(2);
+        }
+
+        $(document).ready(function() {
+        var today = new Date();
+        var oneYearAgo = new Date();
+        oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+        $('#startDate').val(oneYearAgo.toISOString().split('T')[0]);
+        $('#endDate').val(today.toISOString().split('T')[0]);
+
+        loadTeklifRaporu();
+
+        $('#filterBtn').click(function() {
+        loadTeklifRaporu();
+        });
+        });
+
+        function loadTeklifRaporu() {
+        var data = {
+        startDate: $('#startDate').val(),
+        endDate: $('#endDate').val(),
+        customerName: $('#customerNameFilter').val(),
+        customerNumber: $('#customerNumberFilter').val()
+        };
+
+        $.get('/Rapor/GetTeklifRaporu', data, function(res) {
+        // Kartlar
+        $('#totalOffers').text(res.totalOffers || 0);
+        $('#activeOffers').text(res.activeOffers || 0);
+        $('#approvedOffers').text(res.approvedOffers || 0);
+        $('#approvalRate').text((res.approvalRate || 0).toFixed(1) + '%');
+
+        // Toplam Gelir - Her para birimi AYRI KART olarak
+        if (res.totalRevenueByCurrency && res.totalRevenueByCurrency.length > 0) {
+        var revenueHtml = '<div class="row g-2">';
+        $.each(res.totalRevenueByCurrency, function(i, item) {
+        revenueHtml += `
+        <div class="col-6 col-md-4">
+        <div class="text-center p-2">
+        <div class="stat-number" style="font-size: 20px;">${formatCurrency(item.total, item.currency)}</div>
+        <div class="stat-label" style="font-size: 11px;">${item.currency}</div>
+        </div>
+        </div>
+        `;
+        });
+        revenueHtml += '</div>';
+        $('#revenueContainer').html(revenueHtml);
+
+        var firstCurrency = res.totalRevenueByCurrency[0];
+        var avgAmount = res.totalOffers > 0 ? firstCurrency.total / res.totalOffers : 0;
+        $('#avgOfferAmount').text(formatCurrency(avgAmount, firstCurrency.currency));
+        } else {
+        $('#revenueContainer').html('<div class="stat-number">₺0</div><div class="stat-label">Toplam Teklif Tutarı</div>');
+        $('#avgOfferAmount').text('₺0');
+        }
+
+        // Durum Dağılımı Grafiği
+        if (statusChart) statusChart.destroy();
+        var ctx = document.getElementById('statusChart').getContext('2d');
+        statusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+        labels: ['Aktif Teklifler', 'Onaylanan Teklifler'],
+        datasets: [{ data: [res.activeOffers || 0, res.approvedOffers || 0], backgroundColor: ['#f59e0b', '#10b981'], borderWidth: 0 }]
+        },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.raw + ' teklif'; } } } } }
+        });
+
+        // Versiyon Grafiği
+        if (versionChart) versionChart.destroy();
+        var versions = res.versionStats.map(x => 'v' + x.version);
+        var versionCounts = res.versionStats.map(x => x.count);
+        var ctx2 = document.getElementById('versionChart').getContext('2d');
+        versionChart = new Chart(ctx2, {
+        type: 'bar',
+        data: { labels: versions, datasets: [{ label: 'Teklif Sayısı', data: versionCounts, backgroundColor: '#3b82f6', borderRadius: 8, borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: function(ctx) { return ctx.raw + ' teklif'; } } } }, scales: { y: { title: { display: true, text: 'Teklif Sayısı' }, beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } } }
+        });
+
+        // Aylık Trend Grafiği
+        if (trendChart) trendChart.destroy();
+        var months = res.monthlyTrend.map(x => x.month);
+        var totals = res.monthlyTrend.map(x => x.total);
+        var approveds = res.monthlyTrend.map(x => x.approved);
+        var ctx3 = document.getElementById('trendChart').getContext('2d');
+        trendChart = new Chart(ctx3, {
+        type: 'line',
+        data: {
+        labels: months,
+        datasets: [
+        { label: 'Toplam Teklif', data: totals, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3 },
+        { label: 'Onaylanan Teklif', data: approveds, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.3 }
+        ]
+        },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw + ' teklif'; } } } } }
+        });
+
+        // Müşteri Tablosu - PARA BİRİMİ BAZLI
+        var tbody = $('#customerTableBody');
+        tbody.empty();
+        if (!res.customerStats || res.customerStats.length === 0) {
+        tbody.html('运转<td colspan="8" class="text-center">Veri bulunamadı<\/td><\/tr>');
+        return;
+        }
+
+        $.each(res.customerStats, function(i, c) {
+        var totalText = '';
+        if (c.amountByCurrency && c.amountByCurrency.length > 0) {
+        $.each(c.amountByCurrency, function(j, amt) {
+        totalText += `${formatCurrency(amt.total, amt.currency)} `;
+        });
+        } else { totalText = '₺0'; }
+
+        var avgText = '';
+        if (c.avgByCurrency && c.avgByCurrency.length > 0) {
+        $.each(c.avgByCurrency, function(j, avg) {
+        avgText += `${formatCurrency(avg.avg, avg.currency)} `;
+        });
+        } else { avgText = '₺0'; }
+
+        tbody.append(`
+        <tr>
+        <td><strong>${c.customerName}<\/strong><\/td>
+        <td>${c.customerNumber}<\/td>
+        <td class="text-center"><span class="badge bg-primary">${c.totalOffers}<\/span><\/td>
+        <td class="text-center"><span class="badge bg-warning">${c.activeOffers}<\/span><\/td>
+        <td class="text-center"><span class="badge bg-success">${c.approvedOffers}<\/span><\/td>
+        <td class="text-end">${totalText}<\/td>
+        <td class="text-end">${avgText}<\/td>
+        <td class="text-center">${new Date(c.lastOffer).toLocaleDateString()}<\/td>
+        </tr>
+        `);
+        });
+        }).fail(function() {
+        console.log('Teklif raporu yüklenemedi');
+        $('#totalOffers').text('0');
+        $('#activeOffers').text('0');
+        $('#approvedOffers').text('0');
+        $('#approvalRate').text('0%');
+        $('#totalRevenue').text('₺0');
+        $('#avgOfferAmount').text('₺0');
+        });
+        }
+    </script>
+}

@@ -1,0 +1,265 @@
+﻿@{
+    ViewData["Title"] = "Raporlarım";
+}
+
+
+
+<div class="container-fluid" style="padding: 15px;">
+  <div class="page-header">
+        <div>
+            <h1><i class="fas fa-chart-bar me-3"></i> Raporlarım</h1>
+            <p>Tamir geçmişinizi ve istatistiklerinizi görüntüleyin</p>
+        </div>
+        <a href="/CustomerDashboard/Index" class="btn-dashboard">
+            <i class="fas fa-arrow-left me-2"></i> Dashboard'a Dön
+        </a>
+    </div>
+    <!-- İstatistik Kartları -->
+    <div class="stats-row" id="customerStats">
+        <div class="stat-box"><div class="number" id="statTotal">0</div><div class="label">Toplam Tamir</div></div>
+        <div class="stat-box"><div class="number" id="statPending">0</div><div class="label">Bekleyen</div></div>
+        <div class="stat-box"><div class="number" id="statProgress">0</div><div class="label">İşlemde</div></div>
+        <div class="stat-box"><div class="number" id="statCompleted">0</div><div class="label">Tamamlandı</div></div>
+        <div class="stat-box"><div class="number" id="statDelivered">0</div><div class="label">Teslim Edildi</div></div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-box"><div class="number" id="statRevenue">₺0</div><div class="label">Toplam Harcama</div></div>
+        <div class="stat-box"><div class="number" id="statAvg">₺0</div><div class="label">Ortalama Harcama</div></div>
+    </div>
+
+    <!-- Grafikler -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h5 class="mb-2"><i class="fas fa-chart-pie me-2"></i> Tamir Durum Dağılımım</h5>
+                <canvas id="statusChart" style="height: 160px;"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h5 class="mb-2"><i class="fas fa-chart-line me-2"></i> Aylık Tamir Trendim</h5>
+                <canvas id="monthlyTrendChart" style="height: 160px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tamir Geçmişi Tablosu - İŞLEM KOLONU YOK -->
+    <div class="report-card">
+        <div class="report-header">
+            <div>
+                <span class="report-title"><i class="fas fa-history me-2"></i> Tamir Geçmişim</span>
+            </div>
+            <button class="btn-excel no-loader" id="exportExcelBtn">
+                <i class="fas fa-file-excel me-2"></i> Excel
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table id="repairHistoryTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Takip Kodu</th>
+                        <th>Ürün Adı</th>
+                        <th>Marka/Model</th>
+                        <th>Geliş Tarihi</th>
+                        <th>Teslim Tarihi</th>
+                        <th>Durum</th>
+                        <th>Ücret</th>
+                        <th>Personel</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<form id="antiForgeryForm" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+
+@section Scripts {
+   
+    <script>
+        var statusChart, monthlyTrendChart;
+        var repairTable;
+
+        $(document).ready(function() {
+            if (document.getElementById('statusChart')) {
+                loadStatusDistribution();
+            }
+            if (document.getElementById('monthlyTrendChart')) {
+                loadMonthlyTrend();
+            }
+            loadCustomerStats();
+            
+            if ($('#repairHistoryTable').length) {
+                repairTable = $('#repairHistoryTable').DataTable({
+                    language: { 
+                        // url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/tr.json' 
+                        url: '/datatables/tr.json'
+                    },
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: '/CustomerDashboard/GetCustomerRepairHistoryServerSide',
+                        type: 'POST',
+                        data: function(d) {
+                            return d;
+                        },
+                                headers: {
+            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+        }
+                    },
+                    columns: [
+                        { data: 'trackingCode' },
+                        { data: 'productName' },
+                        { 
+                            data: null,
+                            render: function(data) {
+                                return (data.productBrand || '-') + ' / ' + (data.productModel || '-');
+                            }
+                        },
+                        { data: 'receivedDate' },
+                        { data: 'deliveryDate' },
+                        { 
+                            data: 'status',
+                            render: function(data) {
+                                var statusClass = data === 'Beklemede' ? 'badge-pending' : 
+                                                 (data === 'İşlemde' ? 'badge-progress' : 
+                                                 (data === 'Tamamlandı' ? 'badge-completed' : 'badge-delivered'));
+                                return '<span class="' + statusClass + '">' + data + '</span>';
+                            }
+                        },
+                        { data: 'price' },
+                        { data: 'personel' }
+                    ],
+                    dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                         "<'row'<'col-sm-12'tr>>" +
+                         "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" +
+                         "<'row'<'col-sm-12'B>>",
+                    buttons: [
+                        { extend: 'excel', text: '<i class="fas fa-file-excel"></i> Excel', className: 'btn btn-success btn-sm' },
+                        { extend: 'pdf', text: '<i class="fas fa-file-pdf"></i> PDF', className: 'btn btn-danger btn-sm' },
+                        { extend: 'print', text: '<i class="fas fa-print"></i> Yazdır', className: 'btn btn-secondary btn-sm' }
+                    ],
+                    pageLength: 10,
+                    responsive: true,
+                    order: [[3, 'desc']]
+                });
+            }
+        });
+        
+        function loadCustomerStats() {
+            $.get('/CustomerDashboard/GetCustomerRepairStats', function(res) {
+                if (res.success) {
+                    $('#statTotal').text(res.total);
+                    $('#statPending').text(res.pending);
+                    $('#statProgress').text(res.inProgress);
+                    $('#statCompleted').text(res.completed);
+                    $('#statDelivered').text(res.delivered);
+                    $('#statRevenue').text('₺' + (res.totalRevenue || 0).toFixed(2));
+                    $('#statAvg').text(res.total > 0 ? '₺' + ((res.totalRevenue / res.total).toFixed(2)) : '₺0');
+                }
+            }).fail(function(xhr) {
+                console.log("Stats Error:", xhr.responseText);
+            });
+        }
+        
+        function loadStatusDistribution() {
+            $.get('/CustomerDashboard/GetCustomerStatusDistribution', function(res) {
+                if (res && res.labels) {
+                    if (statusChart) statusChart.destroy();
+                    var ctx = document.getElementById('statusChart').getContext('2d');
+                    statusChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: { labels: res.labels, datasets: [{ data: res.data, backgroundColor: res.colors }] },
+                        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } } }
+                    });
+                }
+            }).fail(function(xhr) {
+                console.log("Status Error:", xhr.responseText);
+            });
+        }
+        
+        function loadMonthlyTrend() {
+            $.get('/CustomerDashboard/GetCustomerMonthlyTrend', function(res) {
+                if (res && res.data) {
+                    if (monthlyTrendChart) monthlyTrendChart.destroy();
+                    var ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+                    monthlyTrendChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: res.data.map(function(x) { return x.monthName; }),
+                            datasets: [{ label: 'Tamir Sayısı', data: res.data.map(function(x) { return x.count; }), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } } }
+                    });
+                }
+            }).fail(function(xhr) {
+                console.log("Trend Error:", xhr.responseText);
+            });
+        }
+        
+       // Excel export
+        $('#exportExcelBtn').click(function() {
+
+            Swal.fire({ title: 'Excel hazırlanıyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            
+            $.ajax({
+                url: '/CustomerDashboard/ExportCustomerRepairsExcel',
+                type: 'POST',
+                xhrFields: { responseType: 'blob' },
+      
+                success: function(blob) {
+                    var url = window.URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'TamirGecmisim_' + new Date().toISOString().slice(0,19).replace(/:/g, '-') + '.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    Swal.close();
+
+                    // ========== LOADER'I KAPAT ==========
+            if (typeof hideGlobalLoader !== 'undefined') {
+                hideGlobalLoader();
+            }
+
+                    Swal.fire({
+                title: 'Başarılı!',
+                text: 'Excel dosyası indiriliyor...',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(function() {
+                // SweetAlert kapandıktan SONRA loader'ı kapat
+                if (typeof hideGlobalLoader !== 'undefined') {
+                    hideGlobalLoader();
+                }
+            });
+
+  
+                },
+                error: function(xhr) {
+                    Swal.close();
+
+                     // ========== LOADER'I KAPAT ==========
+            if (typeof hideGlobalLoader !== 'undefined') {
+                hideGlobalLoader();
+            }
+
+                    console.log("Excel Error:", xhr.responseText);
+                    Swal.fire('Hata!', 'Excel oluşturulurken bir hata oluştu.', 'error');
+                },
+              
+            });
+        });
+
+
+
+
+    </script>
+}

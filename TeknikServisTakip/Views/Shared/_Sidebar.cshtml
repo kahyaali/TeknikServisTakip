@@ -1,0 +1,323 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Entities.Concrete
+@inject UserManager<AppUser> UserManager
+
+<aside class="sidebar" id="sidebar">
+    @* <div class="sidebar-header">
+        <h4><i class="fas fa-tools"></i> <span>Teknik Servis</span></h4>
+        <p>Yönetim Paneli</p>
+    </div>
+ *@
+    
+    <div class="sidebar-header">
+        @{
+            var logoPath = "/images/firmaimages/logo.png";
+            var wwwrootPath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var logoPhysicalPath = System.IO.Path.Combine(wwwrootPath, "images", "firmaimages", "logo.png");
+            var hasLogo = System.IO.File.Exists(logoPhysicalPath);
+        }
+
+        @if (hasLogo)
+        {
+            <!-- Sadece logo göster -->
+            <img src="@logoPath?v=@DateTime.Now.Ticks" alt="Logo" class="sidebar-logo" />
+        }
+        else
+        {
+            <!-- Logo yoksa Teknik Servis + Yönetim Paneli -->
+            <div class="sidebar-brand">
+                <i class="fas fa-tools"></i>
+                <span class="sidebar-brand-text">Teknik Servis</span>
+            </div>
+            <p class="sidebar-subtitle">Yönetim Paneli</p>
+        }
+    </div>
+
+    <ul class="sidebar-menu list-unstyled">
+        <li>
+            <a asp-controller="Admin" asp-action="Index" class="single-menu nav-link">
+                <i class="fas fa-chalkboard-user"></i>
+                <span class="menu-title">Dashboard</span>
+            </a>
+        </li>
+
+        <li class="menu-group">KULLANICI YÖNETİMİ</li>
+        <li>
+            <div class="menu-dropdown" data-dropdown-id="1">
+                <button type="button" class="menu-dropdown-btn" onclick="toggleDropdown(this)">
+                    <i class="fas fa-users"></i>
+                    <span class="menu-title">Kullanıcılar</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </button>
+                <div class="menu-dropdown-content">
+                    <a asp-controller="Admin" asp-action="AdminList" class="menu-item nav-link"><i class="fas fa-user-shield me-2"></i> Admin Yönetimi</a>
+                    <a asp-controller="Admin" asp-action="UserRoles" class="menu-item nav-link"><i class="fas fa-user-tag me-2"></i> Kullanıcı Rolleri</a>
+                    <a asp-controller="Admin" asp-action="CustomerRoles" class="menu-item nav-link">
+                        <i class="fas fa-user-friends me-2"></i> Müşteri Rolleri
+                    </a>
+                    <a asp-controller="Personel" asp-action="Index" class="menu-item nav-link"><i class="fas fa-users me-2"></i> Personel Yönetimi</a>
+                    <a asp-controller="Admin" asp-action="PersonelTakip" class="menu-item nav-link">
+                        <i class="fas fa-user-clock me-2"></i> Personel İş Takip
+                    </a>
+                    <a asp-controller="Customer" asp-action="Index" class="menu-item nav-link"><i class="fas fa-user-friends me-2"></i> Müşteri Yönetimi</a>            
+                </div>
+            </div>
+        </li>
+
+        <li class="menu-group">ORGANİZASYON</li>
+        <li>
+            <div class="menu-dropdown" data-dropdown-id="2">
+                <button type="button" class="menu-dropdown-btn" onclick="toggleDropdown(this)">
+                    <i class="fas fa-building"></i>
+                    <span class="menu-title">Organizasyon</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </button>
+                <div class="menu-dropdown-content">
+                    <a asp-controller="Department" asp-action="Index" class="menu-item nav-link"><i class="fas fa-building me-2"></i> Departmanlar</a>
+                    <a asp-controller="Positions" asp-action="Index" class="menu-item nav-link"><i class="fas fa-briefcase me-2"></i> Pozisyonlar</a>
+                </div>
+            </div>
+        </li>
+
+        <li class="menu-group">OPERASYON</li>
+        <li>
+            <div class="menu-dropdown" data-dropdown-id="3">
+                <button type="button" class="menu-dropdown-btn" onclick="toggleDropdown(this)">
+                    <i class="fas fa-cogs"></i>
+                    <span class="menu-title">Operasyon</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </button>
+                <div class="menu-dropdown-content">
+                    <a asp-controller="Repair" asp-action="Index" class="menu-item nav-link"><i class="fas fa-tools me-2"></i> Tamir Kaydı</a>
+                    <a asp-controller="Repair" asp-action="ArchiveRepairs" class="menu-item nav-link"><i class="fas fa-archive me-2"></i> Tamir Arşivi</a>
+                    <a asp-controller="Delivery" asp-action="DeliveryList" class="menu-item nav-link"><i class="fas fa-truck me-2"></i> Teslimatlar</a>
+                </div>
+            </div>
+        </li>
+
+        <li class="menu-group">ÜRÜN YÖNETİMİ</li>
+        <li>
+            <div class="menu-dropdown" data-dropdown-id="5">
+                <button type="button" class="menu-dropdown-btn" onclick="toggleDropdown(this)">
+                    <i class="fas fa-tags"></i>
+                    <span class="menu-title">Kategoriler</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </button>
+                <div class="menu-dropdown-content">
+                    <a asp-controller="Category" asp-action="Index" class="menu-item nav-link">
+                        <i class="fas fa-list me-2"></i> Kategori Listesi
+                    </a>
+                    <a asp-controller="Category" asp-action="Create" class="menu-item nav-link">
+                        <i class="fas fa-plus me-2"></i> Yeni Kategori
+                    </a>
+                </div>
+            </div>
+        </li>
+
+        <li class="menu-group">EXPERTİZ & TEKLİF</li>
+        <li>
+            <div class="menu-dropdown" data-dropdown-id="expertise">
+                <button type="button" class="menu-dropdown-btn" onclick="toggleDropdown(this)">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span class="menu-title">Expertiz Yönetimi</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </button>
+                <div class="menu-dropdown-content">
+                    <a asp-controller="ExpertiseApproval" asp-action="Index" class="menu-item nav-link">
+                        <i class="fas fa-clock me-2"></i> Onay Bekleyen Expertizler
+                    </a>
+                    <a asp-controller="Offer" asp-action="Index" class="menu-item nav-link">
+                        <i class="fas fa-file-invoice me-2"></i> Teklifler
+                    </a>
+                    <a asp-controller="Offer" asp-action="Archived" class="menu-item nav-link">
+                        <i class="fas fa-archive me-2"></i> Onaylanan Teklifler
+                    </a>
+                    <a asp-controller="Offer" asp-action="ReviseArchives" class="menu-item nav-link">
+                        <i class="fas fa-history me-2"></i> Revize Arşivi
+                    </a>
+
+                </div>
+            </div>
+        </li>
+
+        <!-- DEPO MODÜLÜ  -->
+        <li class="menu-group">DEPO - STOK YÖNETİMİ</li>
+        <li>
+            <div class="menu-dropdown" data-dropdown-id="4">
+                <button type="button" class="menu-dropdown-btn" onclick="toggleDropdown(this)">
+                    <i class="fas fa-boxes"></i>
+                    <span class="menu-title">Stok Yönetimi</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </button>
+                <div class="menu-dropdown-content">
+                    <!-- Ana Liste -->
+                    <a asp-controller="Stock" asp-action="Index" class="menu-item nav-link">
+                        <i class="fas fa-warehouse me-2"></i> Tüm Ürünler
+                    </a>
+            
+                    <!-- İşlemler -->
+                    <a asp-controller="Stock" asp-action="Create" class="menu-item nav-link">
+                        <i class="fas fa-plus-circle me-2"></i> Yeni Ürün Ekle
+                    </a>
+            
+                    <!-- Stok Hareketleri -->
+                    <a asp-controller="Stock" asp-action="StockMovementsAll" class="menu-item nav-link">
+                        <i class="fas fa-exchange-alt me-2"></i> Stok Hareketleri
+                    </a>
+            
+                    <!-- Excel İşlemleri -->
+                    <div class="dropdown-divider"></div>
+                    <a asp-controller="Stock" asp-action="BulkImport" class="menu-item nav-link">
+                        <i class="fas fa-file-import me-2"></i> Excel'den İçe Aktar
+                    </a>
+                    <a asp-controller="Stock" asp-action="ExportExcel" class="menu-item nav-link">
+                        <i class="fas fa-file-export me-2"></i> Excel'e Dışa Aktar
+                    </a>
+            
+                    <!-- Uyarılar -->
+                    <div class="dropdown-divider"></div>
+                    <a asp-controller="Stock" asp-action="Alerts" class="menu-item nav-link">
+                        <i class="fas fa-bell me-2"></i> Stok Uyarıları
+                        <span class="badge bg-danger ms-2" id="criticalStockCount" style="font-size: 10px;">0</span>
+                    </a>
+                </div>
+            </div>
+        </li>
+
+       
+
+        <li class="menu-group">İÇERİK YÖNETİMİ</li>
+        <li>
+            <div class="menu-dropdown" data-dropdown-id="4">
+                <button type="button" class="menu-dropdown-btn" onclick="toggleDropdown(this)">
+                    <i class="fas fa-file-alt"></i>
+                    <span class="menu-title">İçerikler</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </button>
+                <div class="menu-dropdown-content">
+                    <a asp-controller="Service" asp-action="Index" class="menu-item nav-link"><i class="fas fa-cogs me-2"></i> Hizmetler</a>
+                    <a asp-controller="Reference" asp-action="Index" class="menu-item nav-link"><i class="fas fa-star me-2"></i> Referanslar</a>
+                    <a asp-controller="PageContent" asp-action="Index" class="menu-item nav-link"><i class="fas fa-edit me-2"></i> Sayfa İçerikleri</a>
+                </div>
+            </div>
+        </li>
+
+        <li class="menu-group">DEPO RAPORLARI</li>
+        <li>
+            <div class="menu-dropdown" data-dropdown-id="6">
+                <button type="button" class="menu-dropdown-btn" onclick="toggleDropdown(this)">
+                    <i class="fas fa-boxes"></i>
+                    <span class="menu-title">Depo Raporları</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </button>
+                <div class="menu-dropdown-content">
+                    <a asp-controller="Stock" asp-action="StockMovementsAll" class="menu-item nav-link">
+                        <i class="fas fa-exchange-alt me-2"></i> Stok Hareketleri
+                    </a>
+                    <a asp-controller="Stock" asp-action="Alerts" class="menu-item nav-link">
+                        <i class="fas fa-bell me-2"></i> Stok Uyarıları
+                    </a>
+                </div>
+            </div>
+        </li>
+
+        <li class="menu-group">RAPOR & SİSTEM</li>
+        <li>
+            <div class="menu-dropdown" data-dropdown-id="5">
+                <button type="button" class="menu-dropdown-btn" onclick="toggleDropdown(this)">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="menu-title">Rapor & Sistem</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </button>
+                <div class="menu-dropdown-content">
+                    <a asp-controller="Rapor" asp-action="Dashboard" class="menu-item nav-link">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a asp-controller="Rapor" asp-action="GelirRaporu" class="menu-item nav-link">
+                        <i class="fas fa-chart-line me-2"></i> Gelir Raporu
+                    </a>
+                    <a asp-controller="Rapor" asp-action="PersonelPerformans" class="menu-item nav-link">
+                        <i class="fas fa-users me-2"></i> Personel Performans
+                    </a>
+                    <a asp-controller="Rapor" asp-action="UrunRaporu" class="menu-item nav-link">
+                        <i class="fas fa-box me-2"></i> Ürün Bazlı Rapor
+                    </a>
+                    <a asp-controller="Rapor" asp-action="TamirSureRaporu" class="menu-item nav-link">
+                        <i class="fas fa-stopwatch me-2"></i> Tamir Süre Raporu
+                    </a>
+                    <a asp-controller="Rapor" asp-action="MusteriRaporu" class="menu-item nav-link">
+                        <i class="fas fa-building me-2"></i> Müşteri Bazlı Rapor
+                    </a>
+                    <a asp-controller="Rapor" asp-action="TeklifRaporu" class="menu-item nav-link">
+                        <i class="fas fa-file-invoice-dollar me-2"></i> Teklif Raporu
+                    </a>
+                    <a asp-controller="Rapor" asp-action="Index" class="menu-item nav-link"><i class="fas fa-chart-bar me-2"></i> Raporlar</a>
+                    <a asp-controller="Log" asp-action="Index" class="menu-item nav-link"><i class="fas fa-history me-2"></i> Loglar</a>
+                    <a asp-controller="MailSetting" asp-action="Index" class="menu-item nav-link"><i class="fas fa-envelope me-2"></i> Mail Ayarları</a>
+                    <a asp-controller="MailLog" asp-action="Index" class="menu-item nav-link">
+                        <i class="fas fa-envelope-open-text me-2"></i> Mail Logları
+                    </a>
+                </div>
+            </div>
+        </li>     
+    </ul>
+</aside>
+
+
+
+<style>
+    /* Sidebar Header */
+    .sidebar-header {
+        text-align: center;
+        padding: 1rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Logo stili */
+    .sidebar-logo {
+        max-width: 130px;
+        max-height: 45px;
+        object-fit: contain;
+    }
+
+    /* Logo yoksa marka stili */
+    .sidebar-brand {
+        margin-bottom: 5px;
+    }
+
+        .sidebar-brand i {
+            font-size: 1.2rem;
+            margin-right: 6px;
+        }
+
+    .sidebar-brand-text {
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    /* Yönetim Paneli - Sadece logo yoksa görünür */
+    .sidebar-subtitle {
+        font-size: 0.65rem;
+        opacity: 0.6;
+        margin-top: 5px;
+        margin-bottom: 0;
+        letter-spacing: 0.5px;
+    }
+
+    /* Sidebar collapsed durumunda */
+    .sidebar.collapsed .sidebar-logo {
+        max-width: 35px;
+        max-height: 35px;
+    }
+
+    .sidebar.collapsed .sidebar-brand {
+        display: none;
+    }
+
+    .sidebar.collapsed .sidebar-subtitle {
+        display: none;
+    }
+</style>

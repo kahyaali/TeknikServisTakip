@@ -1,0 +1,408 @@
+﻿@model Entities.Concrete.AppUser
+@{
+    ViewData["Title"] = "Profil Düzenle";
+}
+
+
+
+<div class="profile-container">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-user-circle fa-3x me-3"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i> Müşteri Profil Bilgileri</h4>
+                    <p class="mb-0 mt-1">Hesap bilgilerinizi güncelleyin ve yönetin</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i> @TempData["Error"]
+                </div>
+            }
+
+            <div class="info-box">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <h6>Bilgilendirme</h6>
+                        <p>
+                            Kişisel bilgileriniz gizlilik politikalarımız doğrultusunda korunmaktadır.
+                            Zorunlu alanlar <span class="text-danger">*</span> ile işaretlenmiştir.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="row g-4">
+                    <div class="col-md-12">
+                        <label class="form-label">
+                            <i class="fas fa-user me-2 text-primary"></i>Ad Soyad <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-icon">
+                            <i class="fas fa-user"></i>
+                            <input type="text" name="fullName" class="form-control" value="@Model.FullName" required />
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-envelope me-2 text-primary"></i>E-posta <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" name="email" class="form-control" value="@Model.Email" required />
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-phone me-2 text-primary"></i>Telefon <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-icon">
+                            <i class="fas fa-phone"></i>
+                            <input type="tel" name="phoneNumber" class="form-control" value="@Model.PhoneNumber" placeholder="05XX XXX XX XX" required />
+                        </div>
+                        <small class="text-muted">Format: 05XX XXX XX XX</small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-building me-2 text-primary"></i>Firma Adı
+                        </label>
+                        <div class="input-icon">
+                            <i class="fas fa-building"></i>
+                            <input type="text" name="companyName" class="form-control" value="@Model.CompanyName" />
+                        </div>
+                        <small class="text-muted">Opsiyonel - Kurumsal müşteriler için</small>
+                    </div>
+
+                 
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-hashtag me-2 text-primary"></i>Cari No
+                        </label>
+                        <div class="input-icon">
+                            <i class="fas fa-hashtag"></i>
+                            <input type="text" name="cariNo" class="form-control" value="@Model.CariNo" />
+                        </div>
+                        <small class="text-muted">Opsiyonel - Benzersiz olmalıdır</small>
+                    </div>
+                    
+                    <div class="col-md-12">
+                        <label class="form-label">
+                            <i class="fas fa-map-marker-alt me-2 text-primary"></i>Adres <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-icon">
+                            <i class="fas fa-location-dot"></i>
+                            <textarea name="address" class="form-control" rows="2" required>@Model.Address</textarea>
+                        </div>
+                        <small class="text-muted">Mahalle, sokak, bina no, daire no bilgilerinizi giriniz</small>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i class="fas fa-city me-2 text-primary"></i>Şehir <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="city" class="form-control" value="@Model.City" required />
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i class="fas fa-location-dot me-2 text-primary"></i>İlçe <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="district" class="form-control" value="@Model.District" required />
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i class="fas fa-mail-bulk me-2 text-primary"></i>Posta Kodu
+                        </label>
+                        <input type="text" name="postalCode" class="form-control" value="@Model.PostalCode" placeholder="34000" />
+                        <small class="text-muted">5 haneli</small>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">
+                            <i class="fas fa-id-card me-2 text-primary"></i>TC Kimlik No
+                        </label>
+                        <div class="input-icon">
+                            <i class="fas fa-id-card"></i>
+                            <input type="text" name="identityNumber" class="form-control" value="@Model.IdentityNumber" placeholder="11 haneli" />
+                        </div>
+                        <small class="text-muted">Opsiyonel - 11 haneli sayısal değer</small>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="d-grid gap-3">
+                    <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-save">
+                        <i class="fas fa-save me-2"></i> Müşteri Bilgileri Güncelle
+                    </button> 
+                        <button type="button" class="btn btn-secondary" onclick="location.href='/Customer/Index'">
+                            <i class="fas fa-arrow-left me-1"></i> Geri
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Toast mesajı gösterme fonksiyonu
+        function showToast(message, type = 'error') {
+            // Eski toast'ları temizle
+            const oldToasts = document.querySelectorAll('.toast-message');
+            oldToasts.forEach(toast => toast.remove());
+
+            // Toast elementini oluştur
+            const toast = document.createElement('div');
+            toast.className = 'toast-message';
+            
+            let icon = '';
+            switch(type) {
+                case 'success':
+                    icon = '<i class="fas fa-check-circle"></i>';
+                    break;
+                case 'error':
+                    icon = '<i class="fas fa-exclamation-circle"></i>';
+                    break;
+                case 'warning':
+                    icon = '<i class="fas fa-exclamation-triangle"></i>';
+                    break;
+                default:
+                    icon = '<i class="fas fa-info-circle"></i>';
+            }
+            
+            toast.innerHTML = `
+                <div class="toast-content toast-${type}">
+                    ${icon}
+                    <div class="toast-text">${message}</div>
+                    <i class="fas fa-times toast-close"></i>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Kapatma butonu
+            const closeBtn = toast.querySelector('.toast-close');
+            closeBtn.addEventListener('click', () => {
+                toast.style.animation = 'slideInRight 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            });
+            
+            // 4 saniye sonra otomatik kapat
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.style.animation = 'slideInRight 0.3s ease-out reverse';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 4000);
+        }
+
+        // Input validasyon stilini temizle
+        function clearValidationStyles() {
+            const inputs = document.querySelectorAll('#profileForm .form-control');
+            inputs.forEach(input => {
+                input.classList.remove('error', 'success');
+            });
+        }
+
+        // Input'a validasyon stili ekle
+        function setValidationStyle(input, isValid) {
+            input.classList.remove('error', 'success');
+            if (isValid) {
+                input.classList.add('success');
+            } else {
+                input.classList.add('error');
+            }
+        }
+
+        // ========== TELEFON FORMATLAMA (4+3+2+2) ==========
+        const phoneInput = document.querySelector('input[name="phoneNumber"]');
+        if (phoneInput) {
+            // Sayfa yüklendiğinde mevcut değeri formatla
+            function formatExistingPhone() {
+                let value = phoneInput.value.replace(/\D/g, '');
+                if (value.length === 11) {
+                    let formatted = value.slice(0, 4) + ' ' + value.slice(4, 7) + ' ' + value.slice(7, 9) + ' ' + value.slice(9, 11);
+                    phoneInput.value = formatted;
+                }
+            }
+            formatExistingPhone();
+            
+            // Yazarken formatla
+            phoneInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) {
+                    value = value.slice(0, 11);
+                }
+                
+                if (value.length >= 4) {
+                    let part1 = value.slice(0, 4);
+                    let part2 = value.slice(4, 7);
+                    let part3 = value.slice(7, 9);
+                    let part4 = value.slice(9, 11);
+                    
+                    let formatted = part1;
+                    if (part2) formatted += ' ' + part2;
+                    if (part3) formatted += ' ' + part3;
+                    if (part4) formatted += ' ' + part4;
+                    
+                    e.target.value = formatted;
+                } else {
+                    e.target.value = value;
+                }
+                
+                // Anlık validasyon
+                const cleanPhone = e.target.value.replace(/\D/g, '');
+                if (cleanPhone.length === 11) {
+                    setValidationStyle(e.target, true);
+                } else if (cleanPhone.length > 0) {
+                    setValidationStyle(e.target, false);
+                } else {
+                    e.target.classList.remove('error', 'success');
+                }
+            });
+        }
+
+
+        // TC Kimlik kontrolü
+        const tcInput = document.querySelector('#identityNumber');
+        tcInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) {
+                value = value.slice(0, 11);
+            }
+            e.target.value = value;
+            
+            if (value.length === 11 || value.length === 0) {
+                setValidationStyle(e.target, true);
+            } else if (value.length > 0) {
+                setValidationStyle(e.target, false);
+            }
+        });
+
+        // Posta kodu kontrolü
+        const postalInput = document.querySelector('#postalCode');
+        postalInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 5) {
+                value = value.slice(0, 5);
+            }
+            e.target.value = value;
+            
+            if (value.length === 5 || value.length === 0) {
+                setValidationStyle(e.target, true);
+            } else if (value.length > 0) {
+                setValidationStyle(e.target, false);
+            }
+        });
+
+        // Email validasyonu
+        const emailInput = document.querySelector('#email');
+        emailInput.addEventListener('input', function(e) {
+            const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+            if (emailRegex.test(e.target.value)) {
+                setValidationStyle(e.target, true);
+            } else if (e.target.value.length > 0) {
+                setValidationStyle(e.target, false);
+            } else {
+                e.target.classList.remove('error', 'success');
+            }
+        });
+
+        // Form submit öncesi validasyon
+        document.querySelector('#profileForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            
+            let phone = document.querySelector('#phoneNumber').value.replace(/\D/g, '');
+            let email = document.querySelector('#email').value;
+            let fullName = document.querySelector('#fullName').value.trim();
+            let address = document.querySelector('#address').value.trim();
+            let city = document.querySelector('#city').value.trim();
+            let district = document.querySelector('#district').value.trim();
+            
+            const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+            
+            // Validasyon kontrolleri
+            if (fullName.length < 3) {
+                showToast('Ad Soyad en az 3 karakter olmalıdır', 'error');
+                document.querySelector('#fullName').focus();
+                return false;
+            }
+            
+            if (!emailRegex.test(email)) {
+                showToast('Lütfen geçerli bir e-posta adresi giriniz', 'error');
+                document.querySelector('#email').focus();
+                return false;
+            }
+            
+            if (phone.length !== 11) {
+                showToast('Lütfen geçerli bir telefon numarası giriniz (11 haneli)', 'error');
+                document.querySelector('#phoneNumber').focus();
+                return false;
+            }
+            
+            if (address.length < 10) {
+                showToast('Adres en az 10 karakter olmalıdır', 'error');
+                document.querySelector('#address').focus();
+                return false;
+            }
+            
+            if (city.length < 2) {
+                showToast('Lütfen geçerli bir şehir giriniz', 'error');
+                document.querySelector('#city').focus();
+                return false;
+            }
+            
+            if (district.length < 2) {
+                showToast('Lütfen geçerli bir ilçe giriniz', 'error');
+                document.querySelector('#district').focus();
+                return false;
+            }
+            
+            // Tüm validasyonlar başarılı
+            clearValidationStyles();
+            showToast('Bilgileriniz kaydediliyor...', 'info');
+            
+            // Formu gönder
+            this.submit();
+        });
+        
+        // Sayfa yüklendiğinde mevcut değerleri kontrol et
+        document.addEventListener('DOMContentLoaded', function() {
+            // Telefon kontrolü
+            const phoneVal = phoneInput.value.replace(/\D/g, '');
+            if (phoneVal.length === 11) {
+                setValidationStyle(phoneInput, true);
+            }
+            
+            // Email kontrolü
+            const emailVal = emailInput.value;
+            const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+            if (emailRegex.test(emailVal)) {
+                setValidationStyle(emailInput, true);
+            }
+        });
+    </script>
+}

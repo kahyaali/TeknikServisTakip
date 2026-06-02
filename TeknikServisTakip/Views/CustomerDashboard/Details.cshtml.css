@@ -1,0 +1,109 @@
+﻿
+
+#imageModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 9999;
+    text-align: center;
+    padding-top: 50px;
+}
+
+#imageModal span {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    color: white;
+    font-size: 50px;
+    cursor: pointer;
+}
+
+    #imageModal span:hover {
+        color: #ccc;
+    }
+
+#modalImage {
+    max-width: 90%;
+    max-height: 85%;
+    margin-top: 5%;
+    border-radius: 10px;
+}
+
+.image-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.image-container {
+    flex: 1;
+    min-width: 200px;
+    text-align: center;
+}
+
+    .image-container h5 {
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+.resim-thumb {
+    width: 100%;
+    max-width: 250px;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+    .resim-thumb:hover {
+        transform: scale(1.03);
+        opacity: 0.95;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+.badge-teslim {
+    background-color: #6c757d;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 30px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+.card {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+hr {
+    margin: 15px 0;
+}
+
+@@media (max-width: 550px) {
+    .image-container {
+        min-width: 150px;
+    }
+
+    .resim-thumb {
+        max-width: 150px;
+    }
+}
+
+

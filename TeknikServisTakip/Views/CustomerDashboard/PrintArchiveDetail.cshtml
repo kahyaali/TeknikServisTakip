@@ -1,0 +1,304 @@
+﻿@* @model Entities.Concrete.ArchiveRepair
+@{
+    Layout = null;
+    ViewData["Title"] = "Tamir Detay Raporu";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Tamir Detay Raporu</title>
+    <style>
+            body {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                margin: 40px;
+                padding: 0;
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                border-bottom: 2px solid #0d6efd;
+            }
+
+                .header h1 {
+                    color: #0d6efd;
+                    margin: 0;
+                    font-size: 24px;
+                }
+
+                .header p {
+                    color: #6c757d;
+                    margin: 5px 0 0;
+                }
+
+            .badge {
+                background: #10b981;
+                color: white;
+                padding: 3px 10px;
+                border-radius: 20px;
+                font-size: 11px;
+                display: inline-block;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+
+            td {
+                padding: 12px;
+                border: 1px solid #dee2e6;
+            }
+
+            .label {
+                font-weight: 600;
+                width: 30%;
+                background: #f8f9fa;
+            }
+
+            .footer {
+                text-align: center;
+                margin-top: 50px;
+                font-size: 12px;
+                color: #6c757d;
+                border-top: 1px solid #dee2e6;
+                padding-top: 20px;
+            }
+
+            @@media print {
+                body {
+                    margin: 0;
+                    padding: 20px;
+                }
+
+                .no-print {
+                    display: none;
+                }
+            }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TEKNİK SERVİS TAKİP SİSTEMİ</h1>
+        <p>Tamir Detay Raporu</p>
+        <p>@DateTime.Now.ToString("dd.MM.yyyy HH:mm")</p>
+    </div>
+
+    <table>
+        <tr><td class="label">Takip Kodu</td><td><strong>@Model.TrackingCode</strong> <span class="badge">Teslim Edildi</span></td></tr>
+        <tr><td class="label">Ürün Adı</td><td>@Model.ProductName</td></tr>
+        <tr><td class="label">Marka / Model</td><td>@Model.ProductBrand @Model.ProductModel</td></tr>
+        <tr><td class="label">Seri No</td><td>@(string.IsNullOrEmpty(Model.SerialNumber) ? "-" : Model.SerialNumber)</td></tr>
+        <tr><td class="label">Arıza Açıklaması</td><td>@(string.IsNullOrEmpty(Model.ProblemDescription) ? "-" : Model.ProblemDescription)</td></tr>
+        <tr><td class="label">Geliş Tarihi</td><td>@Model.ReceivedDate.ToString("dd.MM.yyyy HH:mm")</td></tr>
+        <tr><td class="label">Teslim Tarihi</td><td>@(Model.DeliveryDate?.ToString("dd.MM.yyyy HH:mm") ?? "-")</td></tr>
+        <tr><td class="label">Personel</td><td>@(Model.Personel?.FullName ?? "-")</td></tr>
+        <tr><td class="label">Ücret</td><td><strong>@Model.Price.ToString("C2")</strong></td></tr>
+        <tr><td class="label">Personel Notu</td><td>@(string.IsNullOrEmpty(Model.InternalNote) ? "-" : Model.InternalNote)</td></tr>
+    </table>
+
+    <div class="footer">
+        Teknik Servis Takip Sistemi | @DateTime.Now.Year
+    </div>
+
+    <div class="no-print" style="text-align: center; margin-top: 30px;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #0d6efd; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            <i class="fas fa-print"></i> Yazdır
+        </button>
+        <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+            Kapat
+        </button>
+    </div>
+</body>
+</html> *@
+
+
+
+
+
+
+
+
+
+   @model Entities.Concrete.ArchiveRepair
+@{
+    Layout = null;
+    ViewData["Title"] = "Tamir Detay Raporu";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Servis_Raporu_@Model.TrackingCode</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px; /* Kenar boşlukları azaltıldı */
+            color: #333;
+            line-height: 1.4;
+            background-color: white;
+        }
+
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #0d6efd;
+        }
+
+        .header h1 {
+            color: #0d6efd;
+            margin: 0;
+            font-size: 22px;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            color: #6c757d;
+            margin: 2px 0;
+            font-size: 14px;
+        }
+
+        .section-title {
+            background: #f8f9fa;
+            padding: 6px 10px;
+            font-weight: bold;
+            border-left: 4px solid #0d6efd;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 13px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 5px;
+            table-layout: fixed;
+        }
+
+        td {
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            font-size: 13px;
+            word-wrap: break-word;
+            vertical-align: top;
+        }
+
+        .label {
+            font-weight: 600;
+            width: 30%;
+            background: #f8f9fa !important;
+            color: #495057;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 11px;
+            color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+
+        @@media print {
+            body { padding: 10px; }
+            .no-print { display: none; }
+            /* Sayfa taşmalarını önlemek için */
+            html, body {
+                height: 99%;
+            }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+
+    <div class="header">
+        <h1>TEKNİK SERVİS TAKİP SİSTEMİ</h1>
+        <p>Arşiv Kayıt Detayı</p>
+        <p style="font-size: 12px;">Rapor Tarihi: @DateTime.Now.ToString("dd.MM.yyyy HH:mm")</p>
+    </div>
+
+    <!-- ÜRÜN BİLGİLERİ -->
+    <div class="section-title">📦 Ürün ve Kayıt Bilgileri</div>
+    <table>
+        <tr>
+            <td class="label">Takip Kodu</td>
+            <td><strong>@Model.TrackingCode</strong></td>
+        </tr>
+        <tr>
+            <td class="label">Ürün Adı</td>
+            <td>@Model.ProductName</td>
+        </tr>
+        <tr>
+            <td class="label">Marka / Model</td>
+            <td>@Model.ProductBrand @Model.ProductModel</td>
+        </tr>
+        <tr>
+            <td class="label">Seri Numarası</td>
+            <td>@(string.IsNullOrEmpty(Model.SerialNumber) ? "-" : Model.SerialNumber)</td>
+        </tr>
+    </table>
+
+    <!-- SERVİS DETAYLARI -->
+    <div class="section-title">🔧 Servis ve Tamir Detayları</div>
+    <table>
+        <tr>
+            <td class="label">Arıza Açıklaması</td>
+            <td>@(string.IsNullOrEmpty(Model.ProblemDescription) ? "-" : Model.ProblemDescription)</td>
+        </tr>
+        <tr>
+            <td class="label">Personel Notu</td>
+            <td>@(string.IsNullOrEmpty(Model.InternalNote) ? "-" : Model.InternalNote)</td>
+        </tr>
+        <tr>
+            <td class="label">Sorumlu Personel</td>
+            <td>@(Model.Personel?.FullName ?? "-")</td>
+        </tr>
+    </table>
+
+    <!-- TARİH VE ÜCRET -->
+    <div class="section-title">💰 Tarih ve Maliyet Bilgileri</div>
+    <table>
+        <tr>
+            <td class="label">Geliş Tarihi</td>
+            <td>@Model.ReceivedDate.ToString("dd.MM.yyyy HH:mm")</td>
+        </tr>
+        <tr>
+            <td class="label">Teslim Tarihi</td>
+            <td>@(Model.DeliveryDate?.ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
+        </tr>
+        <tr>
+            <td class="label">Toplam Ücret</td>
+            <td><strong style="color: #198754; font-size: 15px;">@Model.Price.ToString("C2")</strong></td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        Bu belge @Model.TrackingCode nolu kayıt için bilgilendirme amaçlı sistem tarafından üretilmiştir.<br />
+        © @DateTime.Now.Year Teknik Servis Yönetim Paneli
+    </div>
+
+    <!-- BUTONLAR -->
+    <div class="no-print" style="text-align: center; margin-top: 20px;">
+        <button onclick="window.print()" style="padding: 8px 20px; background: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+            Yazdır / PDF
+        </button>
+        <button onclick="window.close()" style="padding: 8px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+            Kapat
+        </button>
+    </div>
+
+</body>
+</html>

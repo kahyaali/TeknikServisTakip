@@ -1,0 +1,218 @@
+﻿@model IEnumerable<Entities.Concrete.Department>
+@{
+    ViewData["Title"] = "Departman Yönetimi";
+}
+
+
+<div class="content">
+    <!-- Başlık Alanı -->
+    <div class="page-header">
+        <h1><i class="fas fa-building me-3"></i> Departman Yönetimi</h1>
+        <p>Departman ekleyin, düzenleyin ve yönetin</p>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert-success">
+            <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i> @TempData["Error"]
+        </div>
+    }
+
+    <div class="mb-3">
+        <a href="/Department/Create" class="btn-ekle">
+            <i class="fas fa-plus"></i> Yeni Departman Ekle
+        </a>
+    </div>
+
+    <table id="departmentTable" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th><i class="fas fa-hashtag"></i> ID</th>
+                <th><i class="fas fa-building"></i> Departman Adı</th>
+                <th><i class="fas fa-align-left"></i> Açıklama</th>
+                <th><i class="fas fa-circle"></i> Durum</th>
+                <th><i class="fas fa-calendar"></i> Oluşturulma</th>
+                <th><i class="fas fa-cog"></i> İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td><strong>@item.Name</strong></td>
+                        <td>@(item.Description ?? "-")</td>
+                        <td>
+                            @if (item.IsActive)
+                            {
+                                <span class="badge-active"><i class="fas fa-check"></i> Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="badge-passive"><i class="fas fa-times"></i> Pasif</span>
+                            }
+                        </td>
+                        <td><span class="badge-date"><i class="fas fa-calendar-alt me-1"></i> @item.CreatedAt.ToString("dd.MM.yyyy")</span></td>
+                        <td>
+                            <a href="/Department/Edit/@item.Id" class="btn-duzenle">
+                                <i class="fas fa-edit"></i> Düzenle
+                            </a>
+                            <button onclick="deleteDepartment(@item.Id, '@item.Name')" class="btn-sil">
+                                <i class="fas fa-trash"></i> Sil
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            @* else
+            {
+                <tr>
+                    <td colspan="6" class="text-center">Henüz departman kaydı bulunmamaktadır.</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            } *@
+        </tbody>
+    </table>
+</div>
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+        $('#departmentTable').DataTable({
+        language: {
+        // url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/tr.json',
+        url: '/datatables/tr.json',
+        emptyTable: "Henüz pozisyon kaydı bulunmamaktadır"
+        },
+        dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+        "<'row'<'col-sm-12'tr>>" +
+        "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" +
+        "<'row'<'col-sm-12'B>>",
+       
+        buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i> Excel Verisi',
+                        className: 'btn btn-success btn-sm',
+                        exportOptions: { columns: [1, 2, 3, 4] }
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i> PDF İndir',
+                        className: 'btn btn-danger btn-sm',
+                        orientation: 'portrait', 
+                        pageSize: 'A4',
+                        title: '',
+                        exportOptions: { columns: [1, 2, 3, 4] },
+                        customize: function(doc) {
+                            var tblBody = doc.content.find(function(item) {
+                                return item.table;
+                            });
+
+                            if (tblBody) {
+                                tblBody.table.widths = ['10%', '25%', '35%', '15%', '15%'];
+                                tblBody.layout = {
+                                    hLineWidth: function(i) { return .5; },
+                                    vLineWidth: function(i) { return .5; },
+                                    hLineColor: function(i) { return '#cbd5e1'; },
+                                    vLineColor: function(i) { return '#cbd5e1'; },
+                                    paddingLeft: function(i) { return 8; },
+                                    paddingRight: function(i) { return 8; },
+                                    paddingTop: function(i) { return 8; },
+                                    paddingBottom: function(i) { return 8; }
+                                };
+                            }
+
+                            doc.pageMargins = [30, 60, 30, 40];
+
+                            doc['header'] = (function() {
+                                return {
+                                    columns: [
+                                        {
+                                            alignment: 'left',
+                                            text: 'DEPARTMAN LİSTESİ RAPORU',
+                                            fontSize: 14,
+                                            bold: true,
+                                            margin: [30, 20]
+                                        },
+                                        {
+                                            alignment: 'right',
+                                            text: 'Tarih: ' + new Date().toLocaleDateString('tr-TR'),
+                                            fontSize: 9,
+                                            margin: [0, 25, 30, 0]
+                                        }
+                                    ]
+                                };
+                            });
+
+                            doc.styles.tableHeader = {
+                                bold: true, fontSize: 10, color: 'white', fillColor: '#1e293b', alignment: 'center'
+                            };
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i> Yazdır',
+                         className: 'btn btn-secondary btn-sm',                     
+                        exportOptions: { columns: [1, 2, 3, 4] }
+                    }
+                ],
+        pageLength: 10,
+        responsive: true,
+        order: [[0, 'desc']]
+        });
+        });
+
+        function deleteDepartment(id, name) {
+        Swal.fire({
+        title: 'Departman Silinecek!',
+        html: `<div style="font-size:16px;"><b>${name}</b><br>departmanını silmek üzeresiniz!</div><div class="mt-2 text-danger">Bu işlem <b>GERİ ALINAMAZ</b>!</div>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-trash"></i> Evet, Sil!',
+        cancelButtonText: '<i class="fas fa-times"></i> İptal'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        Swal.fire({
+        title: 'İşlem yapılıyor...',
+        text: 'Lütfen bekleyin',
+        allowOutsideClick: false,
+        didOpen: () => {
+        Swal.showLoading();
+        }
+        });
+                    
+        $.ajax({
+        url: '/Department/Delete',
+        type: 'POST',
+        data: { id: id },
+        success: function(res) {
+        if (res.success) {
+        Swal.fire('Silindi!', res.message, 'success').then(() => location.reload());
+        } else {
+        Swal.fire('Hata!', res.message, 'error');
+        }
+        },
+        error: function() {
+        Swal.fire('Hata!', 'Bir sorun oluştu.', 'error');
+        }
+        });
+        }
+        });
+        }
+    </script>
+}

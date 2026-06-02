@@ -1,0 +1,785 @@
+﻿@using Entities.Enum
+@using TeknikServisTakip.Helpers
+@model Entities.Concrete.RepairItem
+@{
+    ViewData["Title"] = "Tamir Detayı";
+}
+
+@{
+    var statusEnum = (RepairStatusEnum)(Model.StatusId ?? 1);
+    var statusName = statusEnum.GetDisplayName();
+    var statusColor = statusEnum switch
+    {
+        RepairStatusEnum.UrunKaydedildi => "secondary",
+        RepairStatusEnum.ExpertizBekleniyor => "warning",
+        RepairStatusEnum.ExpertizeGonderildi => "info",
+        RepairStatusEnum.TeklifHazirlaniyor => "primary",
+        RepairStatusEnum.TeklifGonderildi => "info",
+        RepairStatusEnum.TeklifOnaylandi => "success",
+        RepairStatusEnum.IslemeAlindi => "primary",
+        RepairStatusEnum.Tamamlandi => "success",
+        RepairStatusEnum.TeslimEdildi => "dark",
+        _ => "secondary"
+    };
+
+    var currency = Model.Currency ?? "TRY";
+    var currencySymbol = CurrencyHelper.GetSymbol(currency);
+}
+
+
+<h1>
+    <i class="fas fa-info-circle"></i> Tamir Detayı
+</h1>
+<hr />
+
+<!-- 1. SATIR: Müşteri ve Ürün Bilgileri -->
+<div class="row align-items-stretch">
+    <div class="col-md-6 d-flex">
+        <div class="card detail-card w-100">
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-user"></i> Müşteri Bilgileri
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td class="detail-label" style="width: 40%">Takip Kodu:</td>
+                        <td class="detail-value"><strong>@Model.TrackingCode</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Müşteri No:</td>
+                        <td class="detail-value">@Model.CustomerNumber</td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Cari No:</td>
+                        <td class="detail-value">
+                            @if (!string.IsNullOrEmpty(Model.AppUser?.CariNo))
+                            {
+                                <span class="badge bg-info">@Model.AppUser.CariNo</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Firma Adı:</td>
+                        <td class="detail-value">
+                            @if (!string.IsNullOrEmpty(Model.AppUser?.CompanyName))
+                            {
+                                <strong class="text-primary">@Model.AppUser.CompanyName</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Müşteri Adı:</td>
+                        <td class="detail-value">@(Model.AppUser?.FullName ?? "Belirtilmemiş")</td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">E-posta:</td>
+                        <td class="detail-value">@(Model.AppUser?.Email ?? "Belirtilmemiş")</td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Telefon:</td>
+                        <td class="detail-value">@(Model.AppUser?.PhoneNumber ?? "Belirtilmemiş")</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 d-flex">
+        <div class="card detail-card w-100">
+            <div class="card-header bg-success text-white">
+                <i class="fas fa-laptop"></i> Ürün Bilgileri
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td class="detail-label" style="width: 40%">Ürün Adı:</td>
+                        <td class="detail-value">@Model.ProductName</td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Marka:</td>
+                        <td class="detail-value">@(Model.ProductBrand ?? "-")</td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Model:</td>
+                        <td class="detail-value">@(Model.ProductModel ?? "-")</td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Seri No:</td>
+                        <td class="detail-value">@(Model.SerialNumber ?? "-")</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. SATIR: Tamir Bilgileri ve Notlar -->
+<div class="row align-items-stretch mt-3">
+    <div class="col-md-6 d-flex">
+        <div class="card detail-card w-100">
+            <div class="card-header bg-warning text-dark">
+                <i class="fas fa-tools"></i> Tamir Bilgileri
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td class="detail-label" style="width: 40%">Personel:</td>
+                        <td class="detail-value">@(Model.Personel?.FullName ?? "Atanmamış")</td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Durum:</td>
+                        <td class="detail-value">
+                            <span class="badge bg-@statusColor">@statusName</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Ücret:</td>
+                        <td class="detail-value">@currencySymbol @Model.Price.ToString("N2") <small class="text-muted">(@currency)</small></td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Geliş Tarihi:</td>
+                        <td class="detail-value">@Model.ReceivedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                    </tr>
+                    @if (Model.StatusId == (int)RepairStatusEnum.TeslimEdildi && Model.DeliveryDate.HasValue)
+                    {
+                        <tr>
+                            <td class="detail-label">Teslim Tarihi:</td>
+                            <td class="detail-value"><strong class="text-success">@Model.DeliveryDate.Value.ToString("dd.MM.yyyy HH:mm")</strong></td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td class="detail-label">Tahmini Teslim:</td>
+                            <td class="detail-value">@(Model.EstimatedDeliveryDate?.ToString("dd.MM.yyyy") ?? "Belirtilmemiş")</td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 d-flex">
+        <div class="card detail-card w-100">
+            <div class="card-header bg-secondary text-white">
+                <i class="fas fa-sticky-note"></i> Notlar
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td class="detail-label" style="width: 40%">Arıza Açıklaması:</td>
+                        <td class="detail-value">@Model.ProblemDescription</td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Müşteri Notu:</td>
+                        <td class="detail-value">@(Model.CustomerNote ?? "-")</td>
+                    </tr>
+                    <tr>
+                        <td class="detail-label">Personel Notu:</td>
+                        <td class="detail-value">@(Model.InternalNote ?? "-")</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KULLANILAN MALZEMELER -->
+<div class="row mt-3">
+    <div class="col-md-12">
+        <div class="card detail-card">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-cubes"></i> Kullanılan Malzemeler</h5>
+                <button type="button" class="btn btn-light btn-sm" onclick="openAddMaterialModal(@Model.Id)">
+                    <i class="fas fa-plus"></i> Malzeme Ekle
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Ürün Adı</th>
+                                <th>Miktar</th>
+                                <th>Açıklama</th>
+                                <th>Kullanım Tarihi</th>
+                                <th>Kullanan Personel</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="materialsList">
+                            <tr><td colspan="6" class="text-center">Yükleniyor...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Çoklu Resim Galerisi -->
+@{
+    var beforeImages = Model.RepairImages?.Where(i => i.ImageType == "Before").OrderBy(i => i.Order).ToList();
+    var afterImages = Model.RepairImages?.Where(i => i.ImageType == "After").OrderBy(i => i.Order).ToList();
+}
+
+<div class="row mt-3">
+    @if (beforeImages != null && beforeImages.Any())
+    {
+        <div class="col-md-6">
+            <div class="card detail-card">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-camera"></i> Tamir Öncesi Resimler (@beforeImages.Count)
+                </div>
+                <div class="card-body">
+                    <div class="image-gallery">
+                        @foreach (var img in beforeImages)
+                        {
+                            <img src="@img.ImagePath" class="resim-thumb"
+                                 onclick="openSlideshow('before', @beforeImages.IndexOf(img))"
+                                 title="Öncesi Resim - @(beforeImages.IndexOf(img) + 1)/@beforeImages.Count" />
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (afterImages != null && afterImages.Any())
+    {
+        <div class="col-md-6">
+            <div class="card detail-card">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-check-circle"></i> Tamir Sonrası Resimler (@afterImages.Count)
+                </div>
+                <div class="card-body">
+                    <div class="image-gallery">
+                        @foreach (var img in afterImages)
+                        {
+                            <img src="@img.ImagePath" class="resim-thumb"
+                                 onclick="openSlideshow('after', @afterImages.IndexOf(img))"
+                                 title="Sonrası Resim - @(afterImages.IndexOf(img) + 1)/@afterImages.Count" />
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if ((beforeImages == null || !beforeImages.Any()) && (afterImages == null || !afterImages.Any()))
+{
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card detail-card">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-image"></i> Resimler
+                </div>
+                <div class="card-body text-center">
+                    <p class="text-muted"><i class="fas fa-ban"></i> Henüz resim eklenmemiştir.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="mt-4 text-center">
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+        <i class="fas fa-edit"></i> Düzenle
+    </a>
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Listeye Dön
+    </a>
+</div>
+
+<!-- Slayt Modal -->
+<div id="slideshowModal" class="slideshow-modal">
+    <span class="close-slideshow" onclick="closeSlideshow()">&times;</span>
+    <button class="prev" onclick="changeSlide(-1)">&#10094;</button>
+    <button class="next" onclick="changeSlide(1)">&#10095;</button>
+    <div class="modal-content">
+        <img id="slideImage" class="slide-image" src="" alt="Tamir resmi" />
+    </div>
+    <span id="slideCounter" class="image-counter"></span>
+    <button id="slideDownloadBtn" class="download-btn"><i class="fas fa-download"></i> Resmi İndir</button>
+</div>
+
+@section Scripts {
+    <script>
+        var currentImages = [];
+        var currentIndex = 0;
+        var currentType = '';
+
+        @{
+                var beforeImagesJson = beforeImages != null ? Newtonsoft.Json.JsonConvert.SerializeObject(beforeImages.Select(i => i.ImagePath)) : "[]";
+                var afterImagesJson = afterImages != null ? Newtonsoft.Json.JsonConvert.SerializeObject(afterImages.Select(i => i.ImagePath)) : "[]";
+        }
+
+        var beforeImagesList = @Html.Raw(beforeImagesJson);
+        var afterImagesList = @Html.Raw(afterImagesJson);
+
+        function openSlideshow(type, index) {
+            currentType = type;
+            if (type === 'before') {
+                currentImages = beforeImagesList;
+            } else {
+                currentImages = afterImagesList;
+            }
+            currentIndex = index;
+            updateSlide();
+            document.getElementById('slideshowModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function updateSlide() {
+            if (currentImages && currentImages.length > 0 && currentIndex >= 0 && currentIndex < currentImages.length) {
+                var imgPath = currentImages[currentIndex];
+                document.getElementById('slideImage').src = imgPath;
+                document.getElementById('slideCounter').innerHTML = (currentIndex + 1) + ' / ' + currentImages.length;
+                document.getElementById('slideDownloadBtn').onclick = function() {
+                    downloadImage(imgPath);
+                };
+            }
+        }
+
+        function changeSlide(direction) {
+            if (currentImages && currentImages.length > 0) {
+                currentIndex += direction;
+                if (currentIndex < 0) currentIndex = currentImages.length - 1;
+                if (currentIndex >= currentImages.length) currentIndex = 0;
+                updateSlide();
+            }
+        }
+
+        function closeSlideshow() {
+            document.getElementById('slideshowModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function downloadImage(url) {
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const link = document.createElement('a');
+                    const objectURL = URL.createObjectURL(blob);
+                    link.href = objectURL;
+                    link.download = url.split('/').pop() || 'resim.jpg';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(objectURL);
+                    Swal.fire('Başarılı!', 'Resim indiriliyor...', 'success');
+                })
+                .catch(() => {
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = url.split('/').pop() || 'resim.jpg';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    Swal.fire('Başarılı!', 'Resim indiriliyor...', 'success');
+                });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            var modal = document.getElementById('slideshowModal');
+            if (modal.style.display === 'flex') {
+                if (e.key === 'Escape') closeSlideshow();
+                if (e.key === 'ArrowLeft') changeSlide(-1);
+                if (e.key === 'ArrowRight') changeSlide(1);
+                e.preventDefault();
+            }
+        });
+
+        document.getElementById('slideshowModal').addEventListener('click', function(e) {
+            if (e.target === this) closeSlideshow();
+        });
+    </script>
+
+    <script>
+        // ========== MALZEME YÖNETİMİ ==========
+        function loadMaterials(repairId) {
+            $.get('/Repair/GetMaterials?repairId=' + repairId, function(materials) {
+                var html = '';
+                if (materials.length === 0) {
+                    html = '<tr><td colspan="6" class="text-center text-muted">Henüz malzeme kullanılmamış.</td></tr>';
+                } else {
+                    for (var i = 0; i < materials.length; i++) {
+                        var m = materials[i];
+                        var materialDisplay = m.materialType === 'External' ?
+                            '<span class="badge bg-info">' + (m.externalProductName || m.productName) + '</span>' :
+                            m.productName;
+                        var typeBadge = m.materialType === 'External' ?
+                            '<span class="badge bg-secondary ms-1">Dışarıdan</span>' : '';
+
+                        html += '<tr>' +
+                            '<td>' + materialDisplay + ' ' + typeBadge + '</td>' +
+                            '<td><span class="badge bg-secondary" onclick="editMaterial(' + m.id + ', ' + m.quantity + ', \'' + (m.description || '').replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' + m.quantity + '</span></td>' +
+                            '<td>' + (m.description || '-') + '</td>' +
+                            '<td>' + m.usedAt + '</td>' +
+                            '<td>' + (m.usedBy || '-') + '</td>' +
+                            '<td>' +
+                                '<button onclick="editMaterial(' + m.id + ', ' + m.quantity + ', \'' + (m.description || '').replace(/'/g, "\\'") + '\')" class="btn btn-sm btn-warning me-1" title="Düzenle"><i class="fas fa-edit"></i></button>' +
+                                '<button onclick="deleteMaterial(' + m.id + ')" class="btn btn-sm btn-danger" title="Sil"><i class="fas fa-trash"></i></button>' +
+                            '</td>' +
+                            '</tr>';
+                    }
+                }
+                $('#materialsList').html(html);
+            }).fail(function() {
+                $('#materialsList').html('<tr><td colspan="6" class="text-center text-danger">Malzemeler yüklenirken hata oluştu.</td></tr>');
+            });
+        }
+
+        function editMaterial(id, quantity, description) {
+            Swal.fire({
+                title: 'Malzeme Düzenle',
+                html: `
+                    <div class="text-start">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Miktar</label>
+                            <input type="number" id="editQuantity" class="form-control" value="${quantity}" min="1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Açıklama</label>
+                            <textarea id="editDescription" class="form-control" rows="2">${description}</textarea>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Kaydet',
+                cancelButtonText: 'İptal',
+                confirmButtonColor: '#28a745',
+                preConfirm: () => {
+                    const newQuantity = $('#editQuantity').val();
+                    if (!newQuantity || newQuantity <= 0) {
+                        Swal.showValidationMessage('Geçerli bir miktar girin!');
+                        return false;
+                    }
+                    return {
+                        quantity: newQuantity,
+                        description: $('#editDescription').val()
+                    };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/Repair/UpdateMaterial',
+                        type: 'POST',
+                        data: {
+                            id: id,
+                            quantity: result.value.quantity,
+                            description: result.value.description
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Başarılı!', res.message, 'success');
+                                loadMaterials(@Model.Id);
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu!', 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        function deleteMaterial(id) {
+            Swal.fire({
+                title: 'Malzemeyi silmek istiyor musunuz?',
+                text: 'Bu işlem geri alınamaz!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/Repair/DeleteMaterial',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success');
+                                loadMaterials(@Model.Id);
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir sorun oluştu!', 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        function openAddMaterialModal(repairId) {
+            $.get('/Stock/GetProductsForSelect')
+                .done(function(products) {
+                    var productOptions = '';
+                    for (var i = 0; i < products.length; i++) {
+                        var p = products[i];
+                        productOptions += '<option value="' + p.id + '" data-stock="' + p.quantity + '" data-name="' + p.productName + '">' +
+                            p.productName + ' | Stok: ' + p.quantity +
+                            (p.productCode ? ' | Kod: ' + p.productCode : '') +
+                            (p.serialNo ? ' | SN: ' + p.serialNo : '') +
+                            (p.brand ? ' | ' + p.brand : '') +
+                            (p.model ? ' ' + p.model : '') + '</option>';
+                    }
+
+                    Swal.fire({
+                        title: '<i class="fas fa-cubes text-success"></i> Malzeme Ekle',
+                        html: '<div class="text-start">' +
+                            '<div class="mb-3">' +
+                            '<label class="form-label fw-bold">🔍 Ürün Ara</label>' +
+                            '<div class="input-group">' +
+                            '<input type="text" id="productSearch" class="form-control" placeholder="Ürün adı, kodu, seri no, marka, model ile ara...">' +
+                            '<span class="input-group-text" id="searchResultCount">0 ürün</span>' +
+                            '</div>' +
+                            '</div>' +
+                            '<div class="mb-3">' +
+                            '<label class="form-label fw-bold">📦 Ürün Seç <span class="text-danger">*</span></label>' +
+                            '<select id="productSelect" class="form-select" size="8" style="height: auto;">' +
+                            '<option value="">-- Ürün Seçin --</option>' +
+                            productOptions +
+                            '</select>' +
+                            '<div id="noProductWarning" class="text-danger small mt-1" style="display:none;">⚠️ Aranan ürün bulunamadı!</div>' +
+                            '<div id="selectedProductInfo" class="text-success small mt-1" style="display:none;"></div>' +
+                            '</div>' +
+                            '<div class="text-center mb-3">' +
+                            '<hr class="my-2">' +
+                            '<button type="button" id="externalMaterialBtn" class="btn btn-outline-secondary btn-sm w-100">' +
+                            '<i class="fas fa-box-open"></i> Dışarıdan Malzeme Ekle (Stok düşmez)</button>' +
+                            '</div>' +
+                            '<div id="externalMaterialPanel" class="mb-3" style="display:none;">' +
+                            '<div class="alert alert-info p-2 small">📌 Dışarıdan eklenen malzemeler stoktan düşmez. Sadece tamir kaydında görünür.</div>' +
+                            '<label class="form-label fw-bold">Malzeme Adı <span class="text-danger">*</span></label>' +
+                            '<input type="text" id="externalProductName" class="form-control" placeholder="Malzeme adı girin">' +
+                            '</div>' +
+                            '<div class="mb-3">' +
+                            '<label class="form-label fw-bold">Miktar <span class="text-danger">*</span></label>' +
+                            '<input type="number" id="quantityInput" class="form-control" placeholder="Miktar" min="1">' +
+                            '</div>' +
+                            '<div class="mb-3">' +
+                            '<label class="form-label fw-bold">Açıklama</label>' +
+                            '<textarea id="descInput" class="form-control" rows="2" placeholder="Kullanım açıklaması..."></textarea>' +
+                            '</div>' +
+                            '</div>',
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="fas fa-check-circle me-1"></i> Malzeme Kullan',
+                        cancelButtonText: 'İptal',
+                        confirmButtonColor: '#28a745',
+                        width: '700px',
+                        didOpen: function() {
+                            var select = $('#productSelect');
+                            var searchInput = $('#productSearch');
+                            var searchResultCount = $('#searchResultCount');
+                            var noProductWarning = $('#noProductWarning');
+                            var selectedProductInfo = $('#selectedProductInfo');
+                            var externalMaterialBtn = $('#externalMaterialBtn');
+                            var externalMaterialPanel = $('#externalMaterialPanel');
+                            var normalModeDiv = $('#productSelect').closest('.mb-3');
+                            var searchModeDiv = $('#productSearch').closest('.mb-3');
+
+                            var isExternalMode = false;
+
+                            function updateUIMode() {
+                                if (isExternalMode) {
+                                    externalMaterialPanel.slideDown();
+                                    externalMaterialBtn.html('<i class="fas fa-arrow-left"></i> Normal Moda Dön');
+                                    externalMaterialBtn.removeClass('btn-outline-secondary').addClass('btn-primary');
+                                    select.prop('disabled', true);
+                                    searchInput.prop('disabled', true);
+                                    normalModeDiv.hide();
+                                    searchModeDiv.hide();
+                                    selectedProductInfo.hide();
+                                    noProductWarning.hide();
+                                    $('#externalProductName').focus();
+                                } else {
+                                    externalMaterialPanel.slideUp();
+                                    externalMaterialBtn.html('<i class="fas fa-box-open"></i> Dışarıdan Malzeme Ekle (Stok düşmez)');
+                                    externalMaterialBtn.removeClass('btn-primary').addClass('btn-outline-secondary');
+                                    select.prop('disabled', false);
+                                    searchInput.prop('disabled', false);
+                                    normalModeDiv.show();
+                                    searchModeDiv.show();
+                                    selectedProductInfo.hide();
+                                    select.val('').trigger('change');
+                                }
+                            }
+
+                            externalMaterialBtn.on('click', function() {
+                                isExternalMode = !isExternalMode;
+                                updateUIMode();
+                            });
+
+                            function filterProducts() {
+                                if (isExternalMode) return;
+
+                                var searchTerm = searchInput.val().toLowerCase();
+                                var visibleCount = 0;
+                                var options = select.find('option');
+
+                                options.each(function() {
+                                    var $this = $(this);
+                                    if ($this.val() === '') return;
+                                    if ($this.text().toLowerCase().indexOf(searchTerm) > -1 || searchTerm === '') {
+                                        $this.show();
+                                        visibleCount++;
+                                    } else {
+                                        $this.hide();
+                                    }
+                                });
+
+                                searchResultCount.text(visibleCount + ' ürün');
+
+                                if (visibleCount === 0 && searchTerm !== '') {
+                                    noProductWarning.show();
+                                    selectedProductInfo.hide();
+                                } else {
+                                    noProductWarning.hide();
+                                }
+
+                                var firstVisible = select.find('option:visible:first');
+                                if (firstVisible.length && firstVisible.val() !== '') {
+                                    select.val(firstVisible.val()).trigger('change');
+                                }
+                            }
+
+                            function updateSelectedInfo() {
+                                if (isExternalMode) return;
+
+                                var selectedOption = select.find('option:selected');
+                                if (selectedOption.val() && selectedOption.val() !== '') {
+                                    var stock = selectedOption.data('stock');
+                                    var name = selectedOption.data('name');
+                                    selectedProductInfo.html('<i class="fas fa-check-circle"></i> Seçilen: ' + name + ' (Stok: ' + stock + ')').show();
+                                    noProductWarning.hide();
+                                    $('#quantityInput').attr('max', stock);
+                                    $('#quantityInput').attr('placeholder', 'Miktar (Maks: ' + stock + ')');
+                                } else {
+                                    selectedProductInfo.hide();
+                                    $('#quantityInput').removeAttr('max');
+                                    $('#quantityInput').attr('placeholder', 'Miktar');
+                                }
+                            }
+
+                            searchInput.on('keyup', filterProducts);
+                            select.on('change', updateSelectedInfo);
+                            filterProducts();
+
+                            $('#quantityInput, #descInput, #productSearch, #externalProductName').on('keypress', function(e) {
+                                if (e.key === 'Enter') {
+                                    Swal.getConfirmButton().click();
+                                }
+                            });
+                        },
+                        preConfirm: function() {
+                            var isExternal = $('#externalMaterialBtn').hasClass('btn-primary');
+                            var selection = $('#productSelect').val();
+                            var quantity = $('#quantityInput').val();
+
+                            if (!isExternal && !selection) {
+                                Swal.showValidationMessage('Lütfen bir ürün seçin!');
+                                return false;
+                            }
+                            if (!quantity || quantity <= 0) {
+                                Swal.showValidationMessage('Geçerli bir miktar girin!');
+                                return false;
+                            }
+
+                            if (isExternal) {
+                                var externalName = $('#externalProductName').val();
+                                if (!externalName) {
+                                    Swal.showValidationMessage('Lütfen malzeme adını girin!');
+                                    return false;
+                                }
+                                return {
+                                    isExternal: true,
+                                    externalName: externalName,
+                                    quantity: quantity,
+                                    description: $('#descInput').val()
+                                };
+                            } else {
+                                var selectedOption = $('#productSelect option:selected');
+                                var stock = selectedOption.data('stock') || 0;
+                                if (parseInt(quantity) > stock) {
+                                    Swal.showValidationMessage('Yetersiz stok! Mevcut stok: ' + stock);
+                                    return false;
+                                }
+                                return {
+                                    isExternal: false,
+                                    productId: selection,
+                                    quantity: quantity,
+                                    description: $('#descInput').val()
+                                };
+                            }
+                        }
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                                title: 'İşlem Yapılıyor...',
+                                text: 'Malzeme kullanımı kaydediliyor',
+                                allowOutsideClick: false,
+                                didOpen: function() {
+                                    Swal.showLoading();
+                                }
+                            });
+
+                            var postData = {
+                                repairId: repairId,
+                                quantity: result.value.quantity,
+                                description: result.value.description
+                            };
+
+                            if (result.value.isExternal) {
+                                postData.isExternal = true;
+                                postData.externalProductName = result.value.externalName;
+                            } else {
+                                postData.isExternal = false;
+                                postData.productId = result.value.productId;
+                            }
+
+                            $.ajax({
+                                url: '/Repair/AddMaterial',
+                                type: 'POST',
+                                data: postData,
+                                success: function(res) {
+                                    if (res.success) {
+                                        Swal.fire('Başarılı!', res.message, 'success');
+                                        loadMaterials(repairId);
+                                    } else {
+                                        Swal.fire('Hata!', res.message, 'error');
+                                    }
+                                },
+                                error: function(xhr) {
+                                    var errorMsg = xhr.responseJSON?.message || 'Bir sorun oluştu!';
+                                    Swal.fire('Hata!', errorMsg, 'error');
+                                }
+                            });
+                        }
+                    });
+                })
+                .fail(function() {
+                    Swal.fire('Hata!', 'Ürün listesi yüklenemedi!', 'error');
+                });
+        }
+
+        $(document).ready(function() {
+            loadMaterials(@Model.Id);
+        });
+    </script>
+}

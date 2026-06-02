@@ -1,0 +1,503 @@
+﻿@{
+    ViewData["Title"] = "Müşteri Bazlı Rapor";
+}
+
+<style>
+    /* ==================== LIGHT MODE ==================== */
+    :root,
+    [data-theme="light"] {
+        --bg-card: #ffffff;
+        --bg-table-header: #f8fafc;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+        --gradient-start: #f8fafc;
+        --gradient-end: #f1f5f9;
+        --rank-1-bg: #fbbf24;
+        --rank-1-text: #92400e;
+        --rank-2-bg: #e5e7eb;
+        --rank-2-text: #4b5563;
+        --rank-3-bg: #fdba74;
+        --rank-3-text: #9a3412;
+    }
+
+    /* ==================== DARK MODE ==================== */
+    [data-theme="dark"] {
+        --bg-card: #1e1e2f;
+        --bg-table-header: #1a1a2e;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --border-color: #2c2c3a;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+        --gradient-start: #1a1a2e;
+        --gradient-end: #16213e;
+        --rank-1-bg: #b45309;
+        --rank-1-text: #fef3c7;
+        --rank-2-bg: #4b5563;
+        --rank-2-text: #e5e7eb;
+        --rank-3-bg: #c2410c;
+        --rank-3-text: #ffedd5;
+    }
+
+    .report-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s;
+    }
+
+    .stat-number {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-top: 5px;
+    }
+
+    .stat-box {
+        padding: 20px;
+        background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+        border-radius: 16px;
+        text-align: center;
+        transition: transform 0.2s;
+        height: 100%;
+    }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+        }
+
+    .filter-group {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .filter-item {
+        flex: 1;
+        min-width: 150px;
+    }
+
+        .filter-item label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+            color: var(--text-secondary);
+        }
+
+        .filter-item input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .data-table th {
+            background: var(--bg-table-header);
+            font-weight: 600;
+        }
+
+    .text-end {
+        text-align: right;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .rank-badge {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    .rank-1 {
+        background: var(--rank-1-bg);
+        color: var(--rank-1-text);
+    }
+
+    .rank-2 {
+        background: var(--rank-2-bg);
+        color: var(--rank-2-text);
+    }
+
+    .rank-3 {
+        background: var(--rank-3-bg);
+        color: var(--rank-3-text);
+    }
+
+    .customer-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 15px;
+        border: 1px solid var(--border-color);
+        transition: all 0.2s;
+        height: 100%;
+    }
+
+        .customer-card:hover {
+            border-color: #10b981;
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-2px);
+        }
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Başlık -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="fas fa-building me-2 text-primary"></i> Müşteri Bazlı Rapor</h2>
+            <p class="text-muted">Müşteri bazında tamir geçmişi ve gelir analizleri</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-2"></i> Yenile
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtreler -->
+    <div class="report-card mb-4">
+        <div class="filter-group">
+            <div class="filter-item">
+                <label><i class="fas fa-calendar me-1"></i> Başlangıç Tarihi</label>
+                <input type="date" id="startDate" class="form-control" />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-calendar me-1"></i> Bitiş Tarihi</label>
+                <input type="date" id="endDate" class="form-control" />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-user me-1"></i> Müşteri Adı</label>
+                <input type="text" id="customerNameFilter" class="form-control" placeholder="Müşteri ara..." />
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-id-card me-1"></i> Müşteri No</label>
+                <input type="text" id="customerNumberFilter" class="form-control" placeholder="Müşteri No ara..." />
+            </div>
+            <div class="filter-item">
+                <button class="btn btn-primary w-100" id="filterBtn">
+                    <i class="fas fa-search me-2"></i> Filtrele
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number" id="totalCustomers">0</div>
+                <div class="stat-label">Toplam Müşteri</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number" id="totalRepairs">0</div>
+                <div class="stat-label">Toplam Tamir</div>
+            </div>
+        </div>
+        <div class="col-md-3" id="revenueCard">
+            <div class="stat-box" id="revenueContainer">
+                <div class="stat-number" id="totalRevenue">₺0</div>
+                <div class="stat-label">Toplam Gelir</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number" id="avgRepairsPerCustomer">0</div>
+                <div class="stat-label">Ortalama Tamir/Müşteri</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- En Çok İş Yapan Müşteriler (Top 5) -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <h5 class="mb-3"><i class="fas fa-crown me-2 text-warning"></i> En Çok İş Yapan Müşteriler</h5>
+        </div>
+        <div id="topCustomersContainer" class="row g-3">
+            <div class="col-12 text-center text-muted py-4">Veri yükleniyor...</div>
+        </div>
+    </div>
+
+    <!-- Müşteri Listesi Tablosu -->
+    <div class="report-card">
+        <h5 class="mb-3"><i class="fas fa-list me-2 text-primary"></i> Tüm Müşteriler</h5>
+        <div class="table-responsive">
+            <table class="data-table" id="customerTable">
+                <thead>
+                    <tr>
+                        <th>Müşteri Adı</th>
+                        <th>Müşteri No</th>
+                        <th class="text-center">Toplam Tamir</th>
+                        <th class="text-center">Tamamlanan</th>
+                        <th class="text-center">İşlemde</th>
+                        <th class="text-end">Toplam Gelir</th>
+                        <th class="text-end">Ortalama Gelir</th>
+                        <th class="text-center">Son İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTableBody"></tbody>
+                <table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2" id="paginationContainer" style="display: none;">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="form-label mb-0 small">Sayfa başına:</label>
+                        <select id="pageSizeSelect" class="form-select form-select-sm w-auto" style="width: 80px;">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="text-muted small" id="paginationInfo"></span>
+                    </div>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="paginationList"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        @section Scripts {
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                const currencySymbols = { 'TRY': '₺', 'USD': '$', 'EUR': '€', 'GBP': '£' };
+                let currentPage = 1;
+                let currentPageSize = 20;
+                let totalPages = 1;
+
+                function formatCurrency(amount, currency = 'TRY') {
+                const symbol = currencySymbols[currency] || '₺';
+                return symbol + amount.toFixed(2);
+                }
+
+                $(document).ready(function() {
+                var today = new Date();
+                var oneYearAgo = new Date();
+                oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+                $('#startDate').val(oneYearAgo.toISOString().split('T')[0]);
+                $('#endDate').val(today.toISOString().split('T')[0]);
+
+                $('#pageSizeSelect').on('change', function() {
+                currentPageSize = parseInt($(this).val());
+                currentPage = 1;
+                loadMusteriRaporu();
+                });
+
+                loadMusteriRaporu();
+
+                $('#filterBtn').click(function() {
+                currentPage = 1;
+                loadMusteriRaporu();
+                });
+                });
+
+                function loadMusteriRaporu() {
+                var data = {
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                customerName: $('#customerNameFilter').val(),
+                customerNumber: $('#customerNumberFilter').val(),
+                page: currentPage,
+                pageSize: currentPageSize
+                };
+
+                $.get('/Rapor/GetMusteriBazliRaporu', data, function(res) {
+                // Kartlar
+                $('#totalCustomers').text(res.totalStats.totalCustomers || 0);
+                $('#totalRepairs').text(res.totalStats.totalRepairs || 0);
+                $('#avgRepairsPerCustomer').text((res.totalStats.avgRepairsPerCustomer || 0).toFixed(1));
+
+                // Toplam Gelir - Her para birimi AYRI KART olarak
+                if (res.totalStats.totalRevenueByCurrency && res.totalStats.totalRevenueByCurrency.length > 0) {
+                var revenueHtml = '<div class="row g-2">';
+                $.each(res.totalStats.totalRevenueByCurrency, function(i, item) {
+                revenueHtml += `
+                <div class="col-6 col-md-4">
+                <div class="text-center p-2">
+                <div class="stat-number" style="font-size: 20px;">${formatCurrency(item.total, item.currency)}</div>
+                <div class="stat-label" style="font-size: 11px;">${item.currency}</div>
+                </div>
+                </div>
+                `;
+                });
+                revenueHtml += '</div>';
+                $('#revenueContainer').html(revenueHtml);
+                } else {
+                $('#revenueContainer').html('<div class="stat-number">₺0</div><div class="stat-label">Toplam Gelir</div>');
+                }
+
+                // Top 5 Müşteriler
+                var topContainer = $('#topCustomersContainer');
+                topContainer.empty();
+                if (res.topCustomers && res.topCustomers.length > 0) {
+                var row = $('<div class="row g-3"></div>');
+                $.each(res.topCustomers, function(i, c) {
+                var rankClass = i == 0 ? 'rank-1' : (i == 1 ? 'rank-2' : (i == 2 ? 'rank-3' : ''));
+
+                var revenueText = '';
+                if (c.revenueByCurrency && c.revenueByCurrency.length > 0) {
+                $.each(c.revenueByCurrency, function(j, rev) {
+                revenueText += `${formatCurrency(rev.total, rev.currency)} `;
+                });
+                } else {
+                revenueText = '₺0';
+                }
+
+                topContainer.append(`
+                <div class="col-md-4 col-lg-3">
+                <div class="customer-card">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="rank-badge ${rankClass}">${i+1}</span>
+                <strong class="fs-6">${c.customerName}</strong>
+                </div>
+                <div class="small text-muted">${c.customerNumber}</div>
+                <div class="mt-2">
+                <div class="d-flex justify-content-between">
+                <span class="text-muted">Tamir:</span>
+                <span class="fw-bold">${c.totalRepairs}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                <span class="text-muted">Gelir:</span>
+                <span class="fw-bold text-success">${revenueText}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                <span class="text-muted">Son İşlem:</span>
+                <span>${new Date(c.lastRepair).toLocaleDateString()}</span>
+                </div>
+                </div>
+                </div>
+                </div>
+                `);
+                });
+                } else {
+                topContainer.html('<div class="col-12 text-center text-muted py-4">Veri bulunamadı</div>');
+                }
+
+                // Müşteri Tablosu
+                var tbody = $('#customerTableBody');
+                tbody.empty();
+                if (!res.customerStats || res.customerStats.length === 0) {
+                tbody.html('运转<td colspan="8" class="text-center">Veri bulunamadı<\/td><\/tr>');
+                $('#paginationContainer').hide();
+                return;
+                }
+
+                $.each(res.customerStats, function(i, c) {
+                var revenueText = '';
+                if (c.revenueByCurrency && c.revenueByCurrency.length > 0) {
+                $.each(c.revenueByCurrency, function(j, rev) {
+                revenueText += `${formatCurrency(rev.total, rev.currency)} `;
+                });
+                } else {
+                revenueText = '₺0';
+                }
+
+                var avgText = '';
+                if (c.avgRevenueByCurrency && c.avgRevenueByCurrency.length > 0) {
+                $.each(c.avgRevenueByCurrency, function(j, avg) {
+                avgText += `${formatCurrency(avg.avg, avg.currency)} `;
+                });
+                } else {
+                avgText = '₺0';
+                }
+
+                tbody.append(`
+                <tr>
+                <td><strong>${c.customerName}<\/strong><\/td>
+                <td>${c.customerNumber}<\/td>
+                <td class="text-center"><span class="badge bg-primary">${c.totalRepairs}<\/span><\/td>
+                <td class="text-center"><span class="badge bg-success">${c.completedRepairs}<\/span><\/td>
+                <td class="text-center"><span class="badge bg-warning">${c.inProgressRepairs}<\/span><\/td>
+                <td class="text-end">${revenueText}<\/td>
+                <td class="text-end">${avgText}<\/td>
+                <td class="text-center">${new Date(c.lastRepair).toLocaleDateString()}<\/td>
+                </tr>
+                `);
+                });
+
+                // Pagination
+                if (res.pagination && res.pagination.totalPages > 1) {
+                currentPage = res.pagination.currentPage;
+                totalPages = res.pagination.totalPages;
+
+                $('#paginationInfo').text(`Toplam ${res.pagination.totalCount} kayıt, Sayfa ${currentPage} / ${totalPages}`);
+                $('#paginationContainer').show();
+
+                var paginationHtml = '';
+                if (currentPage > 1) {
+                paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="1">«</a></li>`;
+                paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage - 1}">‹</a></li>`;
+                }
+
+                var startPage = Math.max(1, currentPage - 2);
+                var endPage = Math.min(totalPages, startPage + 4);
+                if (endPage - startPage < 4 && startPage > 1) {
+                startPage = Math.max(1, endPage - 4);
+                }
+
+                for (var i = startPage; i <= endPage; i++) {
+                paginationHtml += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+                }
+
+                if (currentPage < totalPages) {
+                paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage + 1}">›</a></li>`;
+                paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${totalPages}">»</a></li>`;
+                }
+
+                $('#paginationList').html(paginationHtml);
+
+                $('.page-link[data-page]').off('click').on('click', function(e) {
+                e.preventDefault();
+                var page = parseInt($(this).data('page'));
+                if (!isNaN(page) && page !== currentPage) {
+                currentPage = page;
+                loadMusteriRaporu();
+                }
+                });
+                } else {
+                $('#paginationContainer').hide();
+                }
+                }).fail(function() {
+                console.log('Müşteri raporu yüklenemedi');
+                $('#totalCustomers').text('0');
+                $('#totalRepairs').text('0');
+                $('#totalRevenue').text('₺0');
+                $('#avgRepairsPerCustomer').text('0');
+                $('#paginationContainer').hide();
+                });
+                }
+            </script>
+        }

@@ -1,0 +1,323 @@
+﻿@{
+    ViewData["Title"] = "Gelir Raporu";
+    var currentYear = DateTime.Now.Year;
+}
+
+<style>
+    /* ==================== LIGHT MODE ==================== */
+    :root,
+    [data-theme="light"] {
+        --bg-card: #ffffff;
+        --bg-table-header: #f8fafc;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+        --gradient-start: #f8fafc;
+        --gradient-end: #f1f5f9;
+    }
+
+    /* ==================== DARK MODE ==================== */
+    [data-theme="dark"] {
+        --bg-card: #1e1e2f;
+        --bg-table-header: #1a1a2e;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --border-color: #2c2c3a;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+        --gradient-start: #1a1a2e;
+        --gradient-end: #16213e;
+    }
+
+    .report-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s;
+    }
+
+    .stat-number {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-top: 5px;
+    }
+
+    .stat-box {
+        padding: 20px;
+        background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+        border-radius: 12px;
+        text-align: center;
+        transition: transform 0.2s;
+    }
+
+        .stat-box:hover {
+            transform: translateY(-2px);
+        }
+
+    .year-select {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        border-radius: 20px;
+        padding: 8px 16px;
+        min-width: 120px;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .data-table th {
+            background: var(--bg-table-header);
+            font-weight: 600;
+        }
+
+    .text-end {
+        text-align: right;
+    }
+
+    .chart-container {
+        min-height: 420px;
+    }
+
+        .chart-container canvas {
+            max-height: 350px;
+        }
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Başlık -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="fas fa-chart-line me-2 text-success"></i> Gelir Raporu</h2>
+            <p class="text-muted">Aylık ve yıllık gelir analizleri</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-2"></i> Yenile
+            </button>
+        </div>
+    </div>
+
+    <!-- Yıl Seçici (Dropdown) -->
+    <div class="report-card mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold"><i class="fas fa-calendar me-2"></i> Yıl Seçin:</span>
+            <select id="yearSelect" class="year-select">
+                @for (int i = currentYear - 4; i <= currentYear + 1; i++)
+                {
+                    <option value="@i" selected="@(i == currentYear)">@i Yılı</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <!-- Para Birimi Bazında Gelir Kartları -->
+    <div class="row g-4 mb-4" id="revenueByCurrencyRow" style="display: none;">
+        <div class="col-12">
+            <div class="report-card">
+                <h5 class="mb-3"><i class="fas fa-money-bill-wave me-2 text-primary"></i> Para Birimlerine Göre Gelir</h5>
+                <div class="row" id="revenueByCurrencyContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="stat-box">
+                <div class="stat-number" id="totalRevenue">0</div>
+                <div class="stat-label">Toplam Gelir</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-box">
+                <div class="stat-number" id="totalRepairs">0</div>
+                <div class="stat-label">Toplam Tamir</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-box">
+                <div class="stat-number" id="avgRevenue">0</div>
+                <div class="stat-label">Ortalama Gelir / Tamir</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grafikler -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="report-card chart-container">
+                <h5 class="mb-3"><i class="fas fa-chart-bar me-2 text-primary"></i> Aylık Gelir Grafiği</h5>
+                <canvas id="monthlyRevenueChart" style="width: 100%;"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="report-card chart-container">
+                <h5 class="mb-3"><i class="fas fa-chart-line me-2 text-primary"></i> Yıllık Karşılaştırma</h5>
+                <canvas id="yearlyComparisonChart" style="width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aylık Detay Tablosu -->
+    <div class="report-card">
+        <h5 class="mb-3"><i class="fas fa-table me-2 text-primary"></i> Aylık Gelir Detayları</h5>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr><th>Ay</th><th class="text-end">Tamir Sayısı</th><th class="text-end">Toplam Gelir</th><th class="text-end">Ortalama Gelir</th></tr>
+                </thead>
+                <tbody id="monthlyTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let monthlyChart, yearlyChart;
+        let currentYear = @currentYear;
+
+        const currencySymbols = { 'TRY': '₺', 'USD': '$', 'EUR': '€', 'GBP': '£' };
+        function formatCurrency(amount, currency) {
+        const symbol = currencySymbols[currency] || '₺';
+        return symbol + amount.toFixed(2);
+        }
+
+        $(document).ready(function() {
+        $('#yearSelect').change(function() {
+        currentYear = parseInt($(this).val());
+        loadGelirRaporu(currentYear);
+        });
+        loadGelirRaporu(currentYear);
+        loadYearlyComparison(); // Yıllık karşılaştırma ayrı çağrılıyor
+        });
+
+        function loadGelirRaporu(year) {
+        $.get('/Rapor/GetGelirRaporuStats', { year: year }, function(data) {
+        // Para birimi bazlı gelir kartları
+        if (data.revenueByCurrency && data.revenueByCurrency.length > 0) {
+        $('#revenueByCurrencyRow').show();
+        var revenueHtml = '';
+        $.each(data.revenueByCurrency, function(i, item) {
+        revenueHtml += `
+        <div class="col-md-3 col-sm-6 mb-3">
+        <div class="stat-box text-center" style="padding: 15px;">
+        <div class="stat-number" style="font-size: 24px;">${formatCurrency(item.total, item.currency)}</div>
+        <div class="stat-label">${item.currency} Geliri (${item.count} Tamir)</div>
+        </div>
+        </div>`;
+        });
+        $('#revenueByCurrencyContainer').html(revenueHtml);
+        }
+
+        $('#totalRepairs').text(data.totalRepairs);
+        $('#avgRevenue').text(formatCurrency(data.averageRevenue, data.revenueByCurrency?.[0]?.currency || 'TRY'));
+
+        if (data.revenueByCurrency && data.revenueByCurrency.length === 1) {
+        $('#totalRevenue').text(formatCurrency(data.totalRevenue, data.revenueByCurrency[0].currency));
+        } else {
+        $('#totalRevenue').text('Çoklu Para');
+        }
+
+        var months = data.monthlyIncome.map(x => x.monthName);
+        if (monthlyChart) monthlyChart.destroy();
+        var ctx = document.getElementById('monthlyRevenueChart').getContext('2d');
+
+        var datasets = [];
+        var allCurrencies = new Set();
+        data.monthlyIncome.forEach(month => {
+        if (month.currencies) month.currencies.forEach(curr => allCurrencies.add(curr.currency));
+        });
+
+        var currencyColors = { 'TRY': '#10b981', 'USD': '#3b82f6', 'EUR': '#f59e0b', 'GBP': '#ef4444' };
+        allCurrencies.forEach(currency => {
+        var currencyData = data.monthlyIncome.map(month => {
+        if (month.currencies) {
+        var found = month.currencies.find(c => c.currency === currency);
+        return found ? found.revenue : 0;
+        }
+        return 0;
+        });
+        datasets.push({
+        label: currency,
+        data: currencyData,
+        type: 'bar',
+        backgroundColor: currencyColors[currency] + '80',
+        borderColor: currencyColors[currency],
+        borderWidth: 1,
+        borderRadius: 6
+        });
+        });
+
+        monthlyChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: months, datasets: datasets },
+        options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+        tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + formatCurrency(context.raw, context.dataset.label); } } },
+        legend: { position: 'top' }
+        },
+        scales: { y: { title: { display: true, text: 'Gelir' } } }
+        }
+        });
+
+        // Aylık Tablo
+        var tbody = $('#monthlyTableBody');
+        tbody.empty();
+        $.each(data.monthlyIncome, function(i, m) {
+        tbody.append(`
+        <tr>
+        <td><strong>${m.monthName}</strong></td>
+        <td class="text-end">${m.totalCount}</td>
+        <td class="text-end">${formatCurrency(m.totalRevenue, 'TRY')}</td>
+        <td class="text-end">${formatCurrency(m.avgRevenue, 'TRY')}</td>
+        </tr>
+        `);
+        });
+        });
+        }
+
+        function loadYearlyComparison() {
+        $.get('/Rapor/GetGelirRaporuYearly', function(data) {
+        if (yearlyChart) yearlyChart.destroy();
+        var ctx2 = document.getElementById('yearlyComparisonChart').getContext('2d');
+        yearlyChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+        labels: data.map(x => x.year),
+        datasets: [{
+        label: 'Gelir (TRY)',
+        data: data.map(x => x.totalRevenue),
+        borderColor: '#8b5cf6',
+        backgroundColor: 'rgba(139,92,246,0.1)',
+        fill: true,
+        tension: 0.3
+        }]
+        },
+        options: { responsive: true, maintainAspectRatio: true }
+        });
+        });
+        }
+    </script>
+}

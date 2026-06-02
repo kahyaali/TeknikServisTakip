@@ -1,0 +1,18 @@
+﻿@{
+    ViewData["Title"] = "Yetkisiz Erişim - 401";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="text-center mt-5 pt-5">
+    <div class="display-1 text-danger">
+        <i class="fas fa-lock"></i> 401
+    </div>
+    <h1 class="display-4">Yetkisiz Erişim!</h1>
+    <p class="lead">Bu sayfayı görüntülemek için giriş yapmalısınız.</p>
+    <a asp-controller="Account" asp-action="Login" class="btn btn-success mt-3">
+        <i class="fas fa-sign-in-alt"></i> Giriş Yap
+    </a>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary mt-3">
+        <i class="fas fa-home"></i> Ana Sayfaya Dön
+    </a>
+</div>

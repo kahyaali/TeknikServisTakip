@@ -1,0 +1,369 @@
+﻿@using Entities.Enum
+@using TeknikServisTakip.Helpers
+
+@{
+    ViewData["Title"] = "Personel Paneli";
+    var pendingRepairs = ViewBag.PendingRepairs as List<Entities.Concrete.RepairItem>;
+    var inProgressRepairs = ViewBag.InProgressRepairs as List<Entities.Concrete.RepairItem>;
+    var completedRepairs = ViewBag.CompletedRepairs as List<Entities.Concrete.RepairItem>;
+    var unassignedRepairs = ViewBag.UnassignedRepairs as List<Entities.Concrete.RepairItem>;
+}
+
+<style>
+    .nav-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .nav-btn.active {
+            opacity: 1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn.unassigned {
+            background: #6c757d;
+            color: white;
+        }
+
+        .nav-btn.pending {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .nav-btn.inprogress {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .nav-btn.completed {
+            background: #10b981;
+            color: white;
+        }
+
+    .tab-content {
+        display: none;
+    }
+
+        .tab-content.active {
+            display: block;
+        }
+</style>
+
+<div class="personel-container">
+    <div class="page-header">
+        <h1>Personel Paneli</h1>
+        <p>Hoş geldiniz, <strong>@ViewBag.PersonelName</strong></p>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="stats-row">
+        <div class="stat-card total">
+            <div class="stat-value">@ViewBag.TotalCount</div>
+            <div class="stat-label">Toplam Tamir</div>
+        </div>
+        <div class="stat-card pending">
+            <div class="stat-value">@ViewBag.PendingCount</div>
+            <div class="stat-label">Bekleyen</div>
+        </div>
+        <div class="stat-card progress">
+            <div class="stat-value">@ViewBag.InProgressCount</div>
+            <div class="stat-label">İşlemde</div>
+        </div>
+        <div class="stat-card completed">
+            <div class="stat-value">@ViewBag.CompletedCount</div>
+            <div class="stat-label">Tamamlanan</div>
+        </div>
+    </div>
+
+    <!-- Navigasyon Butonları -->
+    <div class="nav-buttons" style="display: flex; gap: 10px; margin-bottom: 25px; justify-content: center;">
+        <button class="nav-btn unassigned active" data-tab="unassigned">📋 Atanmamış Tamirler (@ViewBag.UnassignedCount)</button>
+        <button class="nav-btn pending" data-tab="pending">⏳ Bekleyen Tamirler (@ViewBag.PendingCount)</button>
+        <button class="nav-btn inprogress" data-tab="inprogress">🔧 İşlemdeki Tamirler (@ViewBag.InProgressCount)</button>
+        <button class="nav-btn completed" data-tab="completed">✅ Tamamlanan Tamirler (@ViewBag.CompletedCount)</button>
+    </div>
+
+    <!-- ATANMAMIŞ TAMİRLER -->
+    <div id="tab-unassigned" class="tab-content active">
+    <div class="task-card">
+        <div class="task-card-header unassigned">
+            <span>Atanmamış Tamirler</span>
+            <span class="task-badge">@ViewBag.UnassignedCount Kayıt</span>
+        </div>
+        <div class="task-card-body">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Müşteri No</th>
+                        <th>Ürün Adı</th>
+                        <th>Arıza Açıklaması</th>
+                        <th>Geliş Tarihi</th>
+                        <th class="d-none">Ücret</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (unassignedRepairs != null && unassignedRepairs.Any())
+                    {
+                        foreach (var item in unassignedRepairs)
+                        {
+                            <tr>
+                                <td class="text-center">@item.Id</td>
+                                <td class="text-center">@item.CustomerNumber</td>
+                                <td class="product-name">@item.ProductName</td>
+                                <td class="text-start">@(item.ProblemDescription?.Length > 40 ? item.ProblemDescription.Substring(0,40)+"..." : item.ProblemDescription ?? "-")</td>
+                                <td class="text-center">@item.ReceivedDate.ToString("dd.MM.yyyy")</td>
+                                <td class="d-none price-text">@item.Price.ToString("C2")</td>
+                                <td class="text-center">
+                                    <button class="btn-takeover take-over" data-id="@item.Id" data-name="@item.ProductName">Üzerine Al</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center">Atanmamış tamir kaydı bulunmamaktadır.</td>
+                        </tr>
+                    }
+                </tbody>
+                </table>
+                </div>
+            </div>
+    </div>
+
+      
+
+            <!-- BEKLEYEN TAMİRLER -->
+    <div id="tab-pending" class="tab-content">
+            <div class="task-card">
+                <div class="task-card-header pending">
+                    <span>Bekleyen Tamirler</span>
+                    <span class="task-badge">@ViewBag.PendingCount Kayıt</span>
+                </div>
+                <div class="task-card-body">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Müşteri No</th>
+                                <th>Ürün Adı</th>
+                                <th>Arıza Açıklaması</th>
+                                <th>Geliş Tarihi</th>
+                                <th class="d-none">Ücret</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (pendingRepairs != null && pendingRepairs.Any())
+                            {
+                                foreach (var item in pendingRepairs)
+                                {
+                                    <tr>
+                                        <td class="text-center">@item.Id</td>
+                                        <td class="text-center">@item.CustomerNumber</td>
+                                        <td class="product-name">@item.ProductName</td>
+                                        <td class="text-start">@(item.ProblemDescription?.Length > 40 ? item.ProblemDescription.Substring(0,40)+"..." : item.ProblemDescription ?? "-")</td>
+                                        <td class="text-center">@item.ReceivedDate.ToString("dd.MM.yyyy")</td>
+                                        <td class="d-none price-text text-end">@item.Price.ToString("C2")</td>
+                                        <td class="text-center">
+                                             @if (item.StatusId == (int)RepairStatusEnum.UrunKaydedildi)
+                                             {
+                                                 <a href="/PersonelDashboard/AddExpertise/@item.Id" class="btn btn-sm btn-info">
+                                                     <i class="fas fa-clipboard-list"></i> Expertiz Çıkar
+                                                 </a>
+                                             }
+                                            else if (item.StatusId == (int)RepairStatusEnum.TeklifOnaylandi)
+                                            {
+                                                <button class="btn-takeover take-over" data-id="@item.Id" data-name="@item.ProductName">
+                                                    <i class="fas fa-hand-paper"></i> İşleme Al
+                                                </button>
+                                            }
+                                           
+                                            else
+                                            {
+                                                <span class="text-muted small">Teklif Sürecinde</span>
+                                            }
+                                            <a href="/PersonelDashboard/RepairDetail/@item.Id" class="btn-detail">
+                                                <i class="fas fa-eye"></i> Detay
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center">Bekleyen tamir kaydı bulunmamaktadır.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+    </div>
+
+            <!-- İŞLEMDEKİ TAMİRLER -->
+    <div id="tab-inprogress" class="tab-content">
+            <div class="task-card">
+                <div class="task-card-header progress">
+                    <span>İşlemdeki Tamirler</span>
+                    <span class="task-badge">@ViewBag.InProgressCount Kayıt</span>
+                </div>
+                <div class="task-card-body">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Müşteri No</th>
+                                <th>Ürün Adı</th>
+                                <th>Arıza Açıklaması</th>
+                                <th>Geliş Tarihi</th>
+                                <th class="d-none">Ücret</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (inProgressRepairs != null && inProgressRepairs.Any())
+                            {
+                                foreach (var item in inProgressRepairs)
+                                {
+                                    <tr>
+                                        <td class="text-center">@item.Id</td>
+                                        <td class="text-center">@item.CustomerNumber</td>
+                                        <td class="product-name">@item.ProductName</td>
+                                        <td class="text-start">@(item.ProblemDescription?.Length > 40 ? item.ProblemDescription.Substring(0,40)+"..." : item.ProblemDescription ?? "-")</td>
+                                        <td class="text-center">@item.ReceivedDate.ToString("dd.MM.yyyy")</td>
+                                        <td class="d-none price-text">@item.Price.ToString("C2")</td>
+                                        <td class="text-center">
+                                            <a href="/PersonelDashboard/RepairDetail/@item.Id" class="btn-detail">
+                                                <i class="fas fa-eye"></i> Detay
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center">İşlemde tamir kaydı bulunmamaktadır.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+    </div>
+
+            <!-- TAMAMLANAN TAMİRLER -->
+    <div id="tab-completed" class="tab-content">
+            <div class="task-card">
+                <div class="task-card-header completed">
+                    <span>Tamamlanan Tamirler</span>
+                    <span class="task-badge">@ViewBag.CompletedCount Kayıt</span>
+                </div>
+                <div class="task-card-body">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Müşteri No</th>
+                                <th>Ürün Adı</th>
+                                <th>Arıza Açıklaması</th>
+                                <th>Geliş Tarihi</th>
+                                <th class="d-none">Ücret</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (completedRepairs != null && completedRepairs.Any())
+                            {
+                                foreach (var item in completedRepairs)
+                                {
+                                    <tr>
+                                        <td class="text-center">@item.Id</td>
+                                        <td class="text-center">@item.CustomerNumber</td>
+                                        <td class="product-name">@item.ProductName</td>
+                                        <td class="text-start">@(item.ProblemDescription?.Length > 40 ? item.ProblemDescription.Substring(0,40)+"..." : item.ProblemDescription ?? "-")</td>
+                                        <td class="text-center">@item.ReceivedDate.ToString("dd.MM.yyyy")</td>
+                                        <td class="d-none price-text">@item.Price.ToString("C2")</td>
+                                        <td class="text-center">
+                                            <a href="/PersonelDashboard/RepairDetail/@item.Id" class="btn-detail">
+                                                <i class="fas fa-eye"></i> Detay
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center">Tamamlanan tamir kaydı bulunmamaktadır.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+    </div>
+        </div>
+
+
+
+        @section Scripts {
+            <script>
+                $(document).ready(function() {
+                    $('.take-over').click(function() {
+                        var id = $(this).data('id');
+                        var name = $(this).data('name');
+                        Swal.fire({
+                            title: 'İşleme Al',
+                            html: '<b>' + name + '</b> ürününü üzerinize almak istediğinize emin misiniz?',
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#10b981',
+                            confirmButtonText: 'Evet, İşleme Al',
+                            cancelButtonText: 'İptal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                Swal.fire({ title: 'İşlem yapılıyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                                $.ajax({
+                                    url: '/PersonelDashboard/TakeOver',
+                                    type: 'POST',
+                                    data: { id: id },
+                                    success: function(res) {
+                                        if (res.success) Swal.fire('Başarılı!', res.message, 'success').then(() => location.reload());
+                                        else Swal.fire('Hata!', res.message, 'error');
+                                    },
+                                    error: () => Swal.fire('Hata!', 'Bir sorun oluştu.', 'error')
+                                });
+                            }
+                        });
+                    });
+                });
+            </script>
+
+            <script>
+                $(document).ready(function() {
+                    $('.nav-btn').click(function() {
+                        var tab = $(this).data('tab');
+
+                        // Tüm butonlardan active kaldır
+                        $('.nav-btn').removeClass('active');
+                        $(this).addClass('active');
+
+                        // Tüm tab içeriklerini gizle
+                        $('.tab-content').removeClass('active');
+
+                        // Seçilen tab'i göster
+                        $('#tab-' + tab).addClass('active');
+                    });
+                });
+            </script>
+        }

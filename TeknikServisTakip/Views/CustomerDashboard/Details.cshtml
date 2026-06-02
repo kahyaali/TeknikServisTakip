@@ -1,0 +1,276 @@
+﻿
+
+@model Entities.Concrete.RepairItem
+@using Entities.Enum
+@using TeknikServisTakip.Helpers
+@{
+    ViewData["Title"] = "Tamir Detayı";
+}
+@{
+    var statusEnum = (RepairStatusEnum)(Model.StatusId ?? 1);
+    var statusName = statusEnum.GetDisplayName();
+    var badgeClass = statusEnum switch
+    {
+        RepairStatusEnum.TeslimEdildi => "badge-teslim",
+        RepairStatusEnum.Tamamlandi => "bg-success",
+        RepairStatusEnum.IslemeAlindi => "bg-info",
+        _ => "bg-warning text-dark"
+    };
+}
+
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-info-circle"></i> Tamir Detayı</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-box"></i> Ürün Bilgileri</h5>
+                    <hr />
+                    <p><strong>Takip Kodu:</strong> <span class="badge bg-dark">@Model.TrackingCode</span></p>
+                    <p><strong>Ürün:</strong> @Model.ProductName</p>
+                    <p><strong>Marka:</strong> @(Model.ProductBrand ?? "-")</p>
+                    <p><strong>Model:</strong> @(Model.ProductModel ?? "-")</p>
+                    <p><strong>Seri No:</strong> @(string.IsNullOrEmpty(Model.SerialNumber) ? "-" : Model.SerialNumber)</p>
+                </div>
+                <div class="col-md-6">
+                    <h5><i class="fas fa-tools"></i> Tamir Bilgileri</h5>
+                    <hr />
+                    <p><strong>Geliş Tarihi:</strong> @Model.ReceivedDate.ToString("dd.MM.yyyy HH:mm")</p>
+                    @if (Model.DeliveryDate.HasValue)
+                    {
+                        <p><strong>Teslim Tarihi:</strong> @Model.DeliveryDate.Value.ToString("dd.MM.yyyy HH:mm")</p>
+                    }
+                    <p>
+                        <strong>Durum:</strong>
+                        @if (statusEnum == RepairStatusEnum.TeslimEdildi)
+                        {
+                            <span class="@badgeClass"><i class="fas fa-check-circle"></i> @statusName</span>
+                        }
+                        else if (statusEnum == RepairStatusEnum.Tamamlandi)
+                        {
+                            <span class="badge bg-success">@statusName</span>
+                        }
+                        else if (statusEnum == RepairStatusEnum.IslemeAlindi)
+                        {
+                            <span class="badge bg-info">@statusName</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">@statusName</span>
+                        }
+                    </p>
+                    <p><strong>Ücret:</strong> @Model.Price.ToString("C2")</p>
+                    <p><strong>Personel:</strong> @(Model.Personel?.FullName ?? "Atanmamış")</p>               
+                </div>
+            </div>
+
+            <!-- ========== ARIZA AÇIKLAMASI ve MÜŞTERİ NOTU ========== -->
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="info-card">
+                        <h5><i class="fas fa-sticky-note text-warning me-2"></i> Açıklamalar ve Notlar</h5>
+                        <hr />
+                        
+                        <!-- Arıza Açıklaması -->
+                        <div class="mb-3">
+                            <div class="fw-bold mb-2">
+                                <i class="fas fa-exclamation-triangle text-danger me-1"></i> Arıza Açıklaması
+                            </div>
+                            <div class="p-3 bg-light rounded">
+                                @(string.IsNullOrEmpty(Model.ProblemDescription) ? "-" : Model.ProblemDescription)
+                            </div>
+                        </div>
+                        
+                        <!-- Müşteri Notu -->
+                        <div class="mb-3">
+                            <div class="fw-bold mb-2">
+                                <i class="fas fa-user text-primary me-1"></i> Müşteri Notu
+                            </div>
+                            <div class="p-3 bg-light rounded">
+                                @(string.IsNullOrEmpty(Model.CustomerNote) ? "-" : Model.CustomerNote)
+                            </div>
+                        </div>
+                        <!-- Personel Notu -->
+                        <div class="mb-3">
+                            <div class="fw-bold mb-2">
+                                <i class="fas fa-user-cog text-info me-1"></i> Personel Notu
+                            </div>
+                            <div class="p-3 bg-light rounded">
+                                @(string.IsNullOrEmpty(Model.InternalNote) ? "-" : Model.InternalNote)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== RESİMLER BÖLÜMÜ ========== -->
+            @{
+                var beforeImages = Model.RepairImages?.Where(i => i.ImageType == "Before").OrderBy(i => i.Order).ToList();
+                var afterImages = Model.RepairImages?.Where(i => i.ImageType == "After").OrderBy(i => i.Order).ToList();
+                var hasOldBeforeImage = !string.IsNullOrEmpty(Model.BeforeImagePath);
+                var hasOldAfterImage = !string.IsNullOrEmpty(Model.AfterImagePath);
+            }
+
+            @if ((beforeImages != null && beforeImages.Any()) || hasOldBeforeImage || (afterImages != null && afterImages.Any()) || hasOldAfterImage)
+            {
+                <div class="row mt-4">
+                    <!-- ÖNCESİ RESİMLER -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <i class="fas fa-camera"></i> Tamir Öncesi Resimler
+                            </div>
+                            <div class="card-body">
+                                <div class="image-gallery">
+                                    @if (hasOldBeforeImage)
+                                    {
+                                        <img src="@Model.BeforeImagePath" class="resim-thumb"
+                                             onclick="showImage('@Model.BeforeImagePath')"
+                                             title="Öncesi Resim" />
+                                    }
+                                    @if (beforeImages != null)
+                                    {
+                                        @foreach (var img in beforeImages)
+                                        {
+                                            <img src="@img.ImagePath" class="resim-thumb"
+                                                 onclick="showImage('@img.ImagePath')"
+                                                 title="Öncesi Resim" />
+                                        }
+                                    }
+                                    @if (!hasOldBeforeImage && (beforeImages == null || !beforeImages.Any()))
+                                    {
+                                        <span class="text-muted">Henüz öncesi resim eklenmemiş.</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SONRASI RESİMLER -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <i class="fas fa-check-circle"></i> Tamir Sonrası Resimler
+                            </div>
+                            <div class="card-body">
+                                <div class="image-gallery">
+                                    @if (hasOldAfterImage)
+                                    {
+                                        <img src="@Model.AfterImagePath" class="resim-thumb"
+                                             onclick="showImage('@Model.AfterImagePath')"
+                                             title="Sonrası Resim" />
+                                    }
+                                    @if (afterImages != null)
+                                    {
+                                        @foreach (var img in afterImages)
+                                        {
+                                            <img src="@img.ImagePath" class="resim-thumb"
+                                                 onclick="showImage('@img.ImagePath')"
+                                                 title="Sonrası Resim" />
+                                        }
+                                    }
+                                    @if (!hasOldAfterImage && (afterImages == null || !afterImages.Any()))
+                                    {
+                                        <span class="text-muted">Henüz sonrası resim eklenmemiş.</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mt-3 text-center">
+                    <i class="fas fa-image"></i> Bu tamir kaydı için henüz resim eklenmemiştir.
+                </div>
+            }
+
+            <div class="mt-4 text-center">
+                <a href="/CustomerDashboard" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Geri
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resim Modal -->
+<div id="imageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; text-align:center; padding-top:50px;">
+    <span onclick="closeImage()" style="position:absolute; top:20px; right:40px; color:white; font-size:40px; cursor:pointer;">&times;</span>
+    <img id="modalImage" style="max-width:90%; max-height:80vh; margin-top:50px;" />
+    <div style="margin-top:15px;">
+        <button onclick="closeImage()" class="btn btn-secondary">Kapat</button>
+        <a id="downloadLink" href="#" download class="btn btn-primary no-loader">Resmi İndir</a>
+    </div>
+</div>
+
+<style>
+    .info-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+    }
+
+    .image-gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .resim-thumb {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 2px solid #dee2e6;
+        transition: transform 0.2s;
+    }
+
+        .resim-thumb:hover {
+            transform: scale(1.05);
+            border-color: #0d6efd;
+        }
+
+    .badge-teslim {
+        background: #10b981;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+
+    .rounded {
+        border-radius: 10px !important;
+    }
+</style>
+
+<script>
+    function showImage(url) {
+        document.getElementById('modalImage').src = url;
+        document.getElementById('downloadLink').href = url;
+        document.getElementById('imageModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeImage() {
+        document.getElementById('imageModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImage();
+        }
+    });
+</script>

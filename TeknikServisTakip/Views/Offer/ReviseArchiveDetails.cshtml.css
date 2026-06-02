@@ -1,0 +1,29 @@
+﻿
+.info-row {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+body.dark-mode .info-row {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .bg-secondary {
+    background-color: #2c3e50 !important;
+}
+
+body.dark-mode .table-dark {
+    background-color: #16213e !important;
+}
+
+    body.dark-mode .table-dark td,
+    body.dark-mode .table-dark th {
+        background-color: #16213e !important;
+        color: #ffffff !important;
+        border-color: #2c3e50 !important;
+    }
+
+

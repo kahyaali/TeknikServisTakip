@@ -1,0 +1,102 @@
+﻿/*
+.report-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.stat-number {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 5px;
+}
+
+.stat-box {
+    padding: 20px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    text-align: center;
+}
+
+.filter-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-item {
+    flex: 1;
+    min-width: 150px;
+}
+
+    .filter-item label {
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        display: block;
+        color: #6b7280;
+    }
+
+    .filter-item input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+    }
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .data-table th, .data-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .data-table th {
+        background: #f8fafc;
+        font-weight: 600;
+    }
+
+.text-end {
+    text-align: right;
+}
+
+.rank-badge {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.rank-1 {
+    background: #fbbf24;
+    color: #92400e;
+}
+
+.rank-2 {
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
+.rank-3 {
+    background: #fdba74;
+    color: #9a3412;
+}
+
+
+*/

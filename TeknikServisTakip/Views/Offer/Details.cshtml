@@ -1,0 +1,197 @@
+﻿
+
+@model TeknikServisTakip.Models.ViewModels.OfferDetailsViewModel
+@{
+    ViewData["Title"] = "Teklif Detayları";
+    string sym = Model.Currency == "USD" ? "$" : Model.Currency == "EUR" ? "€" : Model.Currency == "GBP" ? "£" : "₺";
+}
+
+<div class="container-fluid mt-4">
+
+    <!-- Başlık ve Butonlar -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-0">Teklif Detay Kartı</h2>
+            <small class="text-muted">Sistem üzerindeki tüm kalem girdileri, iskontolar ve süreç takibi</small>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left me-1"></i> Listeye Dön
+            </a>
+            <a asp-action="DownloadPdf" asp-route-id="@Model.OfferId" class="btn btn-danger shadow-sm" target="_blank">
+                <i class="fas fa-file-pdf me-1"></i> PDF İndir
+            </a>
+        </div>
+    </div>
+
+    <!-- 1. KART: Teklif ve Süreç Kartı (Tam sayfa, 2 sütun) -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-dark text-white fw-bold py-3">
+            <i class="fas fa-info-circle me-2"></i> Teklif ve Süreç Kartı
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Sol Sütun -->
+                <div class="col-md-6">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted fw-semibold" width="35%">Teklif No:</td>
+                            <td class="fw-bold text-primary">@Model.OfferNumber (v@(Model.Version))</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-semibold">Firma Adı:</td>
+                            <td class="fw-bold">@(string.IsNullOrEmpty(Model.CompanyName) ? "---" : Model.CompanyName)</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-semibold">Müşteri Adı:</td>
+                            <td class="fw-bold">@Model.CustomerName</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-semibold">Müşteri No:</td>
+                            <td><span class="badge bg-secondary">@Model.CustomerNumber</span></td>
+                        </tr>
+                    </table>
+                </div>
+                <!-- Sağ Sütun -->
+                <div class="col-md-6">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted fw-semibold" width="35%">Durum:</td>
+                            <td>
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i> Onay Bekliyor</span>
+                                }
+                                else if (Model.ApprovedAt.HasValue)
+                                {
+                                    <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> Onaylandı / Arşivde</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Revize Edildi (Eski)</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-semibold">Teklif Oluşturma:</td>
+                            <td class="font-monospace">@Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-semibold">Onay Tarihi:</td>
+                            <td class="font-monospace text-success fw-semibold">
+                                @(Model.ApprovedAt.HasValue ? Model.ApprovedAt.Value.ToString("dd.MM.yyyy HH:mm") : "Henüz Onaylanmadı")
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-semibold">Onaylayan Personel:</td>
+                            <td>@(string.IsNullOrEmpty(Model.ApprovedBy) ? "---" : Model.ApprovedBy)</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. KART: Fiyatlandırılan Ürün Girdileri ve Kalemleri (Tam sayfa) -->
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle mb-0">
+                <thead class="bg-dark text-white">
+                    <tr>
+                        <th class="ps-3" style="width: 20%;">Cihaz / Ürün</th>
+                        <th style="width: 20%;">Yapılan İşlem / Parça</th>
+                        <th class="text-center" style="width: 10%;">Miktar</th>
+                        <th class="text-center" style="width: 10%;">Birim</th>
+                        <th class="text-start" style="width: 12%;">Birim Fiyat</th>
+                        <th class="text-start" style="width: 28%;">Teknisyen Notu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Lines)
+                    {
+                        <tr>
+                            <td class="ps-3 fw-bold">@item.ProductName</td>
+                            <td>@item.Description</td>
+                            <td class="text-center fw-semibold">@item.Quantity</td>
+                            <td class="text-center"><span class="badge bg-secondary bg-opacity-25 text-dark">@item.Unit</span></td>
+                            <td class="text-start fw-bold text-primary" style="padding-left: 1rem;">@item.UnitPrice.ToString("N2") @sym</td>
+                            <td class="text-start text-muted small">@(string.IsNullOrEmpty(item.TechnicianNote) ? "-" : item.TechnicianNote)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 3. KART: Mali Özet Tablosu (Tam sayfa) -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header text-white fw-bold py-3" style="background: linear-gradient(135deg, #11998e, #38ef7d);">
+            <i class="fas fa-calculator me-2"></i> Mali Özet Tablosu
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-10 mx-auto">
+                    <!-- Parça Toplamı -->
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                        <div>
+                            <i class="fas fa-microchip me-2 text-primary fs-5"></i>
+                            <span class="fw-semibold">Yedek Parça Toplamı</span>
+                        </div>
+                        <div class="fs-5 fw-bold">@Model.TotalLinesAmount.ToString("N2") @sym</div>
+                    </div>
+
+                    <!-- İşçilik Toplamı -->
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                        <div>
+                            <i class="fas fa-tools me-2 text-warning fs-5"></i>
+                            <span class="fw-semibold">Toplam İşçilik Bedeli</span>
+                        </div>
+                        <div class="fs-5 fw-bold">@Model.TotalLaborCost.ToString("N2") @sym</div>
+                    </div>
+
+                    <!-- İskonto (varsa) -->
+                    @if (Model.TotalDiscountAmount > 0)
+                    {
+                        <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                            <div>
+                                <i class="fas fa-tag me-2 text-danger fs-5"></i>
+                                <span class="fw-semibold text-danger">Toplam Uygulanan İskonto</span>
+                            </div>
+                            <div class="fs-5 fw-bold text-danger">-@Model.TotalDiscountAmount.ToString("N2") @sym</div>
+                        </div>
+                    }
+
+                    <!-- KDV -->
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                        <div>
+                            <i class="fas fa-receipt me-2 text-info fs-5"></i>
+                            <span class="fw-semibold">Hesaplanan KDV Tutarı</span>
+                        </div>
+                        <div class="fs-5 fw-bold">@Model.TotalTaxAmount.ToString("N2") @sym</div>
+                    </div>
+
+                    <!-- Genel Toplam -->
+                    <div class="d-flex justify-content-between align-items-center py-4 mt-2 rounded-3" style="background: linear-gradient(135deg, rgba(17, 153, 142, 0.1), rgba(56, 239, 125, 0.1));">
+                        <div class="ps-3">
+                            <i class="fas fa-flag-checkered me-2 text-success fs-3"></i>
+                            <span class="fw-bold fs-3">GENEL TOPLAM</span>
+                        </div>
+                        <div class="pe-3 fw-bold fs-2 text-success">@Model.GrandTotal.ToString("N2") @sym</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. KART: Şartlar ve Özel Notlar (Tam sayfa) -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-secondary text-white fw-bold py-3">
+            <i class="fas fa-sticky-note me-2"></i> Şartlar ve Özel Notlar
+        </div>
+        <div class="card-body">
+            <p class="mb-0" style="white-space: pre-line;">
+                @(string.IsNullOrEmpty(Model.Note) ? "Eklenmiş özel bir not bulunmuyor." : Model.Note)
+            </p>
+        </div>
+    </div>
+</div>

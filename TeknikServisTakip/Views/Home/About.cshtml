@@ -1,0 +1,131 @@
+﻿@{
+    ViewData["Title"] = "Hakkımızda";
+    var about = ViewBag.About as Entities.Concrete.PageContent;
+    var sliderImages = !string.IsNullOrEmpty(about?.SliderImages) ? System.Text.Json.JsonSerializer.Deserialize<List<string>>(about.SliderImages) : new List<string>();
+}
+
+
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold">@(about?.Title ?? "Hakkımızda")</h1>
+                <div class="divider mx-auto" style="width: 80px; height: 4px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 2px;"></div>
+            </div>
+            
+            <!-- Slider (BÜYÜK RESİMLER) -->
+            @if (sliderImages.Any())
+            {
+                <div id="aboutSlider" class="carousel slide mb-5" data-bs-ride="carousel">
+                    <div class="carousel-indicators">
+                        @for (int i = 0; i < sliderImages.Count; i++)
+                        {
+                            <button type="button" data-bs-target="#aboutSlider" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")"></button>
+                        }
+                    </div>
+                    <div class="carousel-inner">
+                        @for (int i = 0; i < sliderImages.Count; i++)
+                        {
+                            <div class="carousel-item @(i == 0 ? "active" : "")">
+                                <img src="@sliderImages[i]" class="slider-resim" />
+                            </div>
+                        }
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#aboutSlider" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Önceki</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#aboutSlider" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Sonraki</span>
+                    </button>
+                </div>
+            }
+            
+            <!-- Ana Resim (KÜÇÜK) -->
+            @if (!string.IsNullOrEmpty(about?.ImageUrl))
+            {
+                <div class="text-center mb-4">
+                    <img src="@about.ImageUrl" class="ana-resim" />
+                </div>
+            }
+            
+          
+
+                     <!-- hakkımızda tsarım 1-->
+            <div class="about-text-section">
+                <div class="about-quote-icon">
+                    <i class="fas fa-quote-left"></i>
+                </div>
+                <p class="about-paragraph">@(about?.Content ?? "Hakkımızda içeriği henüz eklenmemiştir.")</p>
+                <div class="about-quote-icon right">
+                    <i class="fas fa-quote-right"></i>
+                </div>
+            </div>
+
+            <!-- Hakkımızda tasarım 2-->
+
+           @*  <div class="about-text-section">
+                <div class="about-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <p class="about-paragraph">@(about?.Content ?? "Hakkımızda içeriği henüz eklenmemiştir.")</p>
+            </div> *@
+
+            <!-- ALT KISIM - CARD İÇİNDE -->
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-body p-5">
+                    <div class="row mt-5">
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-tools fa-3x text-primary mb-3"></i>
+                            <h5>Kaliteli Servis</h5>
+                            <p class="text-muted">Profesyonel ekip</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-clock fa-3x text-primary mb-3"></i>
+                            <h5>Hızlı Teslimat</h5>
+                            <p class="text-muted">Zamanında tamir</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                            <h5>Garantili İşçilik</h5>
+                            <p class="text-muted">Tüm tamirler garantili</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light text-muted text-center">
+                    Son güncelleme: @(about?.UpdatedAt.ToString("dd.MM.yyyy") ?? "-")
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+<!-- footer en alta sabitlemek için script kodu  -->
+@* <script>
+    // Footer'ı en alta sabitle
+    window.addEventListener('load', function() {
+        var footer = document.querySelector('footer');
+        var body = document.body;
+        var html = document.documentElement;
+        
+        var height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+        var viewport = window.innerHeight;
+        
+        if (height < viewport) {
+            footer.style.position = 'fixed';
+            footer.style.bottom = '0';
+            footer.style.left = '0';
+            footer.style.right = '0';
+            footer.style.marginTop = '0';
+        } else {
+            footer.style.position = 'relative';
+        }
+    });
+</script> *@
+
+

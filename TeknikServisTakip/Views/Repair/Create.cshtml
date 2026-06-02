@@ -1,0 +1,1020 @@
+﻿@using Entities.Enum
+@using TeknikServisTakip.Helpers
+@model Entities.Concrete.RepairItem
+@{
+    ViewData["Title"] = "Yeni Tamir Ekle";
+    var personels = ViewBag.Personels as IEnumerable<Entities.Concrete.Personel>;
+    var customers = ViewBag.Customers as IEnumerable<Entities.Concrete.AppUser>;
+}
+
+
+
+<div class="page-wrapper">
+    <div class="content-wrapper">
+        <h1><i class="fas fa-plus"></i> Yeni Tamir Ekle</h1>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert-danger">@TempData["Error"]</div>
+        }
+
+        <form method="post" enctype="multipart/form-data" asp-action="Create" asp-controller="Repair" id="addRepairForm">
+            @Html.AntiForgeryToken()
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">Müşteri Bilgileri</div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Müşteri</label>
+                                <select name="AppUserId" id="CustomerSelect" class="form-control" required>
+                                    <option value="">-- Müşteri Seçin --</option>
+                                    @if (customers != null && customers.Any())
+                                    {
+                                        foreach (var customer in customers)
+                                        {
+                                            <option value="@customer.Id" data-customernumber="@customer.CustomerNumber">
+                                                @customer.FullName-@customer.CustomerNumber
+                                            </option>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <option value="">Müşteri bulunamadı</option>
+                                    }
+                                </select>
+                            </div>
+            
+                            <div class="mb-3">
+                                <label class="form-label">Müşteri No</label>
+                                <input type="text" name="CustomerNumber" id="CustomerNumber" class="form-control readonly-field" readonly />
+                            </div>
+            
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Ürün Adı</label>
+                                        <input type="text" name="ProductName" class="form-control" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Marka</label>
+                                        <input type="text" name="ProductBrand" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Model</label>
+                                        <input type="text" name="ProductModel" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Seri No</label>
+                                        <input type="text" name="SerialNumber" class="form-control" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">Tamir Bilgileri</div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Personel</label>
+                                        <select name="PersonelId" class="form-control">
+                                            <option value="">-- Personel Seçin --</option>
+                                            @if (personels != null && personels.Any())
+                                            {
+                                                foreach (var personel in personels)
+                                                {
+                                                    <option value="@personel.Id">@personel.FullName</option>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <option value="">Personel bulunamadı</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Repair status-->
+                                @* <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Durum</label>
+                                        <select name="StatusId" class="form-control">
+                                            @foreach (var status in Enum.GetValues(typeof(RepairStatusEnum)))
+                                            {
+                                                var statusEnum = (RepairStatusEnum)status;
+                                                var isSelected = (int)statusEnum == (Model?.StatusId ?? 1);
+                                                if (isSelected)
+                                                {
+                                                    <option value="@((int)statusEnum)" selected>@statusEnum.GetDisplayName()</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@((int)statusEnum)">@statusEnum.GetDisplayName()</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div> *@
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Durum</label>
+                                        <select name="StatusId" class="form-control" asp-items="ViewBag.StatusList"></select>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Tahmini Teslim Tarihi</label>
+                                        <input type="date" name="EstimatedDeliveryDate" class="form-control" />
+                                    </div>
+                                </div>
+                               @*  <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Ücret (₺)</label>
+                                        <input type="text" name="Price" class="form-control" value="0" placeholder="0,00" />
+                                    </div>
+                                </div> *@
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Ücret (₺)</label>
+                                        <input type="text" name="Price" id="PriceInput" class="form-control text-end bg-light" value="@Model.Price.ToString("N2")" readonly />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NOTLAR BÖLÜMÜ (Tam genişlik) -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-warning text-dark">Notlar</div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Arıza Açıklaması</label>
+                                            <textarea name="ProblemDescription" class="form-control" rows="4" required></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Müşteri Notu</label>
+                                            <textarea name="CustomerNote" class="form-control" rows="4"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Personel Notu (Dahili)</label>
+                                            <textarea name="InternalNote" class="form-control" rows="4"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAMİR ÖNCESİ RESİMLER -->
+                <div class="col-md-6 mt-3">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <i class="fas fa-camera"></i> Tamir Öncesi Resimler
+                            <span class="badge bg-light text-dark float-end">En fazla 5 resim</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- TOPLU RESİM SEÇME ALANI -->
+                            <div class="mb-3">
+                                <label class="form-label">Toplu Resim Seç (Tek seferde 5'e kadar)</label>
+                                <input type="file" id="multipleBeforeInput" class="form-control" accept="image/*" multiple />
+                                <button type="button" id="addMultipleBefore" class="btn-multiple-image mt-2">+ Toplu Ekle</button>
+                                <div id="multipleBeforeList" class="file-list"></div>
+                            </div>
+                            
+                            <hr />
+                            
+                            <!-- TEK TEK RESİM EKLEME ALANI -->
+                            <label class="form-label">Tek Tek Resim Ekle</label>
+                            <div id="beforeImagesContainer"></div>
+                            <button type="button" id="addBeforeImage" class="btn-add-image">+ Tek Resim Ekle</button>
+                            <div class="image-counter" id="beforeCounter">0 / 5 resim</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAMİR SONRASI RESİMLER -->
+                <div class="col-md-6 mt-3">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <i class="fas fa-check-circle"></i> Tamir Sonrası Resimler
+                            <span class="badge bg-light text-dark float-end">En fazla 5 resim</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- TOPLU RESİM SEÇME ALANI -->
+                            <div class="mb-3">
+                                <label class="form-label">Toplu Resim Seç (Tek seferde 5'e kadar)</label>
+                                <input type="file" id="multipleAfterInput" class="form-control" accept="image/*" multiple />
+                                <button type="button" id="addMultipleAfter" class="btn-multiple-image mt-2">+ Toplu Ekle</button>
+                                <div id="multipleAfterList" class="file-list"></div>
+                            </div>
+                            
+                            <hr />
+                            
+                            <!-- TEK TEK RESİM EKLEME ALANI -->
+                            <label class="form-label">Tek Tek Resim Ekle</label>
+                            <div id="afterImagesContainer"></div>
+                            <button type="button" id="addAfterImage" class="btn-add-image">+ Tek Resim Ekle</button>
+                            <div class="image-counter" id="afterCounter">0 / 5 resim</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-success" id="submitBtn"><i class="fas fa-save"></i> Kaydet</button>
+                <button type="button" class="btn-geri" onclick="location.href='/Repair/Index'">
+                    <i class="fas fa-arrow-left"></i> Geri
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    
+    button.btn-remove-image {
+        background: #dc3545 !important;
+        color: white !important;
+        border: none !important;
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 8px !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        padding: 0 !important;
+        margin: 2px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+</style>
+
+@* @section Scripts {
+    <script>
+        let newBeforeCount = 0;
+        let newAfterCount = 0;
+        let pendingBeforeFiles = [];
+        let pendingAfterFiles = [];
+
+        $(document).ready(function() {
+        updateCounters();
+            
+        $('#CustomerSelect').change(function() {
+        var selectedOption = $(this).find('option:selected');
+        var customerNo = selectedOption.data('customernumber');
+        if (customerNo) {
+        $('#CustomerNumber').val(customerNo);
+        } else {
+        $('#CustomerNumber').val('');
+        }
+        });
+
+        // ========== TOPLU ÖNCESİ RESİM EKLEME ==========
+        $('#addMultipleBefore').click(function() {
+        var files = $('#multipleBeforeInput')[0].files;
+        var totalBefore = newBeforeCount + pendingBeforeFiles.length;
+                
+        if (files.length === 0) {
+        Swal.fire('Uyarı!', 'Lütfen resim seçin!', 'warning');
+        return;
+        }
+                
+        if (totalBefore + files.length > 5) {
+        var kalan = 5 - totalBefore;
+        Swal.fire('Uyarı!', `En fazla 5 resim ekleyebilirsiniz! ${kalan} adet daha ekleyebilirsiniz.`, 'warning');
+        return;
+        }
+                
+        for (var i = 0; i < files.length; i++) {
+        pendingBeforeFiles.push(files[i]);
+        }
+                
+        updateMultipleBeforeList();
+        $('#multipleBeforeInput').val('');
+        updateCounters();
+        });
+            
+       
+                function updateMultipleBeforeList() {
+            var listDiv = $('#multipleBeforeList');
+            listDiv.empty();
+            if (pendingBeforeFiles.length > 0) {
+                listDiv.html('<strong>Seçilenler:</strong> <button type="button" id="selectAllPendingBefore" class="select-all-btn" style="background:#0d6efd; border:none; padding:2px 8px; border-radius:4px; margin-left:5px;">Tümünü Seç</button> <button type="button" id="deleteSelectedPendingBefore" class="btn-delete-selected" style="background:#dc3545; border:none; padding:2px 8px; border-radius:4px; margin-left:5px;">Seçilenleri Sil</button><br/>');
+                for (var i = 0; i < pendingBeforeFiles.length; i++) {
+                    listDiv.append(`<span class="pending-before-item" data-index="${i}" style="cursor:pointer;">${pendingBeforeFiles[i].name} <button type="button" class="remove-pending-before" data-index="${i}" style="background:none; border:none; color:red; cursor:pointer;">×</button></span>`);
+                }
+            } else {
+                listDiv.html('');
+            }
+
+            $('.pending-before-item').off('click').on('click', function(e) {
+                if ($(e.target).hasClass('remove-pending-before')) return;
+                $(this).toggleClass('selected');
+            });
+
+            $('#selectAllPendingBefore').off('click').on('click', function() {
+                $('.pending-before-item').addClass('selected');
+            });
+
+            $('#deleteSelectedPendingBefore').off('click').on('click', function() {
+                var selectedIndexes = [];
+                $('.pending-before-item.selected').each(function() {
+                    selectedIndexes.push($(this).data('index'));
+                });
+        
+                if (selectedIndexes.length === 0) {
+                    Swal.fire('Uyarı', 'Silmek için resim seçin!', 'warning');
+                    return;
+                }
+        
+                Swal.fire({
+                    title: `${selectedIndexes.length} resim silinecek!`,
+                    text: 'Bu işlem geri alınamaz!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Evet, Sil!',
+                    cancelButtonText: 'İptal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        selectedIndexes.sort((a, b) => b - a);
+                        for (var idx of selectedIndexes) {
+                            pendingBeforeFiles.splice(idx, 1);
+                        }
+                        updateMultipleBeforeList();
+                        updateCounters();
+                        Swal.fire('Silindi!', `${selectedIndexes.length} resim silindi.`, 'success');
+                    }
+                });
+            });
+
+            $('.remove-pending-before').off('click').on('click', function(e) {
+                e.stopPropagation();
+                var index = $(this).data('index');
+                pendingBeforeFiles.splice(index, 1);
+                updateMultipleBeforeList();
+                updateCounters();
+            });
+        }
+
+
+        // ========== TOPLU SONRASI RESİM EKLEME ==========
+        $('#addMultipleAfter').click(function() {
+        var files = $('#multipleAfterInput')[0].files;
+        var totalAfter = newAfterCount + pendingAfterFiles.length;
+                
+        if (files.length === 0) {
+        Swal.fire('Uyarı!', 'Lütfen resim seçin!', 'warning');
+        return;
+        }
+                
+        if (totalAfter + files.length > 5) {
+        var kalan = 5 - totalAfter;
+        Swal.fire('Uyarı!', `En fazla 5 resim ekleyebilirsiniz! ${kalan} adet daha ekleyebilirsiniz.`, 'warning');
+        return;
+        }
+                
+        for (var i = 0; i < files.length; i++) {
+        pendingAfterFiles.push(files[i]);
+        }
+                
+        updateMultipleAfterList();
+        $('#multipleAfterInput').val('');
+        updateCounters();
+        });
+            
+              function updateMultipleAfterList() {
+            var listDiv = $('#multipleAfterList');
+            listDiv.empty();
+            if (pendingAfterFiles.length > 0) {
+                listDiv.html('<strong>Seçilenler:</strong> <button type="button" id="selectAllPendingAfter" class="select-all-btn" style="background:#0d6efd; border:none; padding:2px 8px; border-radius:4px; margin-left:5px;">Tümünü Seç</button> <button type="button" id="deleteSelectedPendingAfter" class="btn-delete-selected" style="background:#dc3545; border:none; padding:2px 8px; border-radius:4px; margin-left:5px;">Seçilenleri Sil</button><br/>');
+                for (var i = 0; i < pendingAfterFiles.length; i++) {
+                    listDiv.append(`<span class="pending-after-item" data-index="${i}" style="cursor:pointer;">${pendingAfterFiles[i].name} <button type="button" class="remove-pending-after" data-index="${i}" style="background:none; border:none; color:red; cursor:pointer;">×</button></span>`);
+                }
+            } else {
+                listDiv.html('');
+            }
+
+            $('.pending-after-item').off('click').on('click', function(e) {
+                if ($(e.target).hasClass('remove-pending-after')) return;
+                $(this).toggleClass('selected');
+            });
+
+            $('#selectAllPendingAfter').off('click').on('click', function() {
+                $('.pending-after-item').addClass('selected');
+            });
+
+            $('#deleteSelectedPendingAfter').off('click').on('click', function() {
+                var selectedIndexes = [];
+                $('.pending-after-item.selected').each(function() {
+                    selectedIndexes.push($(this).data('index'));
+                });
+        
+                if (selectedIndexes.length === 0) {
+                    Swal.fire('Uyarı', 'Silmek için resim seçin!', 'warning');
+                    return;
+                }
+        
+                Swal.fire({
+                    title: `${selectedIndexes.length} resim silinecek!`,
+                    text: 'Bu işlem geri alınamaz!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Evet, Sil!',
+                    cancelButtonText: 'İptal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        selectedIndexes.sort((a, b) => b - a);
+                        for (var idx of selectedIndexes) {
+                            pendingAfterFiles.splice(idx, 1);
+                        }
+                        updateMultipleAfterList();
+                        updateCounters();
+                        Swal.fire('Silindi!', `${selectedIndexes.length} resim silindi.`, 'success');
+                    }
+                });
+            });
+
+            $('.remove-pending-after').off('click').on('click', function(e) {
+                e.stopPropagation();
+                var index = $(this).data('index');
+                pendingAfterFiles.splice(index, 1);
+                updateMultipleAfterList();
+                updateCounters();
+            });
+        }
+
+        // ========== TEK TEK ÖNCESİ RESİM EKLEME ==========
+        $('#addBeforeImage').click(function() {
+        var totalBefore = newBeforeCount + pendingBeforeFiles.length;
+                
+        if (totalBefore >= 5) {
+        Swal.fire('Uyarı!', 'En fazla 5 öncesi resmi ekleyebilirsiniz!', 'warning');
+        return;
+        }
+                
+        newBeforeCount++;
+        var newId = newBeforeCount;
+                
+        $('#beforeImagesContainer').append(`
+        <div class="image-row" id="beforeRow${newId}">
+        <input type="file" name="BeforeImages" class="form-control" accept="image/*" />
+        <button type="button" class="btn-remove-image remove-before" data-id="${newId}">X</button>
+        </div>
+        `);
+        updateCounters();
+        });
+
+        $(document).on('click', '.remove-before', function() {
+        var id = $(this).data('id');
+        $(`#beforeRow${id}`).remove();
+        newBeforeCount--;
+        renumberRows('before');
+        updateCounters();
+        });
+
+        // ========== TEK TEK SONRASI RESİM EKLEME ==========
+        $('#addAfterImage').click(function() {
+        var totalAfter = newAfterCount + pendingAfterFiles.length;
+                
+        if (totalAfter >= 5) {
+        Swal.fire('Uyarı!', 'En fazla 5 sonrası resmi ekleyebilirsiniz!', 'warning');
+        return;
+        }
+                
+        newAfterCount++;
+        var newId = newAfterCount;
+                
+        $('#afterImagesContainer').append(`
+        <div class="image-row" id="afterRow${newId}">
+        <input type="file" name="AfterImages" class="form-control" accept="image/*" />
+        <button type="button" class="btn-remove-image remove-after" data-id="${newId}">X</button>
+        </div>
+        `);
+        updateCounters();
+        });
+
+        $(document).on('click', '.remove-after', function() {
+        var id = $(this).data('id');
+        $(`#afterRow${id}`).remove();
+        newAfterCount--;
+        renumberRows('after');
+        updateCounters();
+        });
+
+        // ========== FORM GÖNDERME ==========
+        $('#addRepairForm').on('submit', function(e) {
+        var totalBefore = newBeforeCount + pendingBeforeFiles.length;
+        var totalAfter = newAfterCount + pendingAfterFiles.length;
+                
+        if (totalBefore > 5) {
+        e.preventDefault();
+        Swal.fire('Hata!', 'Öncesi resim sayısı 5\'i geçemez!', 'error');
+        return false;
+        }
+                
+        if (totalAfter > 5) {
+        e.preventDefault();
+        Swal.fire('Hata!', 'Sonrası resim sayısı 5\'i geçemez!', 'error');
+        return false;
+        }
+                
+        var formData = new FormData(this);
+                
+        for (var i = 0; i < pendingBeforeFiles.length; i++) {
+        formData.append('BeforeImages', pendingBeforeFiles[i]);
+        }
+                
+        for (var i = 0; i < pendingAfterFiles.length; i++) {
+        formData.append('AfterImages', pendingAfterFiles[i]);
+        }
+                
+        e.preventDefault();
+                
+        Swal.fire({
+        title: 'Kaydediliyor...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+        });
+                
+        $.ajax({
+        url: '/Repair/Create',
+        type: 'POST',
+        data: formData,
+            headers: {
+            "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+        },
+        processData: false,
+        contentType: false,
+        success: function(response) {
+        if (response.success) {
+        Swal.fire('Başarılı!', 'Tamir kaydı eklendi.', 'success').then(() => {
+        window.location.href = '/Repair/Index';
+        });
+        } else {
+        Swal.fire('Hata!', response.message || 'Bir sorun oluştu.', 'error');
+        }
+        },
+        error: function(xhr) {
+        Swal.fire('Hata!', xhr.responseJSON?.message || 'Bir sorun oluştu.', 'error');
+        }
+        });
+                
+        return false;
+        });
+
+        function renumberRows(type) {
+        var container = type === 'before' ? '#beforeImagesContainer' : '#afterImagesContainer';
+        var rows = $(container).children('.image-row');
+        rows.each(function(index, row) {
+        var newId = index + 1;
+        $(row).attr('id', `${type}Row${newId}`);
+        $(row).find('.remove-before, .remove-after').attr('data-id', newId);
+        });
+        if (type === 'before') newBeforeCount = rows.length;
+        else newAfterCount = rows.length;
+        updateCounters();
+        }
+
+        function updateCounters() {
+        var totalBefore = newBeforeCount + pendingBeforeFiles.length;
+        var totalAfter = newAfterCount + pendingAfterFiles.length;
+        $('#beforeCounter').text(`${totalBefore} / 5 resim`);
+        $('#afterCounter').text(`${totalAfter} / 5 resim`);
+                
+        if (totalBefore >= 5) {
+        $('#addBeforeImage, #addMultipleBefore').prop('disabled', true).css('opacity', '0.5');
+        } else {
+        $('#addBeforeImage, #addMultipleBefore').prop('disabled', false).css('opacity', '1');
+        }
+                
+        if (totalAfter >= 5) {
+        $('#addAfterImage, #addMultipleAfter').prop('disabled', true).css('opacity', '0.5');
+        } else {
+        $('#addAfterImage, #addMultipleAfter').prop('disabled', false).css('opacity', '1');
+        }
+        }
+        });
+    </script>
+} *@
+
+
+@section Scripts {
+    <script>
+        let newBeforeCount = 0;
+        let newAfterCount = 0;
+        let beforeUniqueId = 0;
+        let afterUniqueId = 0;
+
+        let pendingBeforeFiles = [];
+        let pendingAfterFiles = [];
+
+        $(document).ready(function() {
+            updateCounters();
+            initPriceFormat();
+            setMinDeliveryDate();
+
+            $('#CustomerSelect').change(function() {
+                var selectedOption = $(this).find('option:selected');
+                var customerNo = selectedOption.data('customernumber');
+                if (customerNo) {
+                    $('#CustomerNumber').val(customerNo);
+                } else {
+                    $('#CustomerNumber').val('');
+                }
+            });
+
+            // 1. TAHMİNİ TESLİM TARİHİ İÇİN GEÇMİŞ GÜNLERİ ENGELLER
+            function setMinDeliveryDate() {
+                var today = new Date().toISOString().split('T')[0];
+                $('input[name="EstimatedDeliveryDate"]').attr('min', today);
+            }
+
+            // 2. FİYAT ALANINI ANLIK VE ÇIKIŞTA FORMATLAR (1.250,00 ₺)
+            function initPriceFormat() {
+                let priceInput = $('input[name="Price"]');
+
+                // İlk açılışta 0 ise temiz bir görünüm ver
+                if(priceInput.val() === "0" || priceInput.val() === "") {
+                    priceInput.val("0,00").addClass("text-end");
+                }
+
+                priceInput.on('input', function() {
+                    let val = $(this).val().replace(/[^0-9.,]/g, ''); // Sadece sayı, nokta, virgül
+                    if ((val.match(/,/g) || []).length > 1) val = val.replace(/,+$/, "");
+                    $(this).val(val);
+                });
+
+                priceInput.on('blur', function() {
+                    let val = $(this).val().trim();
+                    if (val === '' || val === '0') {
+                        $(this).val('0,00');
+                        return;
+                    }
+                    val = val.replace(/\./g, '').replace(',', '.');
+                    let number = parseFloat(val);
+                    if (!isNaN(number)) {
+                        let formatted = number.toLocaleString('tr-TR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                        $(this).val(formatted);
+                    } else {
+                        $(this).val('0,00');
+                    }
+                });
+
+                priceInput.on('focus', function() {
+                    if ($(this).val() === '0,00') {
+                        $(this).val('');
+                    }
+                });
+            }
+
+            // ========== TOPLU ÖNCESİ RESİM EKLEME ==========
+            $('#addMultipleBefore').click(function() {
+                var files = $('#multipleBeforeInput')[0].files;
+                var totalBefore = newBeforeCount + pendingBeforeFiles.length;
+
+                if (files.length === 0) {
+                    Swal.fire('Uyarı!', 'Lütfen resim seçin!', 'warning');
+                    return;
+                }
+
+                if (totalBefore + files.length > 5) {
+                    var kalan = 5 - totalBefore;
+                    Swal.fire('Uyarı!', `En fazla 5 resim ekleyebilirsiniz! ${kalan} adet daha ekleyebilirsiniz.`, 'warning');
+                    return;
+                }
+
+                for (var i = 0; i < files.length; i++) {
+                    pendingBeforeFiles.push(files[i]);
+                }
+
+                updateMultipleBeforeList();
+                $('#multipleBeforeInput').val('');
+                updateCounters();
+            });
+
+            function updateMultipleBeforeList() {
+                var listDiv = $('#multipleBeforeList');
+                listDiv.empty();
+                if (pendingBeforeFiles.length > 0) {
+                    listDiv.html('<strong>Seçilenler:</strong> <button type="button" id="selectAllPendingBefore" class="select-all-btn" style="background:#0d6efd; border:none; color:white; padding:2px 8px; border-radius:4px; margin-left:5px;">Tümünü Seç</button> <button type="button" id="deleteSelectedPendingBefore" class="btn-delete-selected" style="background:#dc3545; border:none; color:white; padding:2px 8px; border-radius:4px; margin-left:5px;">Seçilenleri Sil</button><br/>');
+                    for (var i = 0; i < pendingBeforeFiles.length; i++) {
+                        listDiv.append(`<span class="pending-before-item" data-index="${i}" style="cursor:pointer; display:inline-block; margin:2px; padding:2px 5px; border:1px solid #ccc; border-radius:4px;">${pendingBeforeFiles[i].name} <button type="button" class="remove-pending-before" data-index="${i}" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">×</button></span>`);
+                    }
+                } else {
+                    listDiv.html('');
+                }
+
+                $('.pending-before-item').off('click').on('click', function(e) {
+                    if ($(e.target).hasClass('remove-pending-before')) return;
+                    $(this).toggleClass('selected').css('background-color', $(this).hasClass('selected') ? '#e2e3e5' : 'transparent');
+                });
+
+                $('#selectAllPendingBefore').off('click').on('click', function() {
+                    $('.pending-before-item').addClass('selected').css('background-color', '#e2e3e5');
+                });
+
+                $('#deleteSelectedPendingBefore').off('click').on('click', function() {
+                    var selectedIndexes = [];
+                    $('.pending-before-item.selected').each(function() {
+                        selectedIndexes.push($(this).data('index'));
+                    });
+
+                    if (selectedIndexes.length === 0) {
+                        Swal.fire('Uyarı', 'Silmek için resim seçin!', 'warning');
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: `${selectedIndexes.length} resim silinecek!`,
+                        text: 'Bu işlem geri alınamaz!',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        confirmButtonText: 'Evet, Sil!',
+                        cancelButtonText: 'İptal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            selectedIndexes.sort((a, b) => b - a);
+                            for (var idx of selectedIndexes) {
+                                pendingBeforeFiles.splice(idx, 1);
+                            }
+                            updateMultipleBeforeList();
+                            updateCounters();
+                            Swal.fire('Silindi!', `${selectedIndexes.length} resim silindi.`, 'success');
+                        }
+                    });
+                });
+
+                $('.remove-pending-before').off('click').on('click', function(e) {
+                    e.stopPropagation();
+                    var index = $(this).data('index');
+                    pendingBeforeFiles.splice(index, 1);
+                    updateMultipleBeforeList();
+                    updateCounters();
+                });
+            }
+
+            // ========== TOPLU SONRASI RESİM EKLEME ==========
+            $('#addMultipleAfter').click(function() {
+                var files = $('#multipleAfterInput')[0].files;
+                var totalAfter = newAfterCount + pendingAfterFiles.length;
+
+                if (files.length === 0) {
+                    Swal.fire('Uyarı!', 'Lütfen resim seçin!', 'warning');
+                    return;
+                }
+
+                if (totalAfter + files.length > 5) {
+                    var kalan = 5 - totalAfter;
+                    Swal.fire('Uyarı!', `En fazla 5 resim ekleyebilirsiniz! ${kalan} adet daha ekleyebilirsiniz.`, 'warning');
+                    return;
+                }
+
+                for (var i = 0; i < files.length; i++) {
+                    pendingAfterFiles.push(files[i]);
+                }
+
+                updateMultipleAfterList();
+                $('#multipleAfterInput').val('');
+                updateCounters();
+            });
+
+            function updateMultipleAfterList() {
+                var listDiv = $('#multipleAfterList');
+                listDiv.empty();
+                if (pendingAfterFiles.length > 0) {
+                    listDiv.html('<strong>Seçilenler:</strong> <button type="button" id="selectAllPendingAfter" class="select-all-btn" style="background:#0d6efd; border:none; color:white; padding:2px 8px; border-radius:4px; margin-left:5px;">Tümünü Seç</button> <button type="button" id="deleteSelectedPendingAfter" class="btn-delete-selected" style="background:#dc3545; border:none; color:white; padding:2px 8px; border-radius:4px; margin-left:5px;">Seçilenleri Sil</button><br/>');
+                    for (var i = 0; i < pendingAfterFiles.length; i++) {
+                        listDiv.append(`<span class="pending-after-item" data-index="${i}" style="cursor:pointer; display:inline-block; margin:2px; padding:2px 5px; border:1px solid #ccc; border-radius:4px;">${pendingAfterFiles[i].name} <button type="button" class="remove-pending-after" data-index="${i}" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">×</button></span>`);
+                    }
+                } else {
+                    listDiv.html('');
+                }
+
+                $('.pending-after-item').off('click').on('click', function(e) {
+                    if ($(e.target).hasClass('remove-pending-after')) return;
+                    $(this).toggleClass('selected').css('background-color', $(this).hasClass('selected') ? '#e2e3e5' : 'transparent');
+                });
+
+                $('#selectAllPendingAfter').off('click').on('click', function() {
+                    $('.pending-after-item').addClass('selected').css('background-color', '#e2e3e5');
+                });
+
+                $('#deleteSelectedPendingAfter').off('click').on('click', function() {
+                    var selectedIndexes = [];
+                    $('.pending-after-item.selected').each(function() {
+                        selectedIndexes.push($(this).data('index'));
+                    });
+
+                    if (selectedIndexes.length === 0) {
+                        Swal.fire('Uyarı', 'Silmek için resim seçin!', 'warning');
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: `${selectedIndexes.length} resim silinecek!`,
+                        text: 'Bu işlem geri alınamaz!',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        confirmButtonText: 'Evet, Sil!',
+                        cancelButtonText: 'İptal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            selectedIndexes.sort((a, b) => b - a);
+                            for (var idx of selectedIndexes) {
+                                pendingAfterFiles.splice(idx, 1);
+                            }
+                            updateMultipleAfterList();
+                            updateCounters();
+                            Swal.fire('Silindi!', `${selectedIndexes.length} resim silindi.`, 'success');
+                        }
+                    });
+                });
+
+                $('.remove-pending-after').off('click').on('click', function(e) {
+                    e.stopPropagation();
+                    var index = $(this).data('index');
+                    pendingAfterFiles.splice(index, 1);
+                    updateMultipleAfterList();
+                    updateCounters();
+                });
+            }
+
+            // ========== TEK TEK ÖNCESİ RESİM EKLEME ==========
+            $('#addBeforeImage').click(function() {
+                var totalBefore = newBeforeCount + pendingBeforeFiles.length;
+
+                if (totalBefore >= 5) {
+                    Swal.fire('Uyarı!', 'En fazla 5 öncesi resmi ekleyebilirsiniz!', 'warning');
+                    return;
+                }
+
+                beforeUniqueId++;
+
+                // Input ve butonu dikeyde tam hizalamak için d-flex ve align-items-center eklendi
+                $('#beforeImagesContainer').append(`
+                    <div class="image-row d-flex align-items-center mb-2" id="beforeRow${beforeUniqueId}">
+                        <input type="file" name="BeforeImages" class="form-control me-2" accept="image/*" />
+                        <button type="button" class="btn btn-danger remove-before" data-id="${beforeUniqueId}">X</button>
+                    </div>
+                `);
+
+                newBeforeCount = $('#beforeImagesContainer').children('.image-row').length;
+                updateCounters();
+            });
+
+            $(document).on('click', '.remove-before', function() {
+                var id = $(this).data('id');
+                $(`#beforeRow${id}`).remove();
+                newBeforeCount = $('#beforeImagesContainer').children('.image-row').length;
+                updateCounters();
+            });
+
+            // ========== TEK TEK SONRASI RESİM EKLEME ==========
+            $('#addAfterImage').click(function() {
+                var totalAfter = newAfterCount + pendingAfterFiles.length;
+
+                if (totalAfter >= 5) {
+                    Swal.fire('Uyarı!', 'En fazla 5 sonrası resmi ekleyebilirsiniz!', 'warning');
+                    return;
+                }
+
+                afterUniqueId++;
+
+                // Input ve butonu dikeyde tam hizalamak için d-flex ve align-items-center eklendi
+                $('#afterImagesContainer').append(`
+                    <div class="image-row d-flex align-items-center mb-2" id="afterRow${afterUniqueId}">
+                        <input type="file" name="AfterImages" class="form-control me-2" accept="image/*" />
+                        <button type="button" class="btn btn-danger remove-after" data-id="${afterUniqueId}">X</button>
+                    </div>
+                `);
+
+                newAfterCount = $('#afterImagesContainer').children('.image-row').length;
+                updateCounters();
+            });
+
+            $(document).on('click', '.remove-after', function() {
+                var id = $(this).data('id');
+                $(`#afterRow${id}`).remove();
+                newAfterCount = $('#afterImagesContainer').children('.image-row').length;
+                updateCounters();
+            });
+
+            // ========== FORM GÖNDERME (FORMATLANMIŞ FİYATI ARKA PLANDA DÜZELTİR) ==========
+            $('#addRepairForm').on('submit', function(e) {
+                e.preventDefault();
+
+                var totalBefore = newBeforeCount + pendingBeforeFiles.length;
+                var totalAfter = newAfterCount + pendingAfterFiles.length;
+
+                if (totalBefore > 5) {
+                    Swal.fire('Hata!', 'Öncesi resim sayısı 5\'i geçemez!', 'error');
+                    return false;
+                }
+
+                if (totalAfter > 5) {
+                    Swal.fire('Hata!', 'Sonrası resim sayısı 5\'i geçemez!', 'error');
+                    return false;
+                }
+
+                var formData = new FormData(this);
+
+                // Ekrandaki "1.250,00" değerini backend'in (decimal) anlayacağı "1250.50" formatına çevirip öyle gönderiyoruz.
+                let rawPrice = $('input[name="Price"]').val().replace(/\./g, '').replace(',', '.');
+                formData.set('Price', rawPrice);
+
+                for (var i = 0; i < pendingBeforeFiles.length; i++) {
+                    formData.append('BeforeImages', pendingBeforeFiles[i]);
+                }
+
+                for (var i = 0; i < pendingAfterFiles.length; i++) {
+                    formData.append('AfterImages', pendingAfterFiles[i]);
+                }
+
+                Swal.fire({
+                    title: 'Kaydediliyor...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                $.ajax({
+                    url: '/Repair/Create',
+                    type: 'POST',
+                    data: formData,
+                    headers: {
+                        "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire('Başarılı!', 'Tamir kaydı eklendi.', 'success').then(() => {
+                                window.location.href = '/Repair/Index';
+                            });
+                        } else {
+                            Swal.fire('Hata!', response.message || 'Bir sorun oluştu.', 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire('Hata!', xhr.responseJSON?.message || 'Bir sorun oluştu.', 'error');
+                    }
+                });
+
+                return false;
+            });
+
+            function updateCounters() {
+                var totalBefore = newBeforeCount + pendingBeforeFiles.length;
+                var totalAfter = newAfterCount + pendingAfterFiles.length;
+
+                $('#beforeCounter').text(`${totalBefore} / 5 resim`);
+                $('#afterCounter').text(`${totalAfter} / 5 resim`);
+
+                if (totalBefore >= 5) {
+                    $('#addBeforeImage, #addMultipleBefore').prop('disabled', true).css('opacity', '0.5');
+                } else {
+                    $('#addBeforeImage, #addMultipleBefore').prop('disabled', false).css('opacity', '1');
+                }
+
+                if (totalAfter >= 5) {
+                    $('#addAfterImage, #addMultipleAfter').prop('disabled', true).css('opacity', '0.5');
+                } else {
+                    $('#addAfterImage, #addMultipleAfter').prop('disabled', false).css('opacity', '1');
+                }
+            }
+        });
+    </script>
+}

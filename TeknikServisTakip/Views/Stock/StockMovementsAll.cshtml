@@ -1,0 +1,159 @@
+﻿@{
+    ViewData["Title"] = "Tüm Stok Hareketleri";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-exchange-alt"></i> Tüm Stok Hareketleri
+                <div class="float-end">
+                    <a href="/Stock/ExportMovementsExcel" class="btn btn-success btn-sm">
+                        <i class="fas fa-file-excel"></i> Excel İndir
+                    </a>
+                    <a href="/Stock/ExportMovementsPdf" class="btn btn-danger btn-sm me-1">
+                        <i class="fas fa-file-pdf"></i> PDF İndir
+                    </a>
+                </div>
+            </h4>
+        </div>
+        <div class="card-body">
+            <!-- Filtreler -->
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Ürün adı, kodu, referans ara..." />
+                </div>
+                <div class="col-md-2">
+                    <select id="movementTypeFilter" class="form-select">
+                        <option value="">Tüm Hareketler</option>
+                        <option value="IN">Stok Girişi</option>
+                        <option value="OUT">Stok Çıkışı</option>
+                        <option value="ADJUST_IN">Düzeltme (+)</option>
+                        <option value="ADJUST_OUT">Düzeltme (-)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" id="startDate" class="form-control" placeholder="Başlangıç" />
+                </div>
+                <div class="col-md-2">
+                    <input type="date" id="endDate" class="form-control" placeholder="Bitiş" />
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        <i class="fas fa-search"></i> Filtrele
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetFilters()">
+                        <i class="fas fa-undo"></i> Sıfırla
+                    </button>
+                </div>
+            </div>
+
+            <!-- DataTable -->
+            <table id="movementsTable" class="table table-bordered table-striped w-100">
+                <thead>
+                    <tr>
+                        <th>Tarih</th>
+                        <th>Ürün Kodu</th>
+                        <th>Ürün Adı</th>
+                        <th>İşlem Tipi</th>
+                        <th>Miktar</th>
+                        <th>Önceki Stok</th>
+                        <th>Yeni Stok</th>
+                        <th>Referans No</th>
+                        <th>Açıklama</th>
+                        <th>İşlemi Yapan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let movementsTable;
+
+        $(document).ready(function() {
+            initDataTable();
+        });
+
+        function initDataTable() {
+            if ($.fn.dataTable.isDataTable('#movementsTable')) {
+                $('#movementsTable').DataTable().destroy();
+            }
+
+            movementsTable = $('#movementsTable').DataTable({
+                processing: true,
+                serverSide: true,
+                deferRender: true,
+                ajax: {
+                    url: '/Stock/GetStockMovementsJson',
+                    type: 'POST',
+                    data: function(d) {
+                        return {
+                            draw: d.draw,
+                            start: d.start,
+                            length: d.length,
+                          search: $('#searchInput').val(),
+                            movementType: $('#movementTypeFilter').val(),
+                            startDate: $('#startDate').val(),
+                            endDate: $('#endDate').val()
+                        };
+                    }
+                },
+                columns: [
+                    { data: 'createdAt' },
+                    { data: 'productCode' },
+                    { data: 'productName' },
+                    {
+                        data: null,
+                        render: function(data) {
+                            let badgeClass = data.movementClass === 'success' ? 'bg-success' :
+                                            (data.movementClass === 'danger' ? 'bg-danger' :
+                                            (data.movementClass === 'info' ? 'bg-info' : 'bg-warning'));
+                            return `<span class="badge ${badgeClass}">${data.movementName}</span>`;
+                        }
+                    },
+                    {
+                        data: 'quantity',
+                        render: function(data) {
+                            return `<span class="fw-bold">${data}</span>`;
+                        }
+                    },
+                    { data: 'previousStock' },
+                    {
+                        data: null,
+                        render: function(data) {
+                            let arrow = data.newStock > data.previousStock ? '↑' : '↓';
+                            let color = data.newStock > data.previousStock ? 'text-success' : 'text-danger';
+                            return `<span class="${color}">${data.previousStock} → ${data.newStock}</span>`;
+                        }
+                    },
+                    { data: 'referenceNo' },
+                    { data: 'description' },
+                    { data: 'createdBy' }
+                ],
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, 250], [10, 25, 50, 100, 250]],
+                language: { url: '/datatables/tr.json' },
+                order: [[0, 'desc']],
+                responsive: true,
+                autoWidth: false
+            });
+        }
+
+        function applyFilters() {
+            movementsTable.ajax.reload();
+        }
+
+        function resetFilters() {
+            $('#searchInput').val('');
+            $('#movementTypeFilter').val('');
+            $('#startDate').val('');
+            $('#endDate').val('');
+            movementsTable.ajax.reload();
+        }
+    </script>
+}

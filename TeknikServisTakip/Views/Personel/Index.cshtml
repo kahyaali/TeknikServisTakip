@@ -1,0 +1,571 @@
+﻿@* 
+
+
+@model IEnumerable<Entities.Concrete.Personel>
+@{
+    ViewData["Title"] = "Personel Listesi";
+}
+
+
+<div style="padding: 20px;">
+    <h1><i class="fas fa-users"></i> Personel Listesi</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div style="margin-bottom: 20px;">
+        <a href="/Personel/Create" class="btn-ekle"><i class="fas fa-plus"></i> Yeni Personel Ekle</a>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="personelTable" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Ad Soyad</th>
+                    <th>Pozisyon</th>
+                    <th>Departman</th>
+                    <th>Telefon</th>
+                    <th>E-posta</th>
+                    <th>Adres</th>
+                    <th>Durum</th>
+                    <th>Kayıt Tarihi</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int sayac = 1;
+                }
+                @foreach (var item in Model)
+                {
+                    <tr data-id="@item.Id" data-fullname="@item.FullName" data-position="@item.Position" data-department="@item.Department" data-phone="@item.PhoneNumber" data-email="@item.Email" data-address="@item.Address" data-status="@(item.IsActive ? "Aktif" : "Pasif")" data-created="@item.CreatedAt.ToString("dd.MM.yyyy")">
+                        <td style="text-align: center;">@sayac</td>
+                        <td class="truncate-text detail-trigger" data-field="Ad Soyad" data-value="@item.FullName">@item.FullName</td>
+                        <td class="truncate-text detail-trigger" data-field="Pozisyon" data-value="@(item.Position?.Name ?? "-")">
+                          @(item.Position?.Name ?? "-")
+                          </td>
+                        <td class="truncate-text detail-trigger" data-field="Departman" data-value="@(item.Department?.Name ?? "-")">
+                         @(item.Department?.Name ?? "-")
+                            </td>
+                        <td>@(string.IsNullOrEmpty(item.PhoneNumber) ? "-" : item.PhoneNumber)</td>
+                        <td class="truncate-text detail-trigger" data-field="E-posta" data-value="@item.Email">@(string.IsNullOrEmpty(item.Email) ? "-" : item.Email)</td>
+                        <td class="truncate-text detail-trigger" data-field="Adres" data-value="@item.Address">@(string.IsNullOrEmpty(item.Address) ? "-" : item.Address)</td>
+                        <td style="text-align: center;">
+                            @if (item.IsActive)
+                            {
+                                <span class="badge-aktif">Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="badge-pasif">Pasif</span>
+                            }
+                        </td>
+                        <td style="text-align: center;">@item.CreatedAt.ToString("dd.MM.yyyy")</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="/Personel/Edit/@item.Id" class="btn-duzenle">
+                                    <i class="fas fa-edit"></i> Düzenle
+                                </a>
+                                <button onclick="deletePersonel(@item.Id, '@item.FullName')" class="btn-sil">
+                                    <i class="fas fa-trash"></i> Sil
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    sayac++;
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Detay Modal -->
+<div class="modal fade detail-modal" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-info-circle"></i> Detay Bilgiler</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailModalBody">
+                <!-- Detaylar buraya gelecek -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        $(document).ready(function() {
+            var table = $('#personelTable').DataTable({
+                language: {
+                    // url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/tr.json'
+                    url: '/datatables/tr.json'
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" +
+                     "<'row'<'col-sm-12'B>>",
+               buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i> Excel Listesi',
+                        className: 'btn btn-success btn-sm',
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 7] }
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i> PDF Rapor',
+                        className: 'btn btn-danger btn-sm',
+                        orientation: 'landscape',
+                        pageSize: 'A4',
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 7] },
+                        customize: function(doc) {
+                            doc.content[1].margin = [0, 10, 0, 20];
+                            doc.styles.tableHeader = { fontSize: 10, bold: true, color: 'white', fillColor: '#1e293b', alignment: 'center' };
+                            doc.defaultStyle.fontSize = 9;
+                            
+                            var tblBody = doc.content.find(function(item) { return item.table; });
+                            if (tblBody) {
+                                tblBody.table.widths = ['5%', '20%', '15%', '15%', '15%', '20%', '10%'];
+                            }
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i> Yazdır',
+                        className: 'btn btn-secondary btn-sm',
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 7] }
+                    }
+                ],
+                pageLength: 10,
+                responsive: true,
+                autoWidth: false,
+                scrollX: false,
+                order: [[1, 'asc']]
+            });
+            
+            // Modal için tıklama olayı
+            $(document).on('click', '.detail-trigger', function() {
+                var field = $(this).data('field');
+                var value = $(this).data('value');
+                var row = $(this).closest('tr');
+                
+                // Tüm satır bilgilerini al
+                var fullName = row.data('fullname');
+                var position = row.data('position');
+                var department = row.data('department');
+                var phone = row.data('phone');
+                var email = row.data('email');
+                var address = row.data('address');
+                var status = row.data('status');
+                var created = row.data('created');
+                
+                // Modal içeriğini oluştur
+                var modalBody = `
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-user"></i> Ad Soyad</div>
+                        <div class="detail-value">${fullName || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-briefcase"></i> Pozisyon</div>
+                        <div class="detail-value">${position || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-building"></i> Departman</div>
+                        <div class="detail-value">${department || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-phone"></i> Telefon</div>
+                        <div class="detail-value">${phone || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-envelope"></i> E-posta</div>
+                        <div class="detail-value">${email || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-location-dot"></i> Adres</div>
+                        <div class="detail-value">${address || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-circle"></i> Durum</div>
+                        <div class="detail-value">${status || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-calendar"></i> Kayıt Tarihi</div>
+                        <div class="detail-value">${created || '-'}</div>
+                    </div>
+                `;
+                
+                $('#detailModalBody').html(modalBody);
+                $('#detailModal').modal('show');
+            });
+        });
+
+
+        function deletePersonel(id, fullName) {
+            Swal.fire({
+                title: 'Silmek İstiyor musunuz?',
+                html: '<b>' + fullName + '</b> adlı personeli silmek üzeresiniz!<br>Bu işlem <b>geri alınamaz</b>.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'İşlem yapılıyor...',
+                        text: 'Lütfen bekleyin',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    $.ajax({
+                        url: '/Personel/Delete',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            let errorMsg = 'Bir sorun oluştu.';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            }
+                            Swal.fire('Hata!', errorMsg, 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}
+ *@
+
+
+
+
+
+@model IEnumerable<TeknikServisTakip.Models.ViewModels.PersonelWithRolesViewModel>
+@{
+    ViewData["Title"] = "Personel Listesi";
+}
+
+<div style="padding: 20px;">
+    <h1><i class="fas fa-users"></i> Personel Listesi</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div style="margin-bottom: 20px;">
+        <a href="/Personel/Create" class="btn-ekle"><i class="fas fa-plus"></i> Yeni Personel Ekle</a>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="personelTable" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Ad Soyad</th>
+                    <th>Pozisyon</th>
+                    <th>Departman</th>
+                    <th>Telefon</th>
+                    <th>E-posta</th>
+                    <th>Adres</th>
+                    <th>Durum</th>
+                    <th>Rol</th>
+                    <th>Kayıt Tarihi</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int sayac = 1;
+                }
+                @foreach (var item in Model)
+                {
+                    <tr data-id="@item.Personel.Id"
+                        data-fullname="@item.Personel.FullName"
+                        data-position="@(item.Personel.Position?.Name ?? "-")"
+                        data-department="@(item.Personel.Department?.Name ?? "-")"
+                        data-phone="@item.Personel.PhoneNumber"
+                        data-email="@item.Personel.Email"
+                        data-address="@item.Personel.Address"
+                        data-status="@(item.Personel.IsActive ? "Aktif" : "Pasif")"
+                        data-created="@item.Personel.CreatedAt.ToString("dd.MM.yyyy")"
+                        data-roles="@item.Roles">
+                        <td style="text-align: center;">@sayac</td>
+                        <td class="truncate-text detail-trigger" data-field="Ad Soyad" data-value="@item.Personel.FullName">@item.Personel.FullName</td>
+                        <td class="truncate-text detail-trigger" data-field="Pozisyon" data-value="@(item.Personel.Position?.Name ?? "-")">
+                            @(item.Personel.Position?.Name ?? "-")
+                        </td>
+                        <td class="truncate-text detail-trigger" data-field="Departman" data-value="@(item.Personel.Department?.Name ?? "-")">
+                            @(item.Personel.Department?.Name ?? "-")
+                        </td>
+                        <td>@(string.IsNullOrEmpty(item.Personel.PhoneNumber) ? "-" : item.Personel.PhoneNumber)</td>
+                        <td class="truncate-text detail-trigger" data-field="E-posta" data-value="@item.Personel.Email">@(string.IsNullOrEmpty(item.Personel.Email) ? "-" : item.Personel.Email)</td>
+                        <td class="truncate-text detail-trigger" data-field="Adres" data-value="@item.Personel.Address">@(string.IsNullOrEmpty(item.Personel.Address) ? "-" : item.Personel.Address)</td>
+                        
+                        <td style="text-align: center;">
+                            @if (item.Personel.IsActive)
+                            {
+                                <span class="badge-aktif">Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="badge-pasif">Pasif</span>
+                            }
+                        </td>
+                        
+                        <td style="text-align: center;">
+                            @if (item.HasAnyRole)
+                            {
+                                <span class="badge-rol">@item.Roles</span>
+                            }
+                            else
+                            {
+                                <span class="badge-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> Rol Atanmamış!
+                                </span>
+                            }
+                        </td>
+                        
+                        <td style="text-align: center;">@item.Personel.CreatedAt.ToString("dd.MM.yyyy")</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="/Personel/Edit/@item.Personel.Id" class="btn-duzenle">
+                                    <i class="fas fa-edit"></i> Düzenle
+                                </a>
+                                <button onclick="deletePersonel(@item.Personel.Id, '@item.Personel.FullName')" class="btn-sil">
+                                    <i class="fas fa-trash"></i> Sil
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    sayac++;
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Detay Modal -->
+<div class="modal fade detail-modal" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-info-circle"></i> Detay Bilgiler</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailModalBody">
+                <!-- Detaylar buraya gelecek -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .badge-rol {
+            background-color: #0d6efd;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .badge-warning {
+            background-color: #ffc107;
+            color: #856404;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            display: inline-block;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function() {
+            var table = $('#personelTable').DataTable({
+                language: {
+                    url: '/datatables/tr.json'
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" +
+                     "<'row'<'col-sm-12'B>>",
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i> Excel Listesi',
+                        className: 'btn btn-success btn-sm',
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 7, 8] }
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i> PDF Rapor',
+                        className: 'btn btn-danger btn-sm',
+                        orientation: 'landscape',
+                        pageSize: 'A4',
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 7, 8] },
+                        customize: function(doc) {
+                            doc.content[1].margin = [0, 10, 0, 20];
+                            doc.styles.tableHeader = { fontSize: 10, bold: true, color: 'white', fillColor: '#1e293b', alignment: 'center' };
+                            doc.defaultStyle.fontSize = 9;
+                            
+                            var tblBody = doc.content.find(function(item) { return item.table; });
+                            if (tblBody) {
+                                tblBody.table.widths = ['5%', '18%', '12%', '12%', '12%', '15%', '10%', '8%', '8%'];
+                            }
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i> Yazdır',
+                        className: 'btn btn-secondary btn-sm',
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 7, 8] }
+                    }
+                ],
+                pageLength: 10,
+                responsive: true,
+                autoWidth: false,
+                scrollX: false,
+                order: [[1, 'asc']]
+            });
+            
+            // Modal için tıklama olayı
+            $(document).on('click', '.detail-trigger', function() {
+                var row = $(this).closest('tr');
+                
+                // Tüm satır bilgilerini al
+                var fullName = row.data('fullname');
+                var position = row.data('position');
+                var department = row.data('department');
+                var phone = row.data('phone');
+                var email = row.data('email');
+                var address = row.data('address');
+                var status = row.data('status');
+                var created = row.data('created');
+                var roles = row.data('roles');
+                
+                // Modal içeriğini oluştur
+                var modalBody = `
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-user"></i> Ad Soyad</div>
+                        <div class="detail-value">${fullName || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-briefcase"></i> Pozisyon</div>
+                        <div class="detail-value">${position || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-building"></i> Departman</div>
+                        <div class="detail-value">${department || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-phone"></i> Telefon</div>
+                        <div class="detail-value">${phone || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-envelope"></i> E-posta</div>
+                        <div class="detail-value">${email || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-location-dot"></i> Adres</div>
+                        <div class="detail-value">${address || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-circle"></i> Durum</div>
+                        <div class="detail-value">${status || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-tag"></i> Rol</div>
+                        <div class="detail-value">${roles || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-calendar"></i> Kayıt Tarihi</div>
+                        <div class="detail-value">${created || '-'}</div>
+                    </div>
+                `;
+                
+                $('#detailModalBody').html(modalBody);
+                $('#detailModal').modal('show');
+            });
+        });
+
+        function deletePersonel(id, fullName) {
+            Swal.fire({
+                title: 'Silmek İstiyor musunuz?',
+                html: '<b>' + fullName + '</b> adlı personeli silmek üzeresiniz!<br>Bu işlem <b>geri alınamaz</b>.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'İşlem yapılıyor...',
+                        text: 'Lütfen bekleyin',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    $.ajax({
+                        url: '/Personel/Delete',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Silindi!', res.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            let errorMsg = 'Bir sorun oluştu.';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            }
+                            Swal.fire('Hata!', errorMsg, 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

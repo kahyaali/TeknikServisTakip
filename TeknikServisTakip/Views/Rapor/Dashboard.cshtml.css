@@ -1,0 +1,192 @@
+﻿
+
+
+/* ==================== LIGHT MODE (Varsayılan) ==================== */
+:root,
+[data-theme="light"] {
+    --bg-card: #ffffff;
+    --bg-card-hover: #ffffff;
+    --bg-table-header: #f8fafc;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --badge-pending-bg: #fef3c7;
+    --badge-pending-text: #d97706;
+    --badge-progress-bg: #dbeafe;
+    --badge-progress-text: #2563eb;
+    --badge-completed-bg: #d1fae5;
+    --badge-completed-text: #059669;
+    --badge-delivered-bg: #e0e7ff;
+    --badge-delivered-text: #4338ca;
+}
+
+/* ==================== DARK MODE ==================== */
+[data-theme="dark"] {
+    --bg-card: #1e1e2f;
+    --bg-card-hover: #2a2a3e;
+    --bg-table-header: #1a1a2e;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --border-color: #2c2c3a;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --badge-pending-bg: #422b1a;
+    --badge-pending-text: #fbbf24;
+    --badge-progress-bg: #1e3a5f;
+    --badge-progress-text: #60a5fa;
+    --badge-completed-bg: #1a3b2e;
+    --badge-completed-text: #34d399;
+    --badge-delivered-bg: #2a2a5a;
+    --badge-delivered-text: #a78bfa;
+}
+
+
+.dataTables_processing,
+.dataTables_processing .loading,
+.spinner-border,
+.spinner-grow,
+.loader,
+.loading-spinner,
+[class*="spinner"],
+[id*="loading"] {
+    display: none !important;
+}
+
+/* Chart.js canvas'larının etrafındaki olası loader'ı gizle */
+canvas + div,
+canvas ~ div {
+    display: none !important;
+}
+
+/* ==================== DASHBOARD KARTLARI ==================== */
+.dashboard-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s, background 0.3s, box-shadow 0.3s;
+}
+
+    .dashboard-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        background: var(--bg-card-hover);
+    }
+
+/* ==================== GRAFİK KONTEYNERLERİ (YÜKSEKLİK EŞİT) ==================== */
+.chart-container {
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+}
+
+    .chart-container h5 {
+        margin-bottom: 15px;
+    }
+
+    .chart-container canvas {
+        flex: 1;
+        min-height: 300px;
+        max-height: 350px;
+    }
+
+/* ==================== İSTATİSTİK KARTLARI ==================== */
+.stat-number {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.stat-icon {
+    font-size: 40px;
+    opacity: 0.3;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    color: var(--text-primary);
+}
+
+.stat-card {
+    position: relative;
+    overflow: hidden;
+}
+
+/* ==================== TABLO STILLERI ==================== */
+.recent-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .recent-table th,
+    .recent-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .recent-table th {
+        background: var(--bg-table-header);
+        font-weight: 600;
+    }
+
+/* ==================== BADGE STILLERI ==================== */
+.badge-status {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.badge-pending {
+    background: var(--badge-pending-bg);
+    color: var(--badge-pending-text);
+}
+
+.badge-progress {
+    background: var(--badge-progress-bg);
+    color: var(--badge-progress-text);
+}
+
+.badge-completed {
+    background: var(--badge-completed-bg);
+    color: var(--badge-completed-text);
+}
+
+.badge-delivered {
+    background: var(--badge-delivered-bg);
+    color: var(--badge-delivered-text);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .dashboard-card {
+        padding: 15px;
+    }
+
+    .stat-number {
+        font-size: 24px;
+    }
+
+    .stat-icon {
+        font-size: 30px;
+    }
+
+    .chart-container {
+        min-height: 350px;
+    }
+
+        .chart-container canvas {
+            min-height: 250px;
+        }
+}
