@@ -14,44 +14,156 @@
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        }
+
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
         }
+
         .track-card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            max-width: 600px;
-            width: 100%;
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        max-width: 600px;
+        width: 100%;
         }
-        h1 { font-size: 28px; color: #1e293b; margin-bottom: 10px; }
-        .btn-search { background-color: #0d6efd; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; width: 100%; }
-        .btn-search:hover { background-color: #0a58ca; }
-        .btn-outline-primary { background-color: transparent; border: 2px solid #0d6efd; color: #0d6efd; padding: 12px 24px; border-radius: 10px; font-weight: 600; width: 100%; margin-bottom: 10px; }
-        .btn-outline-primary:hover { background-color: #0d6efd; color: white; }
-        .form-control { border-radius: 10px; padding: 12px; border: 1px solid #ddd; }
-        .form-control:focus { border-color: #0d6efd; outline: none; box-shadow: 0 0 0 3px rgba(13,110,253,0.1); }
-        .qr-reader { width: 100%; margin-top: 20px; border: 2px dashed #ddd; border-radius: 10px; padding: 10px; background: #f8f9fa; }
-        .nav-links { margin-top: 20px; text-align: center; }
-        .nav-links a { color: #0d6efd; text-decoration: none; margin: 0 10px; }
-        .alert-danger { background-color: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 20px; }
-        .mt-2 { margin-top: 10px; }
-        .w-100 { width: 100%; }
-        .btn-secondary { background-color: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 8px; }
-        .text-center { text-align: center; }
-        .mt-3 { margin-top: 15px; }
-        .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #fff; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; }
-        @@keyframes spin { to { transform: rotate(360deg); } }
-        .camera-select { margin-top: 10px; }
-        .camera-select select { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd; }
+
+        h1 {
+        font-size: 28px;
+        color: #1e293b;
+        margin-bottom: 10px;
+        }
+
+        .btn-search {
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        width: 100%;
+        }
+
+        .btn-search:hover {
+        background-color: #0a58ca;
+        }
+
+        .btn-outline-primary {
+        background-color: transparent;
+        border: 2px solid #0d6efd;
+        color: #0d6efd;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        width: 100%;
+        margin-bottom: 10px;
+        }
+
+        .btn-outline-primary:hover {
+        background-color: #0d6efd;
+        color: white;
+        }
+
+        .form-control {
+        border-radius: 10px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        }
+
+        .form-control:focus {
+        border-color: #0d6efd;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
+        }
+
+        .qr-reader {
+        width: 100%;
+        margin-top: 20px;
+        border: 2px dashed #ddd;
+        border-radius: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        }
+
+        .nav-links {
+        margin-top: 20px;
+        text-align: center;
+        }
+
+        .nav-links a {
+        color: #0d6efd;
+        text-decoration: none;
+        margin: 0 10px;
+        }
+
+        .alert-danger {
+        background-color: #fee2e2;
+        color: #991b1b;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        }
+
+        .mt-2 {
+        margin-top: 10px;
+        }
+
+        .w-100 {
+        width: 100%;
+        }
+
+        .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        }
+
+        .text-center {
+        text-align: center;
+        }
+
+        .mt-3 {
+        margin-top: 15px;
+        }
+
+        .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 1s linear infinite;
+        }
+        @@keyframes spin {
+        to {
+        transform: rotate(360deg);
+        }
+        }
+
+        .camera-select {
+        margin-top: 10px;
+        }
+
+        .camera-select select {
+        width: 100%;
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -65,10 +177,9 @@
 
         <div id="alert-container"></div>
 
-        <!-- Manuel Takip Kodu Girişi -->
         <div class="mb-3">
             <label class="form-label fw-bold">Takip Kodu</label>
-            <input type="text" id="trackingCode" class="form-control" 
+            <input type="text" id="trackingCode" class="form-control"
                    placeholder="Örn: TAK-2026-0001" autofocus />
         </div>
         <button type="button" id="manualSearchBtn" class="btn-search">
@@ -79,12 +190,10 @@
             <p class="text-muted">veya</p>
         </div>
 
-        <!-- Kamerayla Okut -->
         <button type="button" id="scanQrBtn" class="btn-outline-primary">
             <i class="fas fa-camera"></i> Kamerayı Aç ve Okut
         </button>
 
-        <!-- Kamera Alanı -->
         <div id="qr-reader-container" style="display:none;" class="mt-3">
             <div id="qr-reader" class="qr-reader"></div>
             <div class="camera-select">
@@ -95,7 +204,6 @@
             <button type="button" id="stopScanBtn" class="btn-secondary w-100 mt-2">Kamerayı Kapat</button>
         </div>
 
-        <!-- Dosya Yükleyerek Okut -->
         <div class="mt-2">
             <input type="file" id="qr-image-input" accept="image/*" style="display:none;" />
             <button type="button" id="uploadQrBtn" class="btn-outline-primary">
@@ -115,7 +223,7 @@
         let html5QrCode = null;
         let currentCameraId = null;
         let isScanning = false;
-        
+
         const scanBtn = document.getElementById('scanQrBtn');
         const uploadBtn = document.getElementById('uploadQrBtn');
         const fileInput = document.getElementById('qr-image-input');
@@ -128,159 +236,208 @@
         const alertContainer = document.getElementById('alert-container');
 
         function showAlert(message, isError = true) {
-            alertContainer.innerHTML = `<div style="background-color:${isError ? '#fee2e2' : '#d1fae5'}; color:${isError ? '#991b1b' : '#065f46'}; padding:12px; border-radius:8px; margin-bottom:20px;">${message}</div>`;
-            setTimeout(() => {
-                alertContainer.innerHTML = '';
-            }, 5000);
+        alertContainer.innerHTML = `<div style="background-color:${isError ? '#fee2e2' : '#d1fae5'}; color:${isError ? '#991b1b' : '#065f46'}; padding:12px; border-radius:8px; margin-bottom:20px;">${message}</div>`;
+        setTimeout(() => {
+        alertContainer.innerHTML = '';
+        }, 5000);
+        }
+
+   
+        function extractTrackingCode(decodedText) {
+        let text = decodedText.trim();
+        try {
+     
+        if (text.toLowerCase().startsWith('http')) {
+        let url = new URL(text);
+        let codeParam = url.searchParams.get("trackingCode");
+        if (codeParam) {
+        return codeParam.trim().toUpperCase();
+        }
+
+        let pathParts = url.pathname.split('/');
+        let lastPart = pathParts[pathParts.length - 1];
+        if(lastPart && lastPart.includes('-')) {
+        return lastPart.trim().toUpperCase();
+        }
+        }
+        } catch (e) {
+        console.log("URL ayrıştırma hatası, düz metin olarak devam ediliyor.");
+        }
+        return text.toUpperCase();
         }
 
         // Manuel Sorgulama
         manualSearchBtn.addEventListener('click', function() {
-            const code = trackingCodeInput.value.trim().toUpperCase();
-            if (!code) {
-                showAlert('Lütfen takip kodunuzu girin!');
-                return;
-            }
-            
-            $.ajax({
-                url: '/Track/CheckTrackingCode',
-                type: 'POST',
-                data: { trackingCode: code },
-                success: function(response) {
-                    if (response.success) {
-                        window.location.href = response.redirectUrl;
-                    } else {
-                        showAlert(response.message);
-                    }
-                },
-                error: function() {
-                    showAlert('Bir hata oluştu. Lütfen tekrar deneyin.');
-                }
-            });
+        const code = trackingCodeInput.value.trim().toUpperCase();
+        if (!code) {
+        showAlert('Lütfen takip kodunuzu girin!');
+        return;
+        }
+
+        $.ajax({
+        url: '/Track/CheckTrackingCode',
+        type: 'POST',
+        data: { trackingCode: code },
+        success: function(response) {
+        if (response.success) {
+        window.location.href = response.redirectUrl;
+        } else {
+        showAlert(response.message);
+        }
+        },
+        error: function() {
+        showAlert('Bir hata oluştu. Lütfen tekrar deneyin.');
+        }
+        });
         });
 
-        // Enter tuşu ile sorgulama
         trackingCodeInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                manualSearchBtn.click();
-            }
+        if (e.key === 'Enter') {
+        manualSearchBtn.click();
+        }
         });
 
-        // Kamera listesini al
-        async function getCameras() {
-            try {
-                const devices = await Html5Qrcode.getCameras();
-                if (devices && devices.length) {
-                    cameraSelect.innerHTML = '';
-                    devices.forEach(device => {
-                        const option = document.createElement('option');
-                        option.value = device.id;
-                        option.text = device.label || `Kamera ${device.id.slice(0, 5)}`;
-                        cameraSelect.appendChild(option);
-                    });
-                    currentCameraId = devices[0].id;
-                    return devices;
-                }
-            } catch (err) {
-                console.log('Kamera bulunamadı:', err);
-                return [];
-            }
+        function qrboxFunction(viewfinderWidth, viewfinderHeight) {
+        let minEdgePercentage = 0.75;
+        let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+        let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+        return { width: qrboxSize, height: qrboxSize };
         }
 
         // Kamerayı Başlat
         async function startCamera(cameraId) {
-            if (html5QrCode === null) {
-                html5QrCode = new Html5Qrcode("qr-reader");
-            }
-            
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-            
-            try {
-                if (isScanning) {
-                    await html5QrCode.stop();
-                    isScanning = false;
-                }
-                await html5QrCode.start(cameraId, config, (decodedText) => {
-                    html5QrCode.stop();
-                    isScanning = false;
-                    container.style.display = 'none';
-                    const code = decodedText.trim().toUpperCase();
-                    window.location.href = '/Track?trackingCode=' + encodeURIComponent(code);
-                }, (errorMessage) => {
-                    console.log(errorMessage);
-                });
-                isScanning = true;
-            } catch (err) {
-                console.log('Kamera başlatılamadı:', err);
-                showAlert('Kamera başlatılamadı. Lütfen kamera izni verin.');
-            }
+        if (html5QrCode === null) {
+        html5QrCode = new Html5Qrcode("qr-reader");
+        }
+
+        const config = {
+        fps: 20, // Okuma hızını ve hassasiyetini artırıyoruz
+        qrbox: qrboxFunction,
+        aspectRatio: 1.0,
+        experimentalFeatures: {
+        useBarCodeDetectorIfSupported: true
+        }
+        };
+
+        try {
+        if (isScanning) {
+        await html5QrCode.stop();
+        isScanning = false;
+        }
+
+        const cameraConfig = cameraId ? cameraId : { facingMode: "environment" };
+
+        await html5QrCode.start(cameraConfig, config, (decodedText) => {
+        html5QrCode.stop();
+        isScanning = false;
+        container.style.display = 'none';
+
+        // Link gelse bile sadece kodu ayıklıyoruz
+        const cleanCode = extractTrackingCode(decodedText);
+        window.location.href = '/Track?trackingCode=' + encodeURIComponent(cleanCode);
+        }, (errorMessage) => {
+        // Tarama esnasındaki anlık okuyamama durumlarında hata basıp sistemi yormuyoruz
+        });
+        isScanning = true;
+        } catch (err) {
+        console.log('Kamera başlatılamadı:', err);
+        showAlert('Kamera başlatılamadı. Lütfen izinleri denetleyin.');
+        }
         }
 
         // Kamerayı Aç
         scanBtn.addEventListener('click', async function() {
-            container.style.display = 'block';
-            
-            const devices = await getCameras();
-            
-            if (devices.length === 0) {
-                showAlert('Kamera bulunamadı! Lütfen kamera izni verin veya farklı bir tarayıcı deneyin.');
-                container.style.display = 'none';
-                return;
-            }
-            
-            await startCamera(currentCameraId);
+        container.style.display = 'block';
+        cameraSelect.innerHTML = '<option value="">Kameralar taranıyor...</option>';
+
+        try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        const devices = await Html5Qrcode.getCameras();
+
+        if (devices && devices.length > 0) {
+        cameraSelect.innerHTML = '';
+        let backCameraId = null;
+
+        devices.forEach(device => {
+        const option = document.createElement('option');
+        option.value = device.id;
+        option.text = device.label || `Kamera ${device.id.slice(0, 5)}`;
+        cameraSelect.appendChild(option);
+
+        const labelLower = (device.label || '').toLowerCase();
+        if (labelLower.includes('back') || labelLower.includes('arka') || labelLower.includes('environment') || labelLower.includes('0, facing back')) {
+        backCameraId = device.id;
+        }
         });
 
-        // Kamera değiştirme
+        if (backCameraId) {
+        currentCameraId = backCameraId;
+        cameraSelect.value = backCameraId;
+        } else {
+        currentCameraId = devices[0].id;
+        cameraSelect.value = devices[0].id;
+        }
+
+        await startCamera(currentCameraId);
+        } else {
+        await startCamera(null);
+        }
+        } catch (err) {
+        console.log('Kamera İzin Hatası:', err);
+        showAlert('Kamera erişim izni alınamadı.');
+        container.style.display = 'none';
+        }
+        });
+
         cameraSelect.addEventListener('change', async function() {
-            if (isScanning) {
-                currentCameraId = cameraSelect.value;
-                await startCamera(currentCameraId);
-            }
+        if (cameraSelect.value) {
+        currentCameraId = cameraSelect.value;
+        await startCamera(currentCameraId);
+        }
         });
 
-        // Kamerayı Kapat
         stopBtn.addEventListener('click', async function() {
-            if (html5QrCode !== null && isScanning) {
-                await html5QrCode.stop();
-                isScanning = false;
-                container.style.display = 'none';
-            }
+        if (html5QrCode !== null && isScanning) {
+        await html5QrCode.stop();
+        isScanning = false;
+        container.style.display = 'none';
+        }
         });
 
-        // Dosya seçme butonu
         uploadBtn.addEventListener('click', function() {
-            fileInput.click();
+        fileInput.click();
         });
 
-        // Dosya seçilince QR okut
+        // Dosyadan Okuma Alanı
         fileInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        const file = event.target.files[0];
+        if (!file) return;
 
-            uploadStatus.style.display = 'block';
-            uploadStatus.innerHTML = '<div class="spinner"></div> QR kod okunuyor...';
-            
-            const html5QrCodeScanner = new Html5Qrcode("qr-reader");
-            
-            html5QrCodeScanner.scanFile(file, true)
-                .then(decodedText => {
-                    uploadStatus.style.display = 'none';
-                    const code = decodedText.trim().toUpperCase();
-                    window.location.href = '/Track?trackingCode=' + encodeURIComponent(code);
-                })
-                .catch(err => {
-                    uploadStatus.style.display = 'block';
-                    uploadStatus.style.backgroundColor = '#fee2e2';
-                    uploadStatus.style.color = '#991b1b';
-                    uploadStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> QR kod okunamadı! Lütfen daha net bir fotoğraf yükleyin.';
-                    setTimeout(() => {
-                        uploadStatus.style.display = 'none';
-                        uploadStatus.style.backgroundColor = '';
-                        uploadStatus.style.color = '';
-                    }, 3000);
-                    console.log(err);
-                });
+        uploadStatus.style.display = 'block';
+        uploadStatus.style.backgroundColor = '';
+        uploadStatus.style.color = '';
+        uploadStatus.innerHTML = '<div class="spinner"></div> QR kod okunuyor...';
+
+        const html5QrCodeScanner = new Html5Qrcode("qr-reader");
+
+        html5QrCodeScanner.scanFile(file, true)
+        .then(decodedText => {
+        uploadStatus.style.display = 'none';
+
+        // Dosyadan yüklenen linkli QR'ları da süzgeçten geçiriyoruz
+        const cleanCode = extractTrackingCode(decodedText);
+        window.location.href = '/Track?trackingCode=' + encodeURIComponent(cleanCode);
+        })
+        .catch(err => {
+        uploadStatus.style.display = 'block';
+        uploadStatus.style.backgroundColor = '#fee2e2';
+        uploadStatus.style.color = '#991b1b';
+        uploadStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> QR kod okunamadı! Lütfen resmi daha net çekin.';
+        setTimeout(() => {
+        uploadStatus.style.display = 'none';
+        }, 4000);
+        console.log(err);
+        });
         });
     </script>
 </body>

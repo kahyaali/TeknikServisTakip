@@ -1,11 +1,11 @@
-﻿@{
+﻿
+
+@{
     ViewData["Title"] = "Raporlarım";
 }
 
-
-
 <div class="container-fluid" style="padding: 15px;">
-  <div class="page-header">
+    <div class="page-header">
         <div>
             <h1><i class="fas fa-chart-bar me-3"></i> Raporlarım</h1>
             <p>Tamir geçmişinizi ve istatistiklerinizi görüntüleyin</p>
@@ -14,7 +14,7 @@
             <i class="fas fa-arrow-left me-2"></i> Dashboard'a Dön
         </a>
     </div>
-    <!-- İstatistik Kartları -->
+
     <div class="stats-row" id="customerStats">
         <div class="stat-box"><div class="number" id="statTotal">0</div><div class="label">Toplam Tamir</div></div>
         <div class="stat-box"><div class="number" id="statPending">0</div><div class="label">Bekleyen</div></div>
@@ -24,11 +24,16 @@
     </div>
 
     <div class="stats-row">
-        <div class="stat-box"><div class="number" id="statRevenue">₺0</div><div class="label">Toplam Harcama</div></div>
-        <div class="stat-box"><div class="number" id="statAvg">₺0</div><div class="label">Ortalama Harcama</div></div>
+        <div class="stat-box">
+            <div class="number" id="statRevenue" style="font-size: 1.1rem; line-height: 1.5; padding: 5px 0;">Yükleniyor...</div>
+            <div class="label">Toplam Harcama</div>
+        </div>
+        <div class="stat-box">
+            <div class="number" id="statAvg" style="font-size: 1.1rem; line-height: 1.5; padding: 5px 0;">Yükleniyor...</div>
+            <div class="label">Ortalama Harcama</div>
+        </div>
     </div>
 
-    <!-- Grafikler -->
     <div class="row">
         <div class="col-md-6">
             <div class="chart-container">
@@ -44,7 +49,6 @@
         </div>
     </div>
 
-    <!-- Tamir Geçmişi Tablosu - İŞLEM KOLONU YOK -->
     <div class="report-card">
         <div class="report-header">
             <div>
@@ -78,12 +82,17 @@
     @Html.AntiForgeryToken()
 </form>
 
-
 @section Scripts {
-   
     <script>
         var statusChart, monthlyTrendChart;
         var repairTable;
+
+        // Para birimi simgelerini JS tarafında dinamik eşlemek için mini sözlük
+        const currencySymbols = { 'TRY': '₺', 'USD': '$', 'EUR': '€', 'GBP': '£' };
+
+        function getSymbol(cur) {
+            return currencySymbols[cur] || cur;
+        }
 
         $(document).ready(function() {
             if (document.getElementById('statusChart')) {
@@ -93,11 +102,10 @@
                 loadMonthlyTrend();
             }
             loadCustomerStats();
-            
+
             if ($('#repairHistoryTable').length) {
                 repairTable = $('#repairHistoryTable').DataTable({
-                    language: { 
-                        // url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/tr.json' 
+                    language: {
                         url: '/datatables/tr.json'
                     },
                     processing: true,
@@ -108,14 +116,14 @@
                         data: function(d) {
                             return d;
                         },
-                                headers: {
-            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-        }
+                        headers: {
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        }
                     },
                     columns: [
                         { data: 'trackingCode' },
                         { data: 'productName' },
-                        { 
+                        {
                             data: null,
                             render: function(data) {
                                 return (data.productBrand || '-') + ' / ' + (data.productModel || '-');
@@ -123,16 +131,22 @@
                         },
                         { data: 'receivedDate' },
                         { data: 'deliveryDate' },
-                        { 
+                        {
                             data: 'status',
                             render: function(data) {
-                                var statusClass = data === 'Beklemede' ? 'badge-pending' : 
-                                                 (data === 'İşlemde' ? 'badge-progress' : 
+                                var statusClass = data === 'Beklemede' ? 'badge-pending' :
+                                                 (data === 'İşlemde' ? 'badge-progress' :
                                                  (data === 'Tamamlandı' ? 'badge-completed' : 'badge-delivered'));
                                 return '<span class="' + statusClass + '">' + data + '</span>';
                             }
                         },
-                        { data: 'price' },
+                        {
+                            data: null,
+                            render: function(data) {
+                                let sym = getSymbol(data.currency);
+                                return '<span class="fw-bold text-success">' + sym + data.price.toFixed(2) + '</span> <small class="text-muted">(' + data.currency + ')</small>';
+                            }
+                        },
                         { data: 'personel' }
                     ],
                     dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
@@ -150,7 +164,7 @@
                 });
             }
         });
-        
+
         function loadCustomerStats() {
             $.get('/CustomerDashboard/GetCustomerRepairStats', function(res) {
                 if (res.success) {
@@ -159,14 +173,29 @@
                     $('#statProgress').text(res.inProgress);
                     $('#statCompleted').text(res.completed);
                     $('#statDelivered').text(res.delivered);
-                    $('#statRevenue').text('₺' + (res.totalRevenue || 0).toFixed(2));
-                    $('#statAvg').text(res.total > 0 ? '₺' + ((res.totalRevenue / res.total).toFixed(2)) : '₺0');
+
+                    let revenueHtml = "";
+                    let avgHtml = "";
+
+                    if (res.revenueData && res.revenueData.length > 0) {
+                        res.revenueData.forEach(function(item) {
+                            let sym = getSymbol(item.currency);
+                            revenueHtml += '<div>' + sym + item.total.toFixed(2) + ' <span style="font-size:11px; color:#aaa;">(' + item.currency + ')</span></div>';
+                            avgHtml += '<div>' + sym + item.avg.toFixed(2) + ' <span style="font-size:11px; color:#aaa;">(' + item.currency + ')</span></div>';
+                        });
+                    } else {
+                        revenueHtml = "₺0.00";
+                        avgHtml = "₺0.00";
+                    }
+
+                    $('#statRevenue').html(revenueHtml);
+                    $('#statAvg').html(avgHtml);
                 }
             }).fail(function(xhr) {
                 console.log("Stats Error:", xhr.responseText);
             });
         }
-        
+
         function loadStatusDistribution() {
             $.get('/CustomerDashboard/GetCustomerStatusDistribution', function(res) {
                 if (res && res.labels) {
@@ -182,7 +211,7 @@
                 console.log("Status Error:", xhr.responseText);
             });
         }
-        
+
         function loadMonthlyTrend() {
             $.get('/CustomerDashboard/GetCustomerMonthlyTrend', function(res) {
                 if (res && res.data) {
@@ -201,17 +230,15 @@
                 console.log("Trend Error:", xhr.responseText);
             });
         }
-        
-       // Excel export
-        $('#exportExcelBtn').click(function() {
 
+        // Excel export
+        $('#exportExcelBtn').click(function() {
             Swal.fire({ title: 'Excel hazırlanıyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-            
+
             $.ajax({
                 url: '/CustomerDashboard/ExportCustomerRepairsExcel',
                 type: 'POST',
                 xhrFields: { responseType: 'blob' },
-      
                 success: function(blob) {
                     var url = window.URL.createObjectURL(blob);
                     var a = document.createElement('a');
@@ -223,43 +250,31 @@
                     window.URL.revokeObjectURL(url);
                     Swal.close();
 
-                    // ========== LOADER'I KAPAT ==========
-            if (typeof hideGlobalLoader !== 'undefined') {
-                hideGlobalLoader();
-            }
+                    if (typeof hideGlobalLoader !== 'undefined') {
+                        hideGlobalLoader();
+                    }
 
                     Swal.fire({
-                title: 'Başarılı!',
-                text: 'Excel dosyası indiriliyor...',
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false
-            }).then(function() {
-                // SweetAlert kapandıktan SONRA loader'ı kapat
-                if (typeof hideGlobalLoader !== 'undefined') {
-                    hideGlobalLoader();
-                }
-            });
-
-  
+                        title: 'Başarılı!',
+                        text: 'Excel dosyası indiriliyor...',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(function() {
+                        if (typeof hideGlobalLoader !== 'undefined') {
+                            hideGlobalLoader();
+                        }
+                    });
                 },
                 error: function(xhr) {
                     Swal.close();
-
-                     // ========== LOADER'I KAPAT ==========
-            if (typeof hideGlobalLoader !== 'undefined') {
-                hideGlobalLoader();
-            }
-
+                    if (typeof hideGlobalLoader !== 'undefined') {
+                        hideGlobalLoader();
+                    }
                     console.log("Excel Error:", xhr.responseText);
                     Swal.fire('Hata!', 'Excel oluşturulurken bir hata oluştu.', 'error');
-                },
-              
+                }
             });
         });
-
-
-
-
     </script>
 }

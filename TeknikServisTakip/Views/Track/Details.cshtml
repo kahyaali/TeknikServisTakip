@@ -1,4 +1,7 @@
-﻿@model Entities.Concrete.RepairItem
+﻿
+
+
+@model Entities.Concrete.RepairItem
 @using Entities.Enum
 @using TeknikServisTakip.Helpers
 @{
@@ -7,7 +10,10 @@
 }
 @{
     var statusEnum = (RepairStatusEnum)(Model.StatusId ?? 1);
-    var statusName = statusEnum.GetDisplayName();  
+    var statusName = statusEnum.GetDisplayName();
+
+    var currency = Model.Currency ?? "TRY";
+    var currencySymbol = CurrencyHelper.GetSymbol(currency);
 }
 
 
@@ -140,6 +146,10 @@
             <span class="info-value ms-3">@Model.ProductBrand / @Model.ProductModel</span>
         </div>
         <div class="info-row">
+            <span class="info-label">Seri No:</span>
+            <span class="info-value ms-3">@(string.IsNullOrEmpty(Model.SerialNumber) ? "-" : Model.SerialNumber)</span>
+        </div>
+        <div class="info-row">
             <span class="info-label">Arıza Açıklaması:</span>
             <span class="info-value ms-3">@Model.ProblemDescription</span>
         </div>
@@ -157,10 +167,27 @@
                 <span class="status-badge" data-status="@Model.StatusId">@statusName</span>
             </span>
         </div>
+        @if (Model.Personel != null)
+        {
+            <div class="info-row">
+                <span class="info-label">Personel:</span>
+                <span class="info-value ms-3">@Model.Personel.FullName</span>
+            </div>
+        }
         <div class="info-row">
             <span class="info-label">Personel Notu:</span>
             <span class="info-value ms-3">@(Model.InternalNote ?? "-")</span>
         </div>
+        @if (Model.Price > 0)
+        {
+            <div class="info-row">
+                <span class="info-label">Ücret:</span>
+                <span class="info-value ms-3 fw-bold text-success">
+                    @currencySymbol @Model.Price.ToString("N2")
+                    <small class="text-muted">(@currency)</small>
+                </span>
+            </div>
+        }
 
         @if (!string.IsNullOrEmpty(Model.BeforeImagePath))
         {
@@ -182,6 +209,46 @@
                     <a href="@Model.AfterImagePath" target="_blank">
                         <img src="@Model.AfterImagePath" style="max-width: 100%; max-height: 200px; border-radius: 10px;" />
                     </a>
+                </div>
+            </div>
+        }
+
+        <!-- Çoklu Resim Galerisi (eğer RepairImages varsa) -->
+        @{
+            var beforeImages = Model.RepairImages?.Where(i => i.ImageType == "Before").OrderBy(i => i.Order).ToList();
+            var afterImages = Model.RepairImages?.Where(i => i.ImageType == "After").OrderBy(i => i.Order).ToList();
+        }
+
+        @if (beforeImages != null && beforeImages.Any())
+        {
+            <div class="mt-3">
+                <label class="fw-bold">Tamir Öncesi Resimler (@beforeImages.Count):</label>
+                <div class="row mt-2">
+                    @foreach (var img in beforeImages)
+                    {
+                        <div class="col-4 mb-2">
+                            <a href="@img.ImagePath" target="_blank">
+                                <img src="@img.ImagePath" class="img-fluid rounded" style="max-height: 100px; object-fit: cover;" />
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (afterImages != null && afterImages.Any())
+        {
+            <div class="mt-3">
+                <label class="fw-bold">Tamir Sonrası Resimler (@afterImages.Count):</label>
+                <div class="row mt-2">
+                    @foreach (var img in afterImages)
+                    {
+                        <div class="col-4 mb-2">
+                            <a href="@img.ImagePath" target="_blank">
+                                <img src="@img.ImagePath" class="img-fluid rounded" style="max-height: 100px; object-fit: cover;" />
+                            </a>
+                        </div>
+                    }
                 </div>
             </div>
         }

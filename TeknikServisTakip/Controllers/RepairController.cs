@@ -276,7 +276,7 @@ namespace TeknikServisTakip.Controllers
                 // BAŞARILI - COMMIT (TEK EKLENEN SATIR)
                 await transaction.CommitAsync();
 
-                // AJAX isteği mi kontrol et
+                // AJAX isteği mi kontrol ediyoruz
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 {
                     return Json(new { success = true, redirect = true, message = $"Tamir kaydı eklendi! Takip Kodu: {repair.TrackingCode}" });
@@ -805,6 +805,7 @@ namespace TeknikServisTakip.Controllers
         // Karekod oluştur
         private async Task<string> GenerateQRCode(string text)
         {
+           
             string qrFolder = Path.Combine(_webHostEnvironment.WebRootPath, "qrcodes");
             if (!Directory.Exists(qrFolder))
                 Directory.CreateDirectory(qrFolder);
@@ -813,11 +814,17 @@ namespace TeknikServisTakip.Controllers
             string filePath = Path.Combine(qrFolder, fileName);
 
             using (var qrGenerator = new QRCodeGenerator())
-            {
+            {        
                 var qrData = qrGenerator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
                 using (var qrCode = new PngByteQRCode(qrData))
                 {
-                    byte[] qrCodeBytes = qrCode.GetGraphic(50);
+                    
+                    // 1. Parametre (15): Her bir karecik 15x15 piksel olsun (görsel çok devasa olmasın).
+                    // 2. Parametre (new byte[] { 0, 0, 0 }): Siyah renk (RGB).
+                    // 3. Parametre (new byte[] { 255, 255, 255 }): Beyaz renk (RGB).
+                    // 4. Parametre (true): ETRAFINA BEYAZ BOŞLUK (QUIET ZONE) ÇİZ! (Kameranın okuması için en kritik ayar)
+                    byte[] qrCodeBytes = qrCode.GetGraphic(15, new byte[] { 0, 0, 0 }, new byte[] { 255, 255, 255 }, true);
+
                     await System.IO.File.WriteAllBytesAsync(filePath, qrCodeBytes);
                 }
             }

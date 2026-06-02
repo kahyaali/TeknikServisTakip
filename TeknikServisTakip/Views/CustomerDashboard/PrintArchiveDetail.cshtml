@@ -1,225 +1,151 @@
-﻿@* @model Entities.Concrete.ArchiveRepair
+﻿
+
+@model Entities.Concrete.ArchiveRepair
+@using TeknikServisTakip.Helpers
 @{
     Layout = null;
     ViewData["Title"] = "Tamir Detay Raporu";
+
+    // Controller'dan gönderdiğimiz malzemeleri yakalıyoruz kanka
+    var materials = ViewBag.Materials as List<Entities.Concrete.RepairMaterial>;
+
+    // Ana sayfandaki o mükemmel dinamik para birimi lojiğinin birebir aynısı kanka!
+    var currency = Model.Currency ?? "TRY";
+    var currencySymbol = CurrencyHelper.GetSymbol(currency);
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>Tamir Detay Raporu</title>
-    <style>
-            body {
-                font-family: 'Segoe UI', Arial, sans-serif;
-                margin: 40px;
-                padding: 0;
-            }
-
-            .header {
-                text-align: center;
-                margin-bottom: 30px;
-                padding-bottom: 20px;
-                border-bottom: 2px solid #0d6efd;
-            }
-
-                .header h1 {
-                    color: #0d6efd;
-                    margin: 0;
-                    font-size: 24px;
-                }
-
-                .header p {
-                    color: #6c757d;
-                    margin: 5px 0 0;
-                }
-
-            .badge {
-                background: #10b981;
-                color: white;
-                padding: 3px 10px;
-                border-radius: 20px;
-                font-size: 11px;
-                display: inline-block;
-            }
-
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 20px;
-            }
-
-            td {
-                padding: 12px;
-                border: 1px solid #dee2e6;
-            }
-
-            .label {
-                font-weight: 600;
-                width: 30%;
-                background: #f8f9fa;
-            }
-
-            .footer {
-                text-align: center;
-                margin-top: 50px;
-                font-size: 12px;
-                color: #6c757d;
-                border-top: 1px solid #dee2e6;
-                padding-top: 20px;
-            }
-
-            @@media print {
-                body {
-                    margin: 0;
-                    padding: 20px;
-                }
-
-                .no-print {
-                    display: none;
-                }
-            }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>TEKNİK SERVİS TAKİP SİSTEMİ</h1>
-        <p>Tamir Detay Raporu</p>
-        <p>@DateTime.Now.ToString("dd.MM.yyyy HH:mm")</p>
-    </div>
-
-    <table>
-        <tr><td class="label">Takip Kodu</td><td><strong>@Model.TrackingCode</strong> <span class="badge">Teslim Edildi</span></td></tr>
-        <tr><td class="label">Ürün Adı</td><td>@Model.ProductName</td></tr>
-        <tr><td class="label">Marka / Model</td><td>@Model.ProductBrand @Model.ProductModel</td></tr>
-        <tr><td class="label">Seri No</td><td>@(string.IsNullOrEmpty(Model.SerialNumber) ? "-" : Model.SerialNumber)</td></tr>
-        <tr><td class="label">Arıza Açıklaması</td><td>@(string.IsNullOrEmpty(Model.ProblemDescription) ? "-" : Model.ProblemDescription)</td></tr>
-        <tr><td class="label">Geliş Tarihi</td><td>@Model.ReceivedDate.ToString("dd.MM.yyyy HH:mm")</td></tr>
-        <tr><td class="label">Teslim Tarihi</td><td>@(Model.DeliveryDate?.ToString("dd.MM.yyyy HH:mm") ?? "-")</td></tr>
-        <tr><td class="label">Personel</td><td>@(Model.Personel?.FullName ?? "-")</td></tr>
-        <tr><td class="label">Ücret</td><td><strong>@Model.Price.ToString("C2")</strong></td></tr>
-        <tr><td class="label">Personel Notu</td><td>@(string.IsNullOrEmpty(Model.InternalNote) ? "-" : Model.InternalNote)</td></tr>
-    </table>
-
-    <div class="footer">
-        Teknik Servis Takip Sistemi | @DateTime.Now.Year
-    </div>
-
-    <div class="no-print" style="text-align: center; margin-top: 30px;">
-        <button onclick="window.print()" style="padding: 10px 20px; background: #0d6efd; color: white; border: none; border-radius: 5px; cursor: pointer;">
-            <i class="fas fa-print"></i> Yazdır
-        </button>
-        <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
-            Kapat
-        </button>
-    </div>
-</body>
-</html> *@
-
-
-
-
-
-
-
-
-
-   @model Entities.Concrete.ArchiveRepair
-@{
-    Layout = null;
-    ViewData["Title"] = "Tamir Detay Raporu";
-}
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <title>Servis_Raporu_@Model.TrackingCode</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            padding: 20px; /* Kenar boşlukları azaltıldı */
-            color: #333;
-            line-height: 1.4;
-            background-color: white;
-        }
-
-        * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            box-sizing: border-box;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #0d6efd;
-        }
-
-        .header h1 {
-            color: #0d6efd;
-            margin: 0;
-            font-size: 22px;
-            text-transform: uppercase;
-        }
-
-        .header p {
-            color: #6c757d;
-            margin: 2px 0;
-            font-size: 14px;
-        }
-
-        .section-title {
-            background: #f8f9fa;
-            padding: 6px 10px;
-            font-weight: bold;
-            border-left: 4px solid #0d6efd;
-            margin-top: 15px;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            font-size: 13px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 5px;
-            table-layout: fixed;
-        }
-
-        td {
-            padding: 10px;
-            border: 1px solid #dee2e6;
-            font-size: 13px;
-            word-wrap: break-word;
-            vertical-align: top;
-        }
-
-        .label {
-            font-weight: 600;
-            width: 30%;
-            background: #f8f9fa !important;
-            color: #495057;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            font-size: 11px;
-            color: #999;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
-        }
-
-        @@media print {
-            body { padding: 10px; }
-            .no-print { display: none; }
-            /* Sayfa taşmalarını önlemek için */
-            html, body {
-                height: 99%;
+            body {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                color: #333;
+                line-height: 1.4;
+                background-color: white;
             }
-        }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                box-sizing: border-box;
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #0d6efd;
+            }
+
+                .header h1 {
+                    color: #0d6efd;
+                    margin: 0;
+                    font-size: 22px;
+                    text-transform: uppercase;
+                }
+
+                .header p {
+                    color: #6c757d;
+                    margin: 2px 0;
+                    font-size: 14px;
+                }
+
+            .section-title {
+                background: #f8f9fa;
+                padding: 6px 10px;
+                font-weight: bold;
+                border-left: 4px solid #0d6efd;
+                margin-top: 15px;
+                margin-bottom: 8px;
+                text-transform: uppercase;
+                font-size: 13px;
+                /* Yazdırırken başlığın sayfa sonunda tek başına kalmasını önler */
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+
+            /* Tabloların veya satırların yazdırılırken çirkin bölünmesini engelleme */
+            table, tr, td, th {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 15px;
+                table-layout: fixed;
+            }
+
+            td, th {
+                padding: 10px;
+                border: 1px solid #dee2e6;
+                font-size: 13px;
+                word-wrap: break-word;
+                vertical-align: top;
+            }
+
+            th {
+                background: #f8f9fa !important;
+                color: #495057;
+                text-align: left;
+                font-weight: 600;
+            }
+
+            .label {
+                font-weight: 600;
+                width: 30%;
+                background: #f8f9fa !important;
+                color: #495057;
+            }
+
+            /* Dışarıdan parça ve miktar alanı için mini badge tasarımları */
+            .badge {
+                display: inline-block;
+                padding: 2px 6px;
+                font-size: 11px;
+                font-weight: bold;
+                border-radius: 4px;
+                color: white;
+            }
+
+            .bg-info {
+                background-color: #0dcaf0 !important;
+                color: #000 !important;
+            }
+
+            .bg-secondary {
+                background-color: #6c757d !important;
+                color: #fff !important;
+            }
+
+            .footer {
+                text-align: center;
+                margin-top: 30px;
+                font-size: 11px;
+                color: #999;
+                border-top: 1px solid #eee;
+                padding-top: 10px;
+            }
+
+            @@media print {
+                body {
+                    padding: 10px;
+                }
+
+                .no-print {
+                    display: none;
+                }
+
+                html, body {
+                    height: 99%;
+                }
+            }
     </style>
 </head>
 <body onload="window.print()">
@@ -230,7 +156,6 @@
         <p style="font-size: 12px;">Rapor Tarihi: @DateTime.Now.ToString("dd.MM.yyyy HH:mm")</p>
     </div>
 
-    <!-- ÜRÜN BİLGİLERİ -->
     <div class="section-title">📦 Ürün ve Kayıt Bilgileri</div>
     <table>
         <tr>
@@ -251,7 +176,6 @@
         </tr>
     </table>
 
-    <!-- SERVİS DETAYLARI -->
     <div class="section-title">🔧 Servis ve Tamir Detayları</div>
     <table>
         <tr>
@@ -268,7 +192,52 @@
         </tr>
     </table>
 
-    <!-- TARİH VE ÜCRET -->
+    <div class="section-title">🧱 Kullanılan Yedek Parça ve Malzemeler</div>
+    @if (materials != null && materials.Any())
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Ürün / Parça Adı</th>
+                    <th style="width: 15%; text-align: center;">Miktar</th>
+                    <th style="width: 30%;">Teknisyen Açıklaması</th>
+                    <th style="width: 20%;">Kullanım Tarihi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var material in materials)
+                {
+                    <tr>
+                        <td>
+                            @if (material.MaterialType == "External")
+                            {
+                                <span class="badge bg-info">@material.ExternalProductName</span>
+                                <span class="badge bg-secondary">Dışarıdan</span>
+                            }
+                            else
+                            {
+                                @(material.Product?.ProductName ?? "-")
+                            }
+                        </td>
+                        <td style="text-align: center;"><strong>@material.Quantity</strong></td>
+                        <td>@(material.Description ?? "-")</td>
+                        <td>@material.UsedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <table>
+            <tr>
+                <td style="text-align: center; color: #6c757d; font-style: italic; padding: 15px;">
+                    Bu tamir işleminde kullanılan herhangi bir yedek parça veya malzeme bulunmamaktadır.
+                </td>
+            </tr>
+        </table>
+    }
+
     <div class="section-title">💰 Tarih ve Maliyet Bilgileri</div>
     <table>
         <tr>
@@ -281,7 +250,12 @@
         </tr>
         <tr>
             <td class="label">Toplam Ücret</td>
-            <td><strong style="color: #198754; font-size: 15px;">@Model.Price.ToString("C2")</strong></td>
+            <td>
+                <strong style="color: #198754; font-size: 15px;">
+                    @currencySymbol @Model.Price.ToString("N2")
+                </strong>
+                <small style="color: #6c757d; font-weight: normal;">(@currency)</small>
+            </td>
         </tr>
     </table>
 
@@ -290,7 +264,6 @@
         © @DateTime.Now.Year Teknik Servis Yönetim Paneli
     </div>
 
-    <!-- BUTONLAR -->
     <div class="no-print" style="text-align: center; margin-top: 20px;">
         <button onclick="window.print()" style="padding: 8px 20px; background: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
             Yazdır / PDF
@@ -299,6 +272,5 @@
             Kapat
         </button>
     </div>
-
 </body>
 </html>

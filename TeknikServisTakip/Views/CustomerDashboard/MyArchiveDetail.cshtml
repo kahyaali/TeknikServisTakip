@@ -1,6 +1,13 @@
-﻿@model Entities.Concrete.ArchiveRepair
+﻿
+
+
+@model Entities.Concrete.ArchiveRepair
+@using TeknikServisTakip.Helpers
 @{
     ViewData["Title"] = "Arşiv Detayı";
+
+    var currency = Model.Currency ?? "TRY";
+    var currencySymbol = CurrencyHelper.GetSymbol(currency);
 }
 
 <div class="container-fluid">
@@ -41,7 +48,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6">
             <div class="info-card">
                 <h5><i class="fas fa-calendar-alt text-success me-2"></i> Tarih & Personel</h5>
@@ -60,7 +67,12 @@
                 </div>
                 <div class="row mb-3">
                     <div class="col-5 info-label">Ücret</div>
-                    <div class="col-7 info-value"><span class="fw-bold text-success fs-5">@Model.Price.ToString("C2")</span></div>
+                    <div class="col-7 info-value">
+                        <span class="fw-bold text-success fs-5">
+                            @currencySymbol @Model.Price.ToString("N2")
+                        </span>
+                        <small class="text-muted">(@currency)</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -92,6 +104,62 @@
         </div>
     </div>
 
+    <!-- KULLANILAN MALZEMELER -->
+@{
+    var materials = ViewBag.Materials as List<Entities.Concrete.RepairMaterial>;
+}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="info-card">
+            <h5><i class="fas fa-cubes text-success me-2"></i> Kullanılan Malzemeler</h5>
+            <hr />
+            @if (materials != null && materials.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr class="table-light">
+                                <th>Ürün Adı</th>
+                                <th>Miktar</th>
+                                <th>Açıklama</th>
+                                <th>Kullanım Tarihi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var material in materials)
+                            {
+                                    <tr>
+                                        <td>
+                                            @if (material.MaterialType == "External")
+                                            {
+                                                <span class="badge bg-info">@material.ExternalProductName</span>
+                                                <span class="badge bg-secondary ms-1">Dışarıdan</span>
+                                            }
+                                            else
+                                            {
+                                                @(material.Product?.ProductName ?? "-")
+                                            }
+                                        </td>
+                                        <td>@material.Quantity</td>
+                                        <td>@(material.Description ?? "-")</td>
+                                        <td>@material.UsedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                    </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-box-open fa-2x mb-2 d-block"></i>
+                    <span>Bu tamirde kullanılan malzeme bulunmamaktadır.</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
     <!-- BUTONLAR -->
     <div class="row mt-4">
         <div class="col-12 text-center">
@@ -108,6 +176,7 @@
             </div>
         </div>
     </div>
+</div>
 
 <style>
     .detail-header {
@@ -156,4 +225,40 @@
         margin: 0 5px;
         padding: 8px 20px;
     }
+
+    /* Dark mode desteği */
+    [data-theme="dark"] .info-card {
+        background: #1e293b;
+        border-color: #334155;
+    }
+
+    [data-theme="dark"] .info-label {
+        color: #94a3b8;
+    }
+
+    [data-theme="dark"] .info-value {
+        color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .bg-light {
+        background-color: #0f172a !important;
+    }
+
+    [data-theme="dark"] .table-bordered {
+        border-color: #334155;
+    }
+
+        [data-theme="dark"] .table-bordered th,
+        [data-theme="dark"] .table-bordered td {
+            border-color: #334155;
+        }
+
+    [data-theme="dark"] .table-light {
+        background-color: #0f172a;
+    }
+
+        [data-theme="dark"] .table-light th {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
 </style>

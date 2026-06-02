@@ -1,8 +1,8 @@
 ﻿@model IEnumerable<Entities.Concrete.RepairItem>
+@using TeknikServisTakip.Helpers @* <-- Helper katmanını buraya da dahil ettik kanka *@
 @{
     ViewData["Title"] = "Müşteri Panelim";
 }
-
 
 <div class="customer-container">
     <div class="page-header">
@@ -10,7 +10,6 @@
         <p>Tamir süreçlerinizi takip edin, profil bilgilerinizi yönetin</p>
     </div>
 
-    <!-- İstatistik Kartları - 5 kart -->
     <div class="stats-row">
         <div class="stat-card total">
             <div class="stat-icon"><i class="fas fa-tools"></i></div>
@@ -40,19 +39,19 @@
     </div>
 
     <div class="action-buttons">
-    <a href="/CustomerDashboard/Edit" class="btn-action btn-profile">
-        <i class="fas fa-user-edit"></i> Profil Düzenle
-    </a>
-    <a href="/Password/ChangePassword" class="btn-action btn-password">
-        <i class="fas fa-key"></i> Şifre Değiştir
-    </a>
-    <a href="/CustomerDashboard/Reports" class="btn-action btn-profile">
-        <i class="fas fa-chart-bar"></i> Raporlarım
-    </a>
-     <a href="/CustomerDashboard/MyArchive" class="btn-action btn-profile" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">
-        <i class="fas fa-archive"></i> Tamir Arşivim
-    </a>
-   </div>
+        <a href="/CustomerDashboard/Edit" class="btn-action btn-profile">
+            <i class="fas fa-user-edit"></i> Profil Düzenle
+        </a>
+        <a href="/Password/ChangePassword" class="btn-action btn-password">
+            <i class="fas fa-key"></i> Şifre Değiştir
+        </a>
+        <a href="/CustomerDashboard/Reports" class="btn-action btn-profile">
+            <i class="fas fa-chart-bar"></i> Raporlarım
+        </a>
+        <a href="/CustomerDashboard/MyArchive" class="btn-action btn-profile" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">
+            <i class="fas fa-archive"></i> Tamir Arşivim
+        </a>
+    </div>
 
     <div class="table-wrapper">
         <table id="repairTable" class="table table-bordered table-striped">
@@ -70,10 +69,13 @@
             <tbody>
                 @foreach (var item in Model)
                 {
+                    // Her satırın kendi para birimini ve simgesini yakalıyoruz kanka
+                    var itemCurrency = item.Currency ?? "TRY";
+                    var itemCurrencySymbol = CurrencyHelper.GetSymbol(itemCurrency);
+
                     <tr>
                         <td class="text-center"><strong>@item.TrackingCode</strong></td>
                         <td><i class="fas fa-laptop text-primary me-2"></i>@item.ProductName</td>
-                       @*  <td>@(item.ProblemDescription?.Length > 50 ? item.ProblemDescription.Substring(0,50)+"..." : item.ProblemDescription ?? "-")</td> *@
                         <td class="problem-desc" data-full="@item.ProblemDescription" style="max-width:250px; white-space:normal; word-wrap:break-word;">
                             @item.ProblemDescription
                         </td>
@@ -96,13 +98,15 @@
                                 <span class="badge-pending"><i class="fas fa-clock me-1"></i> Beklemede</span>
                             }
                         </td>
-                        <td class="text-end fw-bold text-success">@item.Price.ToString("C2")</td>
+                        <td class="text-end fw-bold text-success">
+                            @itemCurrencySymbol @item.Price.ToString("N2") <small class="text-muted" style="font-weight:normal; font-size:11px;">(@itemCurrency)</small>
+                        </td>
                         <td class="text-center">
                             <a href="/CustomerDashboard/Details/@item.Id" class="btn-detail">
                                 <i class="fas fa-eye"></i> Detay
                             </a>
-                         </td>
-                     </tr>
+                        </td>
+                    </tr>
                 }
             </tbody>
         </table>
@@ -116,11 +120,9 @@
     }
 </div>
 
-
 @section Scripts {
-  
     <script>
-                     $(document).ready(function() {
+        $(document).ready(function() {
             $('#repairTable').DataTable({
                 language: {
                     url: '/datatables/tr.json'
@@ -151,7 +153,8 @@
                                             return fullText;
                                         }
                                     }
-                                    return data.replace(/<[^>]*>/g, '');
+                                    // HTML etiketlerini temizle kanka (İkonlar arınsın ama ücret formatı kalsın)
+                                    return data.replace(/<[^>]*>/g, '').trim();
                                 }
                             }
                         },
@@ -179,7 +182,7 @@
                                             return fullText;
                                         }
                                     }
-                                    return data.replace(/<[^>]*>/g, '');
+                                    return data.replace(/<[^>]*>/g, '').trim();
                                 }
                             }
                         },
@@ -273,7 +276,7 @@
                                             return fullText;
                                         }
                                     }
-                                    return data.replace(/<[^>]*>/g, '');
+                                    return data.replace(/<[^>]*>/g, '').trim();
                                 }
                             }
                         },

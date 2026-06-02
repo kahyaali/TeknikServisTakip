@@ -249,7 +249,12 @@
                     { data: 'receivedDate' },
                     { data: 'deliveryDate' },
                     { data: 'personel' },
-                    { data: 'price', render: function(data) { return '<span class="fw-bold text-success">' + data + '</span>'; } },
+                       {
+            data: null,
+            render: function(data) {
+                return '<span class="fw-bold text-success">' + data.currencySymbol + ' ' + data.price + ' <small class="text-muted">(' + data.currency + ')</small></span>';
+            }
+        },
                     {
                         data: null,
                         render: function(data) {
